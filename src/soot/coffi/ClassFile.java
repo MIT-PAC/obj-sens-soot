@@ -71,9 +71,13 @@ public class ClassFile {
     static final short ACC_ANNOTATION = 0x2000;
    /** Access bit flag. */
     static final short ACC_ENUM = 0x4000;
-   /** Remaining bits in the access bit flag. */
+    
+    static final short ACC_SYNTHETIC = 0x1000;
+    
+    /** Remaining bits in the access bit flag. */
     static final short ACC_UNKNOWN =   0x7000;
-
+    
+    
    /** Descriptor code string. */
     static final String DESC_BYTE =    "B";
    /** Descriptor code string. */

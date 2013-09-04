@@ -806,6 +806,9 @@ public class FullSensitiveNode extends IVarAbstraction
 	 */
 	private boolean addFlowsTo(int code, IVarAbstraction qv) 
 	{
+	    if (flowto == null)
+	        flowto = new HashMap<FullSensitiveNode, GeometricManager>();
+	    
 		GeometricManager gm = flowto.get(qv);
 		
 		if ( gm == null ) {

@@ -485,7 +485,8 @@ public class FastHierarchy
                 if( isVisible( concreteType, m ) ) {
                     SootMethod method = concreteType.getMethod( methodSig );
                     if(method.isAbstract()) {
-                    	throw new RuntimeException("Error: Method call resolves to abstract method!");
+                    	throw new RuntimeException("Error: Method call resolves to abstract method. Class: " +
+                    			concreteType + ", method: " + m);
                     }
 					return method;
                 }
