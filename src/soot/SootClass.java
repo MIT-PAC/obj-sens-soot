@@ -60,7 +60,7 @@ public class SootClass extends AbstractHost implements Numberable
     protected String name, shortName, fixedShortName, packageName, fixedPackageName;
     protected int modifiers;
     protected Chain<SootField> fields = new HashChain<SootField>();
-    protected SmallNumberedMap subSigToMethods = new SmallNumberedMap( Scene.v().getSubSigNumberer() );
+    protected SmallNumberedMap<SootMethod> subSigToMethods = new SmallNumberedMap( Scene.v().getSubSigNumberer() );
     // methodList is just for keeping the methods in a consistent order. It
     // needs to be kept consistent with subSigToMethods.
     protected List<SootMethod> methodList = new ArrayList<SootMethod>();
@@ -481,7 +481,7 @@ public class SootClass extends AbstractHost implements Numberable
             if(method.getName().equals(name))
             {
                 if(found)
-                    throw new RuntimeException("ambiguous method");
+                    throw new RuntimeException("ambiguous method: " + name + " in class " + this);
                 else {                    
                     found = true;
                     foundMethod = method;
@@ -586,8 +586,8 @@ public class SootClass extends AbstractHost implements Numberable
         }
         subSigToMethods.put(m.getNumberedSubSignature(),m);
         methodList.add(m);
-        m.isDeclared = true;
-        m.declaringClass = this;
+        m.setDeclared(true);
+        m.setDeclaringClass(this);
         
     }
 
@@ -607,7 +607,7 @@ public class SootClass extends AbstractHost implements Numberable
         }
         subSigToMethods.put(m.getNumberedSubSignature(),null);
         methodList.remove(m);
-        m.isDeclared = false;
+        m.setDeclared(false);
     }
 
     /**

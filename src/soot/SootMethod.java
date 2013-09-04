@@ -51,32 +51,32 @@ public class SootMethod
     public static final String staticInitializerName = "<clinit>";
     public static boolean DEBUG=false;
     /** Name of the current method. */
-    String name;
+    private String name;
 
     /** A list of parameter types taken by this <code>SootMethod</code> object, 
       * in declaration order. */
-    List parameterTypes;
+    private List parameterTypes;
 
     /** The return type of this object. */
-    Type returnType;
+    private Type returnType;
 
     /** True when some <code>SootClass</code> object declares this <code>SootMethod</code> object. */
-    boolean isDeclared;
+    private boolean isDeclared;
 
     /** Holds the class which declares this <code>SootClass</code> method. */
-    SootClass declaringClass;
+    private SootClass declaringClass;
 
     /** Modifiers associated with this SootMethod (e.g. private, protected, etc.) */
-    int modifiers;
+    private int modifiers;
 
     /** Is this method a phantom method? */
-    boolean isPhantom = false;
+    private boolean isPhantom = false;
 
     /** Declared exceptions thrown by this method.  Created upon demand. */
-    List<SootClass> exceptions = null;
+    private List<SootClass> exceptions = null;
 
     /** Active body associated with this method. */
-    Body activeBody;
+    private Body activeBody;
 
     /** Tells this method how to find out where its body lives. */
     protected MethodSource ms;
@@ -188,6 +188,7 @@ public class SootMethod
     }
 
     /** Returns true when this <code>SootMethod</code> object is phantom. */
+    @Override
     public boolean isPhantom() {
         return isPhantom;
     }
@@ -201,6 +202,7 @@ public class SootMethod
     }
 
     /** Sets the phantom flag on this method. */
+    @Override
     public void setPhantom(boolean value) {
         if (value) {
             if (!Scene.v().allowsPhantomRefs())
@@ -394,8 +396,12 @@ public class SootMethod
     }
 
     public void setExceptions(List exceptions) {
-        this.exceptions = new ArrayList<SootClass>();
-        this.exceptions.addAll(exceptions);
+    	if (exceptions != null && !exceptions.isEmpty()) {
+	        this.exceptions = new ArrayList<SootClass>();
+	        this.exceptions.addAll(exceptions);
+	    }
+    	else
+    		this.exceptions = null;
     }
 
     /**

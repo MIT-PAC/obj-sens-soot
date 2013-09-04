@@ -84,7 +84,7 @@ public class SourceLocator
 				        String fileName = className.replace('.', '/') + ".class";
 						InputStream stream = cl.getResourceAsStream(fileName);
 						if(stream==null) return null;
-						return new CoffiClassSource(className, stream);
+						return new CoffiClassSource(className, stream, fileName, null);
 					}
 
             	}.find(className);
@@ -98,7 +98,7 @@ public class SourceLocator
 	        String fileName = className.replace('.', '/') + ".class";
         	InputStream stream = getClass().getClassLoader().getResourceAsStream(fileName);
         	if(stream!=null) {
-				return new CoffiClassSource(className, stream);
+				return new CoffiClassSource(className, stream, fileName, null);
         	}
         }
         return null;
@@ -444,6 +444,12 @@ public class SourceLocator
             } catch( IOException e ) {
                 throw new RuntimeException( "Caught IOException "+e );
             }
+        }
+        public File inputFile(){
+            if (file != null)
+                return file;
+            else
+                return new File(zipFile.getName());
         }
     }
 

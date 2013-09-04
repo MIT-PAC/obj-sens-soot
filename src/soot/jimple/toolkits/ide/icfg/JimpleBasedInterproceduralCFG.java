@@ -67,7 +67,7 @@ public class JimpleBasedInterproceduralCFG implements InterproceduralCFG<Unit,So
 		protected EdgeFilter() {
 			super(new EdgePredicate() {
 				public boolean want(Edge e) {				
-					return e.kind().isExplicit() || e.kind().isThread();
+					return e.kind().isExplicit() || e.kind().isThread() || e.kind().isClinit();
 				}
 			});
 		}
@@ -155,6 +155,7 @@ public class JimpleBasedInterproceduralCFG implements InterproceduralCFG<Unit,So
 
 	@Override
 	public SootMethod getMethodOf(Unit u) {
+		assert unitToOwner.containsKey(u);
 		return unitToOwner.get(u).getMethod();
 	}
 

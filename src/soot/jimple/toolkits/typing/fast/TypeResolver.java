@@ -90,6 +90,11 @@ public class TypeResolver
 				if ( op instanceof Local )
 					this.addDepend((Local)op, ds);
 			}
+			else if ( rhs instanceof CastExpr ) {
+				Value op = ((CastExpr)rhs).getOp();
+				if ( op instanceof Local )
+					this.addDepend((Local)op, ds);
+			}
 			else if ( rhs instanceof ArrayRef )
 				this.addDepend((Local)((ArrayRef)rhs).getBase(), ds);
 		}
@@ -108,7 +113,6 @@ public class TypeResolver
 	public void inferTypes()
 	{
 		AugEvalFunction ef = new AugEvalFunction(this.jb);
-		AugHierarchy ah = new AugHierarchy();
 		BytecodeHierarchy bh = new BytecodeHierarchy();
 		Collection<Typing> sigma = this.applyAssignmentConstraints(
 			new Typing(this.jb.getLocals()), ef, bh);

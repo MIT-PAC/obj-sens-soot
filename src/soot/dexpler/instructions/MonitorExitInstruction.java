@@ -24,12 +24,15 @@
 
 package soot.dexpler.instructions;
 
-import org.jf.dexlib.Code.Instruction;
-import org.jf.dexlib.Code.SingleRegisterInstruction;
+import org.jf.dexlib2.iface.instruction.Instruction;
+import org.jf.dexlib2.iface.instruction.OneRegisterInstruction;
 
 import soot.Local;
+import soot.RefType;
+import soot.dexpler.Debug;
 import soot.dexpler.DexBody;
 import soot.dexpler.IDalvikTyper;
+import soot.dexpler.typing.DalvikTyper;
 import soot.jimple.ExitMonitorStmt;
 import soot.jimple.Jimple;
 
@@ -42,18 +45,16 @@ public class MonitorExitInstruction extends DexlibAbstractInstruction {
     }
 
     public void jimplify (DexBody body) {
-        int reg = ((SingleRegisterInstruction) instruction).getRegisterA();
+        int reg = ((OneRegisterInstruction) instruction).getRegisterA();
         Local object = body.getRegisterLocal(reg);
         exitMonitorStmt = Jimple.v().newExitMonitorStmt(object);
         setUnit(exitMonitorStmt);
         tagWithLineNumber(exitMonitorStmt);
         body.add(exitMonitorStmt);
         
+		if (IDalvikTyper.ENABLE_DVKTYPER) {
+			Debug.printDbg(IDalvikTyper.DEBUG, "constraint: "+ exitMonitorStmt);
+		    DalvikTyper.v().setType(exitMonitorStmt.getOpBox(), RefType.v("java.lang.Object"), true);
 		}
-		
-    public void getConstraint(IDalvikTyper dalvikTyper) {
-      if (IDalvikTyper.ENABLE_DVKTYPER) {
-        dalvikTyper.setObjectType(exitMonitorStmt.getOpBox());
-      }
     }
 }
