@@ -29,6 +29,8 @@ import soot.jimple.NewExpr;
 import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StringConstant;
 import soot.options.Options;
+import soot.tagkit.GeneratedPhantomMethodTag;
+import soot.tagkit.StringTag;
 import soot.util.*;
 
 /** Representation of a reference to a method as it appears in a class file.
@@ -154,8 +156,28 @@ class SootMethodRefImpl implements SootMethodRef {
         if(Options.v().allow_phantom_refs()) {
         	SootMethod m = new SootMethod(name, parameterTypes, returnType, isStatic()?Modifier.STATIC:0);
         	m.setModifiers(Modifier.PUBLIC);	//  we don't know who will be calling us
+        	
+        	//create a tag to denote that this method is a generated phantom method
+        	m.addTag(new GeneratedPhantomMethodTag());
+        	
         	JimpleBody body = Jimple.v().newBody(m);
 			m.setActiveBody(body);
+			
+			int i = 0;
+			for (Object param : parameterTypes) {
+			    if (!(param instanceof Type))
+			        continue;
+			    Type type = (Type)param;
+			    //add local
+			    Local arg = Jimple.v().newLocal("l" + i, type);
+		        body.getLocals().add(arg);
+			    
+		        //add param assignment
+		        body.getUnits().add(Jimple.v().newIdentityStmt(arg, 
+	                Jimple.v().newParameterRef(type, i)));
+
+			    i++;
+			}
 			
 			//exc = new Error
 			RefType runtimeExceptionType = RefType.v("java.lang.Error");
