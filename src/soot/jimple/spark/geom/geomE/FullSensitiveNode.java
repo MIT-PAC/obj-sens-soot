@@ -66,7 +66,8 @@ public class FullSensitiveNode extends IVarAbstraction
 	// store/load complex constraints
 	public Vector<PlainConstraint> complex_cons;
 	
-	public static String symbols[] = {"/", "[]", "|", "-" };
+	// Symbolicize the 1-to-1 and many-to-many mappings
+	public static String symbols[] = {"/", "[]"};
 	
 	static {
 		stubManager = new GeometricManager();
@@ -581,38 +582,12 @@ public class FullSensitiveNode extends IVarAbstraction
 	}
 	
 	@Override
-	public boolean pointer_sensitive_points_to(long context, AllocNode obj) 
-	{
-		SegmentNode[] int_entry = find_points_to(obj);
-		
-		for ( int i = 0; i < GeometricManager.Divisions; ++i ) {
-			SegmentNode p = int_entry[i];
-			while ( p != null ) {
-				if ( context >= p.I1 && context < p.I1 + p.L )
-					return true;
-				p = p.next;
-			}
-		}
-		
-		return false;
-	}
-
-	@Override
-	public boolean test_points_to_has_types(Set<Type> types) 
-	{
-		for (Iterator<AllocNode> it = pt_objs.keySet().iterator(); it.hasNext();) {
-			AllocNode an = it.next();
-			if (types.contains( an.getType() ) ) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	@Override
 	public Set<AllocNode> get_all_points_to_objects() 
 	{
+		// If this pointer is not a representative pointer
+		if ( parent != this )
+			return getRepresentative().get_all_points_to_objects();
+				
 		return pt_objs.keySet();
 	}
 
@@ -645,7 +620,6 @@ public class FullSensitiveNode extends IVarAbstraction
 	@Override
 	public void injectPts()
 	{
-		final GeomPointsTo ptsProvider = (GeomPointsTo)Scene.v().getPointsToAnalysis();
 		pt_objs = new HashMap<AllocNode, GeometricManager>();
 		
 		me.getP2Set().forall( new P2SetVisitor() {
@@ -685,8 +659,11 @@ public class FullSensitiveNode extends IVarAbstraction
 
 	@Override
 	public void get_all_context_sensitive_objects( long l, long r, PtSensVisitor visitor ) 
-	{
-		GeomPointsTo ptsProvider = (GeomPointsTo)Scene.v().getPointsToAnalysis();
+	{	
+		if ( parent != this ) {
+			getRepresentative().get_all_context_sensitive_objects(l, r, visitor);
+			return;
+		}
 		
 		for ( Map.Entry<AllocNode, GeometricManager> entry : pt_objs.entrySet() ) {
 			AllocNode obj = entry.getKey();
@@ -698,7 +675,6 @@ public class FullSensitiveNode extends IVarAbstraction
 			
 			GeometricManager gm = entry.getValue();
 			SegmentNode[] int_entry = gm.getFigures();
-			boolean flag = true;
 			
 			for ( int i = 0; i < GeometricManager.Divisions; ++i ) {
 				// We iterate all the figures
@@ -734,15 +710,12 @@ public class FullSensitiveNode extends IVarAbstraction
 						}
 					}
 					
-					// Now we test which context versions should this interval [objL, objR) maps to
+					// Now we test which context versions this interval [objL, objR) maps to
 					if ( objL != -1 && objR != -1 )
-						flag = visitor.visit(obj, objL, objR, sm_int);
+						visitor.visit(obj, objL, objR, sm_int);
 					
-					if ( flag == false ) break;
 					p = p.next; 
 				}
-				
-				if ( flag == false ) break;
 			}
 		}
 	}
@@ -762,22 +735,6 @@ public class FullSensitiveNode extends IVarAbstraction
 				}
 			}
 		}
-		
-//		if ( ans == 0 ) {
-//			for ( GeometricManager gm : flowto.values() ) {
-//				SegmentNode[] int_entry = gm.getFigures();
-//				for ( int i = 0; i < GeometricManager.Divisions; ++i ) {
-//					SegmentNode p = int_entry[i];
-//					while ( p != null && p.is_new == true ) {
-//						++ans;
-//						p = p.next;
-//					}
-//				}
-//			}
-//			
-//			if ( ans == 0 )
-//				throw new RuntimeException();
-//		}
 		
 		return ans;
 	}
@@ -872,14 +829,14 @@ public class FullSensitiveNode extends IVarAbstraction
 		if ( interI < interJ ) {
 			switch ( code ) {
 			case GeometricManager.ONE_TO_ONE:
-				// pe is a 1-1 mapping
+				// assignment is a 1-1 mapping
 				pres.I1 = interI - pe.I1 + pe.I2;
 				pres.I2 = interI - pts.I1 + pts.I2;
 				pres.L = interJ - interI;
 				return GeometricManager.ONE_TO_ONE;
 				
 			case GeometricManager.MANY_TO_MANY:
-				// pe is a many-many mapping
+				// assignment is a many-many mapping
 				pres.I1 = pe.I2;
 				pres.I2 = interI - pts.I1 + pts.I2;
 				pres.L = ((RectangleNode)pe).L_prime;
@@ -906,7 +863,7 @@ public class FullSensitiveNode extends IVarAbstraction
 		if ( interI < interJ ) {
 			switch ( code ) {
 			case GeometricManager.ONE_TO_ONE:
-				// pe is a 1-1 mapping
+				// assignment is a 1-1 mapping
 				pres.I1 = interI - pe.I1 + pe.I2;
 				pres.I2 = pts.I2;
 				pres.L = interJ - interI;
@@ -914,7 +871,7 @@ public class FullSensitiveNode extends IVarAbstraction
 				break;
 				
 			case GeometricManager.MANY_TO_MANY:
-				// pe is a many-many mapping
+				// assignment is a many-many mapping
 				pres.I1 = pe.I2;
 				pres.I2 = pts.I2;
 				pres.L = ((RectangleNode)pe).L_prime;
@@ -942,12 +899,12 @@ public class FullSensitiveNode extends IVarAbstraction
 		
 		switch ( code >> 8 ) {
 		case GeometricManager.ONE_TO_ONE:
-			// pts is a 1-1 mapping
+			// points-to is a 1-1 mapping
 			ret_type = infer_pts_is_one_to_one(pts, pe, code & 255 );
 			break;
 			
 		case GeometricManager.MANY_TO_MANY:
-			// pts is a mangy-many mapping
+			// points-to is a mangy-many mapping
 			ret_type = infer_pts_is_many_to_many((RectangleNode)pts, pe, code & 255 );
 			break;
 		}
@@ -967,20 +924,20 @@ public class FullSensitiveNode extends IVarAbstraction
 		int ret_type = GeometricManager.Undefined_Mapping;
 		
 		if ( (code>>8) == GeometricManager.ONE_TO_ONE ) {
-			// pe is a 1-1 mapping
+			// assignment is a 1-1 mapping
 			
 			pres.I1 = pts.I2;
 			pres.I2 = pts.I1;
 			
 			switch ( code & 255 ) {
 			case GeometricManager.ONE_TO_ONE:
-				// pts is a 1-1 mapping
+				// points-to is a 1-1 mapping
 				pres.L = pts.L;
 				ret_type = GeometricManager.ONE_TO_ONE;
 				break;
 				
 			case GeometricManager.MANY_TO_MANY:
-				// pts is a many-many mapping
+				// points-to is a many-many mapping
 				pres.L = ((RectangleNode)pts).L_prime;
 				pres.L_prime = pts.L;
 				ret_type = GeometricManager.MANY_TO_MANY;
@@ -995,22 +952,18 @@ public class FullSensitiveNode extends IVarAbstraction
 			
 			switch ( code & 255 ) {
 			case GeometricManager.ONE_TO_ONE:
-				// pts is a 1-1 mapping or 1-many mapping	
+				// points-to is a 1-1 mapping or 1-many mapping	
 				pres.L = pts.L;
 				ret_type = GeometricManager.MANY_TO_MANY;
 				break;
 				
 			case GeometricManager.MANY_TO_MANY:
-				// pts is a many-many mapping
+				// points-to is a many-many mapping
 				pres.L = ((RectangleNode)pts).L_prime;
 				ret_type = GeometricManager.MANY_TO_MANY;
 				break;
 			}
 		}
-		
-//		assert ret_type != IntervalPointsTo.Undefined_Mapping;
-//		if ( !( pres.I1 != 0 && pres.I2 != 0 && pres.L > 0 ) )
-//			assert false;
 		
 		return objn.addFlowsTo(ret_type, qn);
 	}
@@ -1022,7 +975,7 @@ public class FullSensitiveNode extends IVarAbstraction
 		int ret_type = GeometricManager.Undefined_Mapping;
 		
 		if ( (code>>8) == GeometricManager.ONE_TO_ONE ) {
-			// pe is a 1-1 mapping
+			// assignment is a 1-1 mapping
 			
 			pres.I1 = pts.I1;
 			pres.I2 = pts.I2;
@@ -1030,12 +983,12 @@ public class FullSensitiveNode extends IVarAbstraction
 			
 			switch ( code & 255 ) {
 			case GeometricManager.ONE_TO_ONE:
-				// pts is a 1-1 mapping			
+				// points-to is a 1-1 mapping			
 				ret_type = GeometricManager.ONE_TO_ONE;
 				break;
 				
 			case GeometricManager.MANY_TO_MANY:
-				// pts is a many-many mapping
+				// points-to is a many-many mapping
 				pres.L_prime = ((RectangleNode)pts).L_prime;
 				ret_type = GeometricManager.MANY_TO_MANY;
 				break;
@@ -1049,13 +1002,13 @@ public class FullSensitiveNode extends IVarAbstraction
 			
 			switch ( code & 255 ) {
 			case GeometricManager.ONE_TO_ONE:
-				// pts is a 1-1 mapping			
+				// points-to is a 1-1 mapping			
 				pres.L_prime = pts.L;
 				ret_type = GeometricManager.MANY_TO_MANY;
 				break;
 				
 			case GeometricManager.MANY_TO_MANY:
-				// pts is a many-many mapping
+				// points-to is a many-many mapping
 				pres.L_prime = ((RectangleNode)pts).L_prime;
 				ret_type = GeometricManager.MANY_TO_MANY;
 				break;

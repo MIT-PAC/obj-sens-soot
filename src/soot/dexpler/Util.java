@@ -103,6 +103,7 @@ public class Util {
     }
     
     public static Type getType(String type) {
+        System.out.println("get type from '"+ type +"'");
       int idx = 0;
       int arraySize = 0;
       Type returnType = null;
@@ -273,5 +274,43 @@ public class Util {
         //throw new RuntimeException("Expecting static final field to have a constant value! For field: "+field+" of type: "+field.fieldInstance().constantValue().getClass());
       }   
 
+    }
+    
+    public static List<String> splitParameters(String parameters) {
+        List<String> pList = new ArrayList<String>();
+        
+        int idx = 0;
+        int arraySize = 0;
+        
+        String curr = "";
+        while( idx < parameters.length()) {
+          char c = parameters.charAt(idx);
+          curr += c;
+          switch( c ) {
+            case '[':
+                char c2 = parameters.charAt(++idx);
+                if (c2 == 'L') {
+                    while(c2 != ';') {
+                        curr += c2;
+                        c2 = parameters.charAt(++idx);
+                    }
+                } else {
+                    curr += c2;
+                }
+                pList.add(curr);
+                curr = "";
+                break;
+            case ';':
+                pList.add(curr);
+                curr = "";            
+           default:
+               pList.add(curr);
+               break;
+            
+          }
+          idx++;
+        }
+
+        return pList;
     }
 }

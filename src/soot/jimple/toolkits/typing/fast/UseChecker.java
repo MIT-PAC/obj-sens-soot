@@ -266,7 +266,8 @@ public class UseChecker extends AbstractStmtSwitch
 
 			aref.setBase((Local) this.uv.visit(aref.getBase(), at, stmt));
 			stmt.setRightOp(this.uv.visit(rhs, trhs, stmt));
-			stmt.setLeftOp(this.uv.visit(lhs, trhs, stmt));
+//			if (!lhs.getType().isAllowedInFinalCode())
+//				stmt.setLeftOp(this.uv.visit(lhs, trhs, stmt));
 		}
 		else if ( rhs instanceof InstanceFieldRef )
 		{

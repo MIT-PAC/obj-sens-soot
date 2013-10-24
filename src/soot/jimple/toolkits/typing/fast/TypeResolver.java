@@ -23,6 +23,7 @@ package soot.jimple.toolkits.typing.fast;
 import java.util.*;
 import soot.*;
 import soot.jimple.*;
+import soot.jimple.toolkits.typing.Util;
 import soot.toolkits.graph.*;
 import soot.toolkits.scalar.*;
 
@@ -189,8 +190,9 @@ public class TypeResolver
 					vold = Jimple.v().newLocal("tmp", t);
 					this.tg.set(vold, t);
 					this.jb.getLocals().add(vold);
+					Unit u = Util.findFirstNonIdentityUnit(jb, stmt);
 					this.jb.getUnits().insertBefore(
-						Jimple.v().newAssignStmt(vold, op), stmt);
+						Jimple.v().newAssignStmt(vold, op), u);
 				}
 				else
 					vold = (Local)op;
@@ -198,9 +200,10 @@ public class TypeResolver
 				Local vnew = Jimple.v().newLocal("tmp", useType);
 				this.tg.set(vnew, useType);
 				this.jb.getLocals().add(vnew);
+				Unit u = Util.findFirstNonIdentityUnit(jb, stmt);
 				this.jb.getUnits().insertBefore(
 					Jimple.v().newAssignStmt(vnew,
-					Jimple.v().newCastExpr(vold, useType)), stmt);
+					Jimple.v().newCastExpr(vold, useType)), u);
 				return vnew;
 			}
 		}
@@ -301,42 +304,46 @@ public class TypeResolver
 	
 	private Typing typePromotion(Typing tg)
 	{
-		AugEvalFunction ef = new AugEvalFunction(this.jb);
-		AugHierarchy h = new AugHierarchy();
-		UseChecker uc = new UseChecker(this.jb);
-		TypePromotionUseVisitor uv = new TypePromotionUseVisitor(jb, tg);
-		do
-		{
-			Collection<Typing> sigma
-				= this.applyAssignmentConstraints(tg, ef, h);
-			if ( sigma.isEmpty() )
-				return null;
-			tg = sigma.iterator().next();			
-			uv.typingChanged = false;
-			uc.check(tg, uv);
-			if ( uv.fail )
-				return null;
-		} while ( uv.typingChanged );
-		
-		for ( Local v : this.jb.getLocals() )
-		{
-			Type t = tg.get(v);
-			if ( t instanceof Integer1Type )
+		boolean conversionDone;
+		do {
+			AugEvalFunction ef = new AugEvalFunction(this.jb);
+			AugHierarchy h = new AugHierarchy();
+			UseChecker uc = new UseChecker(this.jb);
+			TypePromotionUseVisitor uv = new TypePromotionUseVisitor(jb, tg);
+			do
 			{
-				tg.set(v, BooleanType.v());
-				return this.typePromotion(tg);
-			}
-			else if ( t instanceof Integer127Type )
+				Collection<Typing> sigma
+					= this.applyAssignmentConstraints(tg, ef, h);
+				if ( sigma.isEmpty() )
+					return null;
+				tg = sigma.iterator().next();			
+				uv.typingChanged = false;
+				uc.check(tg, uv);
+				if ( uv.fail )
+					return null;
+			} while ( uv.typingChanged );
+
+			conversionDone = false;
+			for ( Local v : this.jb.getLocals() )
 			{
-				tg.set(v, ByteType.v());
-				return this.typePromotion(tg);
+				Type t = tg.get(v);
+				if ( t instanceof Integer1Type )
+				{
+					tg.set(v, BooleanType.v());
+					conversionDone = true;
+				}
+				else if ( t instanceof Integer127Type )
+				{
+					tg.set(v, ByteType.v());
+					conversionDone = true;
+				}
+				else if ( t instanceof Integer32767Type )
+				{
+					tg.set(v, ShortType.v());
+					conversionDone = true;
+				}
 			}
-			else if ( t instanceof Integer32767Type )
-			{
-				tg.set(v, ShortType.v());
-				return this.typePromotion(tg);
-			}
-		}
+		} while (conversionDone);
 		
 		return tg;
 	}
@@ -524,7 +531,8 @@ public class TypeResolver
 									DefinitionStmt assignStmt
 										= Jimple.v().newAssignStmt(
 										assign.getLeftOp(), newlocal);
-									units.insertAfter(assignStmt, assign);
+									Unit u = Util.findLastIdentityUnit(jb, assign);
+									units.insertAfter(assignStmt, u);
 									assign.setLeftOp(newlocal);
 									
 									this.addLocal(newlocal);

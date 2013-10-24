@@ -77,7 +77,7 @@ import soot.toolkits.graph.Block;
 
 public abstract class AbstractJasminClass
 {
-    protected Map unitToLabel;
+    protected Map<Unit, String> unitToLabel;
     protected Map<Local, Integer> localToSlot;
     protected Map<Unit, Integer> subroutineToReturnAddressSlot;
 
@@ -118,7 +118,7 @@ public abstract class AbstractJasminClass
     public static int argCountOf(SootMethodRef m)
     {
         int argCount = 0;
-        Iterator typeIt = m.parameterTypes().iterator();
+        Iterator<Type> typeIt = m.parameterTypes().iterator();
 
         while(typeIt.hasNext())
         {
@@ -214,7 +214,7 @@ public abstract class AbstractJasminClass
 
         // Add methods parameters
         {
-            Iterator typeIt = m.parameterTypes().iterator();
+            Iterator<Type> typeIt = m.parameterTypes().iterator();
 
             while(typeIt.hasNext())
             {
@@ -444,6 +444,9 @@ public abstract class AbstractJasminClass
                 if (Options.v().android_jars() != "" && Character.isDigit(srcName.charAt(0))) 
                     srcName = "n_"+ srcName;
                 
+                // Jasmin does not support blanks, so get rid of them
+                srcName = srcName.replace(" ", "-");
+                
              	emit(".source "+srcName);
             }
             if(Modifier.isInterface(modifiers))
@@ -465,11 +468,11 @@ public abstract class AbstractJasminClass
 
         // Emit the interfaces
         {
-            Iterator interfaceIt = sootClass.getInterfaces().iterator();
+            Iterator<SootClass> interfaceIt = sootClass.getInterfaces().iterator();
 
             while(interfaceIt.hasNext())
             {
-                SootClass inter = (SootClass) interfaceIt.next();
+                SootClass inter = interfaceIt.next();
 
                 emit(".implements " + slashify(inter.getName()));
             }
@@ -485,9 +488,9 @@ public abstract class AbstractJasminClass
 
     
 	// emit class attributes.
-	Iterator it =  sootClass.getTags().iterator(); 
+	Iterator<Tag> it =  sootClass.getTags().iterator(); 
 	while(it.hasNext()) {
-	    Tag tag = (Tag) it.next();
+	    Tag tag = it.next();
 	    if(tag instanceof Attribute)
 		emit(".class_attribute "  + tag.getName() + " \"" + new String(Base64.encode(((Attribute)tag).getValue()))+"\"");
         /*else {
@@ -540,7 +543,7 @@ public abstract class AbstractJasminClass
         emit(sigAttr);
     }
     
-    Iterator vit = sootClass.getTags().iterator();
+    Iterator<Tag> vit = sootClass.getTags().iterator();
     while (vit.hasNext()){
         Tag t = (Tag)vit.next();
         if (t.getName().equals("VisibilityAnnotationTag")){
@@ -550,7 +553,7 @@ public abstract class AbstractJasminClass
 
         // Emit the fields
         {
-            Iterator fieldIt = sootClass.getFields().iterator();
+            Iterator<SootField> fieldIt = sootClass.getFields().iterator();
 
             while(fieldIt.hasNext())
             {
@@ -593,7 +596,7 @@ public abstract class AbstractJasminClass
                     SignatureTag sigTag = (SignatureTag)field.getTag("SignatureTag");
                     fieldString += "\""+sigTag.getSignature()+"\"\n";
                 }
-                Iterator vfit = field.getTags().iterator();
+                Iterator<Tag> vfit = field.getTags().iterator();
                 while (vfit.hasNext()){
                     Tag t = (Tag)vfit.next();
                     if (t.getName().equals("VisibilityAnnotationTag")){
@@ -603,7 +606,7 @@ public abstract class AbstractJasminClass
 
                 emit(fieldString);
 
-		Iterator attributeIt =  field.getTags().iterator(); 
+		Iterator<Tag> attributeIt =  field.getTags().iterator(); 
 		while(attributeIt.hasNext()) {
 		    Tag tag = (Tag) attributeIt.next();
 		    if(tag instanceof Attribute)
@@ -618,11 +621,11 @@ public abstract class AbstractJasminClass
 
         // Emit the methods
         {
-            Iterator methodIt = sootClass.methodIterator();
+            Iterator<SootMethod> methodIt = sootClass.methodIterator();
 
             while(methodIt.hasNext())
             {
-                emitMethod((SootMethod) methodIt.next());
+                emitMethod(methodIt.next());
                 emit("");
             }
         }
@@ -646,11 +649,11 @@ public abstract class AbstractJasminClass
         
         // Assign each local to a group, and set that group's color count to 0.
         {
-            Iterator localIt = body.getLocals().iterator();
+            Iterator<Local> localIt = body.getLocals().iterator();
 
             while(localIt.hasNext())
             {
-                Local l = (Local) localIt.next();
+                Local l = localIt.next();
                 Object g;
                 
                 if(sizeOfType(l.getType()) == 1)
@@ -669,7 +672,7 @@ public abstract class AbstractJasminClass
 
         // Assign colors to the parameter locals.
         {
-            Iterator codeIt = body.getUnits().iterator();
+            Iterator<Unit> codeIt = body.getUnits().iterator();
 
             while(codeIt.hasNext())
             {
@@ -727,7 +730,7 @@ public abstract class AbstractJasminClass
                 annotDefAttr += ".end .annotation_default";
                 emit(annotDefAttr);
             }
-            Iterator vit = method.getTags().iterator();
+            Iterator<Tag> vit = method.getTags().iterator();
             while (vit.hasNext()){
                 Tag t = (Tag)vit.next();
                 if (t.getName().equals("VisibilityAnnotationTag")){
@@ -749,7 +752,7 @@ public abstract class AbstractJasminClass
        // Emit epilogue
             emit(".end method");
 
-	    Iterator it =  method.getTags().iterator();
+	    Iterator<Tag> it =  method.getTags().iterator();
 	    while(it.hasNext()) {
 		Tag tag = (Tag) it.next();
 		if(tag instanceof Attribute)
@@ -761,10 +764,8 @@ public abstract class AbstractJasminClass
 
     public void print(PrintWriter out)
     {
-        Iterator<String> it = code.iterator();
-
-        while(it.hasNext())
-            out.println(it.next());
+        for (String s : code)
+            out.println(s);
     }
 
 }

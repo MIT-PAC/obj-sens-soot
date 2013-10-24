@@ -19,80 +19,63 @@
 package soot.jimple.spark.geom.helper;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import soot.jimple.spark.geom.dataRep.IntervalContextVar;
 import soot.jimple.spark.pag.Node;
 
 /**
- * Extracts the contexts of object o that are related to pointer p if p points to o.
+ * Extracts the full context sensitive points-to result.
  * 
  * @author xiao
  *
  */
-public class Obj_full_extractor extends PtSensVisitor
+public class Obj_full_extractor 
+	extends PtSensVisitor<IntervalContextVar>
 {
-	public List<IntervalContextVar> icvList = new ArrayList<IntervalContextVar>();
 	private List<IntervalContextVar> backupList = new ArrayList<IntervalContextVar>();
-	
-	@Override
-	public void prepare()
-	{
-		icvList.clear();
-	}
+	private IntervalContextVar tmp_icv = new IntervalContextVar();
 	
 	@Override
 	public boolean visit(Node var, long L, long R, int sm_int) 
 	{
-		// We first use [L, R) update the intervals already in the list.
-		// Every round we collect the intervals for the same (p, o).
-		// Therefore, we merge the intervals that intersect.
-		for ( IntervalContextVar icv : icvList ) {
-			if ( L <= icv.L ) {
-				if ( R >= icv.L ) {
-					icv.L = L;
-					if ( R > icv.R ) icv.R = R;
-					return true;
+		List<IntervalContextVar> resList = tableView.get(var);
+		
+		if ( resList == null ) {
+			// The first time this object is inserted
+			resList = new ArrayList<IntervalContextVar>();
+			tableView.put(var, resList);
+		}
+		else {
+			// We search the list and merge the context sensitive objects
+			backupList.clear();
+			tmp_icv.L = L;
+			tmp_icv.R = R;
+			
+			for ( IntervalContextVar old_cv : resList ) {
+				if ( old_cv.contains(tmp_icv) ) {
+					/*
+					 * Becase we keep the intervals disjoint.
+					 * It's impossible the passed in interval is contained in an interval and intersects with another interval.
+					 * So we can directly return.
+					 */
+					return false;
 				}
+				if ( !tmp_icv.merge(old_cv) )
+					backupList.add(old_cv);
 			}
-			else {
-				if ( L <= icv.R ) {
-					if ( R > icv.R ) icv.R = R;
-					return true;
-				}
-			}
+			
+			// We switch the backup list with the original list
+			List<IntervalContextVar> tmpList = backupList;
+			backupList = resList;
+			resList = tmpList;
+			
+			// Write back
+			L = tmp_icv.L;
+			R = tmp_icv.R;
 		}
 		
-		IntervalContextVar cvar = new IntervalContextVar( L, R, var );
-		icvList.add(cvar);
-		
+		IntervalContextVar icv = new IntervalContextVar( L, R, var );
+		resList.add(icv);
 		return true;
-	}
-
-	@Override
-	public void finish() 
-	{
-		if ( icvList.size() == 0 ) return;
-		
-		// We generate disjoint intervals.
-		Collections.sort(icvList);
-		IntervalContextVar cur = icvList.get(0);
-		for ( int i = 1; i < icvList.size(); ++i ) {
-			IntervalContextVar icv = icvList.get(i);
-			if ( icv.L <= cur.R )
-				cur.R = icv.R;
-			else {
-				backupList.add(cur);
-				cur = icv;
-			}
-		}
-		backupList.add(cur);
-		
-		icvList.clear();
-		
-		// swap
-		List<IntervalContextVar> temp = icvList;
-		icvList = backupList;
-		backupList = temp;
 	}
 }

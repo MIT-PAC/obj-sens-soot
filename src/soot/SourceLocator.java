@@ -178,17 +178,16 @@ public class SourceLocator
 		List<String> classes = new ArrayList<String>();
 
 		if (isArchive(aPath)) {
-			List inputExtensions = new ArrayList(2);
+			List<String> inputExtensions = new ArrayList<String>(3);
 			inputExtensions.add(".class");
 			inputExtensions.add(".jimple");
-			inputExtensions.add(".java");
 
 			try {
 				ZipFile archive = new ZipFile(aPath);
 
 				boolean hasClassesDotDex = false;
-				for (Enumeration entries = archive.entries(); entries.hasMoreElements();) {
-					ZipEntry entry = (ZipEntry) entries.nextElement();
+				for (Enumeration<? extends ZipEntry> entries = archive.entries(); entries.hasMoreElements();) {
+					ZipEntry entry = entries.nextElement();
 					String entryName = entry.getName();
 					// We are dealing with an apk file
 					if (entryName.equals("classes.dex")) {
@@ -197,8 +196,8 @@ public class SourceLocator
 					}
 				}
 
-				for (Enumeration entries = archive.entries(); entries.hasMoreElements();) {
-					ZipEntry entry = (ZipEntry) entries.nextElement();
+				for (Enumeration<? extends ZipEntry> entries = archive.entries(); entries.hasMoreElements();) {
+					ZipEntry entry = entries.nextElement();
 					String entryName = entry.getName();
 					int extensionIndex = entryName.lastIndexOf('.');
 					if (extensionIndex >= 0) {
@@ -391,7 +390,11 @@ public class SourceLocator
 
     public String getOutputDir() {
         String ret = Options.v().output_dir();
-        if( ret.length() == 0 ) ret = "sootOutput";
+        if( ret.length() == 0 ) {
+        	ret = "sootOutput";
+	        if (Options.v().output_jar())
+	        	ret += File.separatorChar + "out.jar";
+        }
         File dir = new File(ret);
 
         if (!dir.exists()) {

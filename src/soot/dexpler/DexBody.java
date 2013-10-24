@@ -126,7 +126,6 @@ public class DexBody  {
 
     // detect array/instructions overlapping obfuscation
     private ArrayList<PseudoInstruction> pseudoInstructionData = new ArrayList<PseudoInstruction>();
-    private String dexFile = null;
 
     PseudoInstruction isAddressInData (int a) {
       for (PseudoInstruction pi: pseudoInstructionData) {
@@ -143,7 +142,6 @@ public class DexBody  {
      * @param method the method that is associated with this body
      */
     public DexBody(String dexFile, Method method, RefType declaringClassType) {
-        this.dexFile = dexFile;
         MethodImplementation code = method.getImplementation();
         if (code == null)
             throw new RuntimeException("error: no code for method "+ method.getName());
@@ -218,8 +216,8 @@ public class DexBody  {
             types.addAll(i.introducedTypes());
 
         if(tries!=null) {
-	        for (TryBlock tryItem : tries) {
-	            List<ExceptionHandler> hList = tryItem.getExceptionHandlers();
+	        for (TryBlock<? extends ExceptionHandler> tryItem : tries) {
+	            List<? extends ExceptionHandler> hList = tryItem.getExceptionHandlers();
 		        for (ExceptionHandler handler: hList) {
 		            String exType = handler.getExceptionType();
 		            if (exType == null) // for handler which capture all Exceptions
@@ -501,8 +499,10 @@ public class DexBody  {
 
         Debug.printDbg("body before any transformation : \n", jBody);
 
+        // Remove dead code and the corresponding locals before assigning types
 		UnreachableCodeEliminator.v().transform(jBody);
 		DeadAssignmentEliminator.v().transform(jBody);
+		UnusedLocalEliminator.v().transform(jBody);
 
         Debug.printDbg("\nbefore splitting");
         Debug.printDbg("",(Body)jBody);
@@ -634,7 +634,8 @@ public class DexBody  {
 
         }
 
-        
+        // We pack locals that are not used in overlapping regions. This may
+        // again lead to unused locals which we have to remove.
         LocalPacker.v().transform(jBody);
         UnusedLocalEliminator.v().transform(jBody);
         LocalNameStandardizer.v().transform(jBody);
@@ -671,29 +672,39 @@ public class DexBody  {
         UnusedLocalEliminator.v().transform(jBody);
         //LocalPacker.v().transform(jBody);
         NopEliminator.v().transform(jBody);
-        
+
         for (Unit u: jBody.getUnits()) {
-          if (u instanceof AssignStmt) {
-            AssignStmt ass = (AssignStmt)u;
-            if (ass.getRightOp() instanceof CastExpr) {
-              CastExpr c = (CastExpr)ass.getRightOp();
-              if (c.getType() instanceof NullType) {
-                Debug.printDbg("replacing cast to null_type by nullConstant assignment in ", u);
-                ass.setRightOp(NullConstant.v());
-              }
+            if (u instanceof AssignStmt) {
+                AssignStmt ass = (AssignStmt)u;
+                if (ass.getRightOp() instanceof CastExpr) {
+                    CastExpr c = (CastExpr)ass.getRightOp();
+                    if (c.getType() instanceof NullType) {
+                        Debug.printDbg("replacing cast to null_type by nullConstant assignment in ", u);
+                        ass.setRightOp(NullConstant.v());
+                    }
+                }
             }
-          }
         }
 
         Debug.printDbg("\nafter jb pack");
         Debug.printDbg("",(Body)jBody);
 
-        // fields init
+        // Leplace local type null_type by java.lang.Object.
+        //
+        // The typing engine cannot find correct type for such code:
+        //
+        // null_type $n0;
+        // $n0 = null;
+        // $r4 = virtualinvoke $n0.<java.lang.ref.WeakReference: java.lang.Object get()>();
+        //
+        for(Local l: jBody.getLocals()) {
+            Type t = l.getType();
+            if (t instanceof NullType) {
+                Debug.printDbg("replacing null_type by java.lang.Object for local ", l);
+                l.setType(RefType.v("java.lang.Object"));
+            }
+        }
 
-          if (m.getName().equals("<init>") || m.getName().equals("<clinit>")) {
-             Util.addConstantTags(jBody);
-          }
-          
         return jBody;
     }
 

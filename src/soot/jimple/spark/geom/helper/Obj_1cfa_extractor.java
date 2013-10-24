@@ -18,10 +18,8 @@
  */
 package soot.jimple.spark.geom.helper;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
 import soot.Scene;
 import soot.jimple.spark.geom.dataRep.CallsiteContextVar;
 import soot.jimple.spark.geom.geomPA.CgEdge;
@@ -30,29 +28,40 @@ import soot.jimple.spark.geom.geomPA.ZArrayNumberer;
 import soot.jimple.spark.pag.Node;
 
 /**
- * Translate the numbered context to callsite context.
+ * Translate the numbered context to 1-CFA callsite context.
  * @author xiao
  *
  */
-public class Obj_1cfa_extractor extends PtSensVisitor
+public class Obj_1cfa_extractor 
+	extends PtSensVisitor<CallsiteContextVar>
 {
-	public Set<CallsiteContextVar> outList = new HashSet<CallsiteContextVar>();
+	private ZArrayNumberer<CallsiteContextVar> all_objs;
 	private CallsiteContextVar cobj = new CallsiteContextVar();
+	private GeomPointsTo ptsProvider = null;
 	
-	private ZArrayNumberer<CallsiteContextVar> all_objs = ContextTranslator.objs_1cfa_map;
-	private GeomPointsTo ptsProvider = (GeomPointsTo)Scene.v().getPointsToAnalysis();
-	
-	@Override
-	public void prepare()
+	public Obj_1cfa_extractor()
 	{
-		outList.clear();
+		ptsProvider = (GeomPointsTo)Scene.v().getPointsToAnalysis();
+		
+		if ( !ContextTranslator.is_1cfa_built() ) {
+			ContextTranslator.build_1cfa_map(ptsProvider);
+		}
+		
+		all_objs = ContextTranslator.objs_1cfa_map;
 	}
 	
 	@Override
 	public boolean visit(Node var, long L, long R, int sm_int) 
 	{
+		List<CallsiteContextVar> resList = tableView.get(var);
+		if ( resList == null ) {
+			resList = new ArrayList<CallsiteContextVar>();
+			tableView.put(var, resList);
+		}
+	
 		cobj.var = var;
 		List<CgEdge> edges = ptsProvider.getCallEdgesInto(sm_int);
+		CallsiteContextVar new_ccv = null;
 		
 		if ( edges != null ) {
 			for ( CgEdge e : edges ) {
@@ -60,25 +69,21 @@ public class Obj_1cfa_extractor extends PtSensVisitor
 				long rangeL = e.map_offset;
 				long rangeR = rangeL + ptsProvider.max_context_size_block[e.s];
 				
-				// We compute if [rangeL, rangeR) intersects with [objL, objR) 
+				// We compute if [rangeL, rangeR) intersects with [L, R) 
 				if ( L < rangeR && rangeL < R ) {
 					cobj.context = e;
-					outList.add( all_objs.searchFor(cobj) );
+					new_ccv = all_objs.searchFor(cobj);
+					
 				}
 			}
 		}
 		else {
 			cobj.context = null;
-			outList.add( all_objs.searchFor(cobj) );
-			return false;
+			new_ccv = all_objs.searchFor(cobj);
 		}
 		
+		if ( resList.contains(new_ccv) ) return false;
+		resList.add( new_ccv );
 		return true;
-	}
-
-	@Override
-	public void finish() 
-	{
-		// nothing to do
 	}
 }
