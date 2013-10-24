@@ -47,6 +47,7 @@ import soot.jimple.InstanceInvokeExpr;
 import soot.jimple.InvokeExpr;
 import soot.jimple.NullConstant;
 import soot.jimple.Stmt;
+import soot.jimple.StringConstant;
 import soot.jimple.spark.builder.GlobalNodeFactory;
 import soot.jimple.spark.builder.MethodNodeFactory;
 import soot.jimple.spark.internal.TypeManager;
@@ -464,7 +465,7 @@ public class PAG implements PointsToAnalysis {
 	}
 	return ret;
     }
-    public AllocNode makeStringConstantNode( String s ) {
+    public AllocNode makeStringConstantNode( StringConstant s ) {
         if( opts.types_for_sites() || opts.vta() )
             return makeAllocNode( RefType.v( "java.lang.String" ),
                     RefType.v( "java.lang.String" ), null );

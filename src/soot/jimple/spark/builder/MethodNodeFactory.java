@@ -283,7 +283,7 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
         if( pag.getOpts().string_constants()
         || Scene.v().containsClass(sc.value) 
         || ( sc.value.length() > 0 && sc.value.charAt(0) == '[' ) ) {
-            stringConstant = pag.makeStringConstantNode( sc.value );
+            stringConstant = pag.makeStringConstantNode( sc );
         } else {
             stringConstant = pag.makeAllocNode(
                 PointsToAnalysis.STRING_NODE,
