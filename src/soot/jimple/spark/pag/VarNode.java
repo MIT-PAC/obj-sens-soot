@@ -26,6 +26,7 @@ import java.util.Map;
 import soot.AnySubType;
 import soot.Context;
 import soot.G;
+import soot.PrimType;
 import soot.RefLikeType;
 import soot.Type;
 import soot.toolkits.scalar.Pair;
