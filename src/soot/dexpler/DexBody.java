@@ -636,8 +636,8 @@ public class DexBody  {
 
         // We pack locals that are not used in overlapping regions. This may
         // again lead to unused locals which we have to remove.
-        LocalPacker.v().transform(jBody);
-        UnusedLocalEliminator.v().transform(jBody);
+        //LocalPacker.v().transform(jBody);
+        //UnusedLocalEliminator.v().transform(jBody);
         LocalNameStandardizer.v().transform(jBody);
 
         Debug.printDbg("\nafter type assigner localpacker and name standardizer");
