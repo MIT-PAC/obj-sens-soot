@@ -65,8 +65,10 @@ public class GeomQueries
 	 * We copy and make a condensed version of call graph.
 	 * @param geom_pts
 	 */
-	public GeomQueries(GeomPointsTo geom_pts)
+	public GeomQueries(GeomPointsTo geom_pts, int kCFABudgetSize, int oneCFABudgetSize)
 	{
+	    GeomQueries.targetBudgetSize = oneCFABudgetSize;
+	    GeomQueries.defaultBudgetSize = kCFABudgetSize;
 		geomPts = geom_pts;
 		n_func = geomPts.n_func;
 		vis_cg = geomPts.vis_cg;

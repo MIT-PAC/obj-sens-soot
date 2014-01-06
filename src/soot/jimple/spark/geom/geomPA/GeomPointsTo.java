@@ -793,7 +793,6 @@ public class GeomPointsTo extends PAG
 							
 							// Only the virtual calls do the following test
 							// We should care about the thread start method, it is treated specially
-							System.out.println(an + " " + t + ((RefType)t).getSootClass() + " " + p.sootEdge);
 							if ( Scene.v().getOrMakeFastHierarchy().
 									resolveConcreteDispatch( ((RefType)t).getSootClass(), sm) == sm ) {
 								keep_this_edge = true;
