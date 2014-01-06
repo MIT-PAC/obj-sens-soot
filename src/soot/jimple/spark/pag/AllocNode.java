@@ -30,12 +30,13 @@ import soot.PhaseOptions;
 import soot.RefType;
 import soot.SootMethod;
 import soot.Type;
+import soot.jimple.toolkits.pta.IAllocNode;
 import soot.options.CGOptions;
 
 /** Represents an allocation site node (Blue) in the pointer assignment graph.
  * @author Ondrej Lhotak
  */
-public class AllocNode extends Node implements Context {
+public class AllocNode extends Node implements Context, IAllocNode { // (LWG) implements IAllocNode
     /** Returns the new expression of this allocation site. */
     public Object getNewExpr() { return newExpr; }
     /** Returns all field ref nodes having this node as their base. */

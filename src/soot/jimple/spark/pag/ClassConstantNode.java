@@ -20,12 +20,13 @@
 package soot.jimple.spark.pag;
 import soot.RefType;
 import soot.jimple.ClassConstant;
+import soot.jimple.toolkits.pta.IClassConstantNode;
 
 /** Represents an allocation site node the represents a known java.lang.Class
  * object.
  * @author Ondrej Lhotak
  */
-public class ClassConstantNode extends AllocNode {
+public class ClassConstantNode extends AllocNode implements IClassConstantNode { // (LWG) implements IClassConstantNode
     public String toString() {
 	return "ClassConstantNode "+getNumber()+" "+newExpr;
     }
