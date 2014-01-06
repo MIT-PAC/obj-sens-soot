@@ -490,8 +490,11 @@ public class FastHierarchy
            See VM Spec, 2nd Edition, Chapter 6, in the definition of invokespecial. */
         if (target.getName().equals("<init>") || target.isPrivate())
             return target;
-        else if (isSubclass(target.getDeclaringClass(), container.getDeclaringClass()))
-            return resolveConcreteDispatch(container.getDeclaringClass(), target );
+        else if (isSubclass(target.getDeclaringClass(), container.getDeclaringClass())) {
+            //return resolveConcreteDispatch(container.getDeclaringClass(), target );
+            //SPECIAL-INVOKE-CHANGE
+            return resolveConcreteDispatch(target.getDeclaringClass(), target );
+        }
         else
             return target;
     }

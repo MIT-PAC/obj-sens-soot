@@ -46,9 +46,15 @@ public final class VirtualCalls
             && !target.getName().equals( "<init>" ) 
             && subSig != sigClinit ) {
 
-            return resolveNonSpecial(
+            //INVOKE-SPECIAL-CHANGE
+            /*return resolveNonSpecial(
                     container.getDeclaringClass().getSuperclass().getType(),
                     subSig );
+                    */
+            return resolveNonSpecial(
+                target.getDeclaringClass().getType(),
+                subSig );
+            
         } else {
             return target;
         }
