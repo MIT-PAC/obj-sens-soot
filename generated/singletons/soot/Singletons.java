@@ -35,7 +35,7 @@ public class Singletons {
         return instance_soot_PhaseOptions;
     }
 
-    private soot.jimple.toolkits.callgraph.VirtualCalls instance_soot_jimple_toolkits_callgraph_VirtualCalls;
+    public soot.jimple.toolkits.callgraph.VirtualCalls instance_soot_jimple_toolkits_callgraph_VirtualCalls;
     public soot.jimple.toolkits.callgraph.VirtualCalls soot_jimple_toolkits_callgraph_VirtualCalls() {
         if( instance_soot_jimple_toolkits_callgraph_VirtualCalls == null ) instance_soot_jimple_toolkits_callgraph_VirtualCalls = new soot.jimple.toolkits.callgraph.VirtualCalls( g );
         return instance_soot_jimple_toolkits_callgraph_VirtualCalls;
@@ -77,7 +77,7 @@ public class Singletons {
         return instance_soot_jimple_toolkits_invoke_SynchronizerManager;
     }
 
-    private soot.jimple.toolkits.typing.integer.ClassHierarchy instance_soot_jimple_toolkits_typing_integer_ClassHierarchy;
+    public soot.jimple.toolkits.typing.integer.ClassHierarchy instance_soot_jimple_toolkits_typing_integer_ClassHierarchy;
     public soot.jimple.toolkits.typing.integer.ClassHierarchy soot_jimple_toolkits_typing_integer_ClassHierarchy() {
         if( instance_soot_jimple_toolkits_typing_integer_ClassHierarchy == null ) instance_soot_jimple_toolkits_typing_integer_ClassHierarchy = new soot.jimple.toolkits.typing.integer.ClassHierarchy( g );
         return instance_soot_jimple_toolkits_typing_integer_ClassHierarchy;
@@ -539,7 +539,7 @@ public class Singletons {
         return instance_soot_jimple_toolkits_pointer_SideEffectTagger;
     }
 
-    private soot.jimple.spark.SparkTransformer instance_soot_jimple_spark_SparkTransformer;
+    public soot.jimple.spark.SparkTransformer instance_soot_jimple_spark_SparkTransformer;
     public soot.jimple.spark.SparkTransformer soot_jimple_spark_SparkTransformer() {
         if( instance_soot_jimple_spark_SparkTransformer == null ) instance_soot_jimple_spark_SparkTransformer = new soot.jimple.spark.SparkTransformer( g );
         return instance_soot_jimple_spark_SparkTransformer;

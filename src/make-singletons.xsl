@@ -38,7 +38,7 @@ public class Singletons {
     <xsl:variable name="class" select="."/>
     <xsl:variable name="undottedClass" select="translate(.,'.','_')"/>
     <xsl:variable name="instanceName">instance_<xsl:value-of select="$undottedClass"/></xsl:variable>
-    private <xsl:value-of select="$class"/><xsl:text> </xsl:text><xsl:value-of select="$instanceName"/>;
+    public <xsl:value-of select="$class"/><xsl:text> </xsl:text><xsl:value-of select="$instanceName"/>;
     public <xsl:value-of select="$class"/><xsl:text> </xsl:text><xsl:value-of select="$undottedClass"/>() {
         if( <xsl:value-of select="$instanceName"/> == null ) <xsl:value-of select="$instanceName"/> = new <xsl:value-of select="$class"/>( g );
         return <xsl:value-of select="$instanceName"/>;
