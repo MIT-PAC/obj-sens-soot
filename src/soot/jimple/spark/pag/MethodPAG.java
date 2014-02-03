@@ -18,6 +18,7 @@
  */
 
 package soot.jimple.spark.pag;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -35,6 +36,7 @@ import soot.SootMethod;
 import soot.VoidType;
 import soot.jimple.Stmt;
 import soot.jimple.spark.builder.MethodNodeFactory;
+import soot.toolkits.scalar.Pair;
 import soot.util.NumberedString;
 import soot.util.SingletonList;
 import soot.util.queue.ChunkedQueue;
@@ -45,13 +47,22 @@ import soot.util.queue.QueueReader;
  * @author Ondrej Lhotak
  */
 public final class MethodPAG {
+    private static HashMap<Pair<SootMethod, Context>, MethodPAG> MethodPAG_methodToPag = 
+            new HashMap<Pair<SootMethod, Context>, MethodPAG>();
     private PAG pag;
     public PAG pag() { return pag; }
+    private Context context;
 
-    protected MethodPAG( PAG pag, SootMethod m ) {
+    public static void reset() {
+        MethodPAG_methodToPag = 
+                new HashMap<Pair<SootMethod, Context>, MethodPAG>();
+    }
+    
+    protected MethodPAG( PAG pag, SootMethod m, Context context ) {
         this.pag = pag;
         this.method = m;
-        this.nodeFactory = new MethodNodeFactory( pag, this );
+        this.context = context;
+        this.nodeFactory = new MethodNodeFactory( pag, this, context );
     }
 
     private Set<Context> addedContexts;
@@ -126,11 +137,12 @@ public final class MethodPAG {
     protected MethodNodeFactory nodeFactory;
     public MethodNodeFactory nodeFactory() { return nodeFactory; }
 
-    public static MethodPAG v( PAG pag, SootMethod m ) {
-        MethodPAG ret = G.v().MethodPAG_methodToPag.get( m );
+    public static MethodPAG v( PAG pag, SootMethod m, Context context ) {
+        Pair<SootMethod,Context> probe = new Pair<SootMethod,Context>(m, context);
+        MethodPAG ret = MethodPAG_methodToPag.get( probe );
         if( ret == null ) { 
-            ret = new MethodPAG( pag, m );
-            G.v().MethodPAG_methodToPag.put( m, ret );
+            ret = new MethodPAG( pag, m, context );
+            MethodPAG_methodToPag.put( probe, ret );
         }
         return ret;
     }

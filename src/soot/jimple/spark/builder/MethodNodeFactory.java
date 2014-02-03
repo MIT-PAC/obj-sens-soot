@@ -29,15 +29,19 @@ import soot.shimple.*;
  * @author Ondrej Lhotak
  */
 public class MethodNodeFactory extends AbstractShimpleValueSwitch {
-    public MethodNodeFactory( PAG pag, MethodPAG mpag ) {
-	this.pag = pag;
-	this.mpag = mpag;
+
+    private Context context;
+    
+    public MethodNodeFactory( PAG pag, MethodPAG mpag, Context context ) {
+        this.pag = pag;
+        this.mpag = mpag;
+        this.context = context;
         setCurrentMethod( mpag.getMethod() );
     }
 
     /** Sets the method for which a graph is currently being built. */
     private void setCurrentMethod( SootMethod m ) {
-	method = m;
+        method = m;
         if( !m.isStatic() ) {
             SootClass c = m.getDeclaringClass();
             if( c == null ) {
@@ -60,23 +64,23 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
         v.apply( this );
         return getNode();
     }
-    
+
     /** Adds the edges required for this statement to the graph. */
     final public void handleStmt( Stmt s ) {
-	if( s.containsInvokeExpr() ) {
-	    return;
-	}
-	s.apply( new AbstractStmtSwitch() {
-	    final public void caseAssignStmt(AssignStmt as) {
+        if( s.containsInvokeExpr() ) {
+            return;
+        }
+        s.apply( new AbstractStmtSwitch() {
+            final public void caseAssignStmt(AssignStmt as) {
                 Value l = as.getLeftOp();
                 Value r = as.getRightOp();
-		if( !( l.getType() instanceof RefLikeType ) ) return;
-		assert r.getType() instanceof RefLikeType : "Type mismatch in assignment "
-			+ as + " in method " + method.getSignature();
-		l.apply( MethodNodeFactory.this );
-		Node dest = getNode();
-		r.apply( MethodNodeFactory.this );
-		Node src = getNode();
+                if( !( l.getType() instanceof RefLikeType ) ) return;
+                assert r.getType() instanceof RefLikeType : "Type mismatch in assignment "
+                + as + " in method " + method.getSignature();
+                l.apply( MethodNodeFactory.this );
+                Node dest = getNode();
+                r.apply( MethodNodeFactory.this );
+                Node src = getNode();
                 if( l instanceof InstanceFieldRef ) {
                     ((InstanceFieldRef) l).getBase().apply( MethodNodeFactory.this );
                     pag.addDereference( (VarNode) getNode() );
@@ -86,69 +90,69 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
                     pag.addDereference( (VarNode) getNode() );
                 }
                 if( r instanceof StaticFieldRef ) {
-                	StaticFieldRef sfr = (StaticFieldRef) r;
-					SootFieldRef s = sfr.getFieldRef();
-                	if (pag.getOpts().empties_as_allocs()) {
-                	    if (s.declaringClass().getName().equals("java.util.Collections")) {
-                                if (s.name().equals("EMPTY_SET")) {
-                                    src = pag.makeAllocNode( RefType.v("java.util.HashSet"), 
-                                                                  RefType.v("java.util.HashSet"), method );
-                                } else if (s.name().equals("EMPTY_MAP")) {
-                                    src = pag.makeAllocNode( RefType.v("java.util.HashMap"), 
-                                                                  RefType.v("java.util.HashMap"), method );
-                                } else if (s.name().equals("EMPTY_LIST")) {
-                                    src = pag.makeAllocNode( RefType.v("java.util.LinkedList"), 
-                                                                  RefType.v("java.util.LinkedList"), method );
-                                } 
+                    StaticFieldRef sfr = (StaticFieldRef) r;
+                    SootFieldRef s = sfr.getFieldRef();
+                    if (pag.getOpts().empties_as_allocs()) {
+                        if (s.declaringClass().getName().equals("java.util.Collections")) {
+                            if (s.name().equals("EMPTY_SET")) {
+                                src = pag.makeAllocNode( RefType.v("java.util.HashSet"), 
+                                    RefType.v("java.util.HashSet"), method, context );
+                            } else if (s.name().equals("EMPTY_MAP")) {
+                                src = pag.makeAllocNode( RefType.v("java.util.HashMap"), 
+                                    RefType.v("java.util.HashMap"), method, context );
+                            } else if (s.name().equals("EMPTY_LIST")) {
+                                src = pag.makeAllocNode( RefType.v("java.util.LinkedList"), 
+                                    RefType.v("java.util.LinkedList"), method, context );
+                            } 
                         } else if (s.declaringClass().getName().equals("java.util.Hashtable")) {
                             if (s.name().equals("emptyIterator")) {
                                 src = pag.makeAllocNode( RefType.v("java.util.Hashtable$EmptyIterator"), 
-                                                              RefType.v("java.util.Hashtable$EmptyIterator"), method );
+                                    RefType.v("java.util.Hashtable$EmptyIterator"), method, context );
                             } else if (s.name().equals("emptyEnumerator")) {
                                 src = pag.makeAllocNode( RefType.v("java.util.Hashtable$EmptyEnumerator"), 
-                                        RefType.v("java.util.Hashtable$EmptyEnumerator"), method );
+                                    RefType.v("java.util.Hashtable$EmptyEnumerator"), method, context );
                             } 
                         }
-                	}
+                    }
                 }
-		mpag.addInternalEdge( src, dest );
-	    }
-	    final public void caseReturnStmt(ReturnStmt rs) {
-		if( !( rs.getOp().getType() instanceof RefLikeType ) ) return;
-		rs.getOp().apply( MethodNodeFactory.this );
+                mpag.addInternalEdge( src, dest );
+            }
+            final public void caseReturnStmt(ReturnStmt rs) {
+                if( !( rs.getOp().getType() instanceof RefLikeType ) ) return;
+                rs.getOp().apply( MethodNodeFactory.this );
                 Node retNode = getNode();
                 mpag.addInternalEdge( retNode, caseRet() );
-	    }
-	    final public void caseIdentityStmt(IdentityStmt is) {
-		if( !( is.getLeftOp().getType() instanceof RefLikeType ) ) return;
-		is.getLeftOp().apply( MethodNodeFactory.this );
-		Node dest = getNode();
-		is.getRightOp().apply( MethodNodeFactory.this );
-		Node src = getNode();
-		mpag.addInternalEdge( src, dest );
-	    }
-	    final public void caseThrowStmt(ThrowStmt ts) {
-		ts.getOp().apply( MethodNodeFactory.this );
-		mpag.addOutEdge( getNode(), pag.nodeFactory().caseThrow() );
-	    }
-	} );
+            }
+            final public void caseIdentityStmt(IdentityStmt is) {
+                if( !( is.getLeftOp().getType() instanceof RefLikeType ) ) return;
+                is.getLeftOp().apply( MethodNodeFactory.this );
+                Node dest = getNode();
+                is.getRightOp().apply( MethodNodeFactory.this );
+                Node src = getNode();
+                mpag.addInternalEdge( src, dest );
+            }
+            final public void caseThrowStmt(ThrowStmt ts) {
+                ts.getOp().apply( MethodNodeFactory.this );
+                mpag.addOutEdge( getNode(), pag.nodeFactory().caseThrow() );
+            }
+        } );
     }
     final public Node getNode() {
-	return (Node) getResult();
+        return (Node) getResult();
     }
 
     final public Node caseThis() {
-	VarNode ret = pag.makeLocalVarNode(
-		    new Pair( method, PointsToAnalysis.THIS_NODE ),
-		    method.getDeclaringClass().getType(), method );
+        VarNode ret = pag.makeLocalVarNode(
+            new Pair( method, PointsToAnalysis.THIS_NODE ),
+            method.getDeclaringClass().getType(), method );
         ret.setInterProcTarget();
         return ret;
     }
 
     final public Node caseParm( int index ) {
         VarNode ret = pag.makeLocalVarNode(
-                    new Pair( method, new Integer( index ) ),
-                    method.getParameterType( index ), method );
+            new Pair( method, new Integer( index ) ),
+            method.getParameterType( index ), method );
         ret.setInterProcTarget();
         return ret;
     }
@@ -163,16 +167,16 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
         }
         setResult( phiNode );
     }
-    
+
     final public Node caseRet() {
         VarNode ret = pag.makeLocalVarNode(
-                    Parm.v( method, PointsToAnalysis.RETURN_NODE ),
-                    method.getReturnType(), method );
+            Parm.v( method, PointsToAnalysis.RETURN_NODE ),
+            method.getReturnType(), method );
         ret.setInterProcSource();
         return ret;
     }
     final public Node caseArray( VarNode base ) {
-	return pag.makeFieldRefNode( base, ArrayElement.v() );
+        return pag.makeFieldRefNode( base, ArrayElement.v() );
     }
     /* End of public methods. */
     /* End of package methods. */
@@ -182,48 +186,48 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
     // public methods.
     @Override
     final public void caseArrayRef( ArrayRef ar ) {
-    	caseLocal( (Local) ar.getBase() );
-	setResult( caseArray( (VarNode) getNode() ) );
+        caseLocal( (Local) ar.getBase() );
+        setResult( caseArray( (VarNode) getNode() ) );
     }
     final public void caseCastExpr( CastExpr ce ) {
-	Pair castPair = new Pair( ce, PointsToAnalysis.CAST_NODE );
-	ce.getOp().apply( this );
-	Node opNode = getNode();
-	Node castNode = pag.makeLocalVarNode( castPair, ce.getCastType(), method );
-	mpag.addInternalEdge( opNode, castNode );
-	setResult( castNode );
+        Pair castPair = new Pair( ce, PointsToAnalysis.CAST_NODE );
+        ce.getOp().apply( this );
+        Node opNode = getNode();
+        Node castNode = pag.makeLocalVarNode( castPair, ce.getCastType(), method );
+        mpag.addInternalEdge( opNode, castNode );
+        setResult( castNode );
     }
-    
+
     @Override
     final public void caseCaughtExceptionRef( CaughtExceptionRef cer ) {
-	setResult( pag.nodeFactory().caseThrow() );
+        setResult( pag.nodeFactory().caseThrow() );
     }
-    
+
     @Override
     final public void caseInstanceFieldRef( InstanceFieldRef ifr ) {
-	if( pag.getOpts().field_based() || pag.getOpts().vta() ) {
-	    setResult( pag.makeGlobalVarNode( 
-			ifr.getField(), 
-			ifr.getField().getType() ) );
-	} else {
-	    setResult( pag.makeLocalFieldRefNode( 
-			ifr.getBase(), 
-			ifr.getBase().getType(),
-			ifr.getField(),
-                        method ) );
-	}
+        if( pag.getOpts().field_based() || pag.getOpts().vta() ) {
+            setResult( pag.makeGlobalVarNode( 
+                ifr.getField(), 
+                ifr.getField().getType() ) );
+        } else {
+            setResult( pag.makeLocalFieldRefNode( 
+                ifr.getBase(), 
+                ifr.getBase().getType(),
+                ifr.getField(),
+                method ) );
+        }
     }
 
     @Override
     final public void caseLocal( Local l ) {
-	setResult( pag.makeLocalVarNode( l,  l.getType(), method ) );
+        setResult( pag.makeLocalVarNode( l,  l.getType(), method ) );
     }
-    
+
     @Override
     final public void caseNewArrayExpr( NewArrayExpr nae ) {
-        setResult( pag.makeAllocNode( nae, nae.getType(), method ) );
+        setResult( pag.makeAllocNode( nae, nae.getType(), method, context ) );
     }
-    
+
     private boolean isStringBuffer(Type t) {
         if(!(t instanceof RefType)) return false;
         RefType rt = (RefType) t;
@@ -232,22 +236,22 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
         if(s.equals("java.lang.StringBuilder")) return true;
         return false;
     }
-    
+
     @Override
     final public void caseNewExpr( NewExpr ne ) {
         if( pag.getOpts().merge_stringbuffer() 
-        && isStringBuffer(ne.getType())) {
-            setResult( pag.makeAllocNode( ne.getType(), ne.getType(), null ) );
+                && isStringBuffer(ne.getType())) {
+            setResult( pag.makeAllocNode( ne.getType(), ne.getType(), null, context ) );
         } else {
-            setResult( pag.makeAllocNode( ne, ne.getType(), method ) );
+            setResult( pag.makeAllocNode( ne, ne.getType(), method, context ) );
         }
     }
-    
+
     @Override
     final public void caseNewMultiArrayExpr( NewMultiArrayExpr nmae ) {
         ArrayType type = (ArrayType) nmae.getType();
         AllocNode prevAn = pag.makeAllocNode(
-            new Pair( nmae, new Integer( type.numDimensions ) ), type, method );
+            new Pair( nmae, new Integer( type.numDimensions ) ), type, method, context );
         VarNode prevVn = pag.makeLocalVarNode( prevAn, prevAn.getType(), method );
         mpag.addInternalEdge( prevAn, prevVn );
         setResult( prevAn );
@@ -256,7 +260,7 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
             if( !( t instanceof ArrayType ) ) break;
             type = (ArrayType) t;
             AllocNode an = pag.makeAllocNode(
-                new Pair( nmae, new Integer( type.numDimensions ) ), type, method );
+                new Pair( nmae, new Integer( type.numDimensions ) ), type, method, context );
             VarNode vn = pag.makeLocalVarNode( an, an.getType(), method );
             mpag.addInternalEdge( an, vn );
             mpag.addInternalEdge( vn, pag.makeFieldRefNode( prevVn, ArrayElement.v() ) );
@@ -264,30 +268,30 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
             prevVn = vn;
         }
     }
-    
+
     @Override
     final public void caseParameterRef( ParameterRef pr ) {
-	setResult( caseParm( pr.getIndex() ) );
+        setResult( caseParm( pr.getIndex() ) );
     }
 
     @Override
     final public void caseStaticFieldRef( StaticFieldRef sfr ) {
-	setResult( pag.makeGlobalVarNode( 
-		    sfr.getField(), 
-		    sfr.getField().getType() ) );
+        setResult( pag.makeGlobalVarNode( 
+            sfr.getField(), 
+            sfr.getField().getType() ) );
     }
-    
+
     @Override
     final public void caseStringConstant( StringConstant sc ) {
         AllocNode stringConstant;
         if( pag.getOpts().string_constants()
-        || Scene.v().containsClass(sc.value) 
-        || ( sc.value.length() > 0 && sc.value.charAt(0) == '[' ) ) {
+                || Scene.v().containsClass(sc.value) 
+                || ( sc.value.length() > 0 && sc.value.charAt(0) == '[' ) ) {
             stringConstant = pag.makeStringConstantNode( sc );
         } else {
             stringConstant = pag.makeAllocNode(
                 PointsToAnalysis.STRING_NODE,
-                RefType.v( "java.lang.String" ), null );
+                RefType.v( "java.lang.String" ), null, context );
         }
         VarNode stringConstantLocal = pag.makeGlobalVarNode(
             stringConstant,
@@ -295,17 +299,17 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
         pag.addEdge( stringConstant, stringConstantLocal );
         setResult( stringConstantLocal );
     }
-    
+
     @Override
     final public void caseThisRef( ThisRef tr ) {
-	setResult( caseThis() );
+        setResult( caseThis() );
     }
 
     @Override
     final public void caseNullConstant( NullConstant nr ) {
-	setResult( null );
+        setResult( null );
     }
-    
+
     @Override
     final public void caseClassConstant( ClassConstant cc ) {
         AllocNode classConstant = pag.makeClassConstantNode(cc);
@@ -315,12 +319,12 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
         pag.addEdge(classConstant, classConstantLocal);
         setResult(classConstantLocal);
     }
-    
+
     @Override
     final public void defaultCase( Object v ) {
-    	throw new RuntimeException( "failed to handle "+v );
+        throw new RuntimeException( "failed to handle "+v );
     }
-    
+
     protected PAG pag;
     protected MethodPAG mpag;
     protected SootMethod method;

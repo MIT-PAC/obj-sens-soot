@@ -64,7 +64,6 @@ public class G extends Singletons
     public int SparkNativeHelper_tempVar = 0;
     public int PaddleNativeHelper_tempVar = 0;
     public boolean PointsToSetInternal_warnedAlready = false;
-    public HashMap<SootMethod, MethodPAG> MethodPAG_methodToPag = new HashMap<SootMethod, MethodPAG>();
     public Set MethodRWSet_allGlobals = new HashSet();
     public Set MethodRWSet_allFields = new HashSet();
     public int GeneralConstObject_counter = 0;

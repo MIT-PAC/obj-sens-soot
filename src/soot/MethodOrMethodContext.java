@@ -26,4 +26,6 @@ public interface MethodOrMethodContext
 { 
     public SootMethod method();
     public Context context();
+    public boolean equals(Object o);
+    public int hashCode();
 }

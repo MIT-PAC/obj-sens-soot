@@ -42,6 +42,13 @@ public class SparkOptions
         return soot.PhaseOptions.getBoolean( options, "enabled" );
     }
     
+    /** 
+     * Run SPARK with k method and heap object sensitivity
+     */
+    public int kobjsens() {
+        return soot.PhaseOptions.getInt(options, "kobjsens");
+    }
+    
     /** Verbose --
     
      * Print detailed information about the execution of Spark.

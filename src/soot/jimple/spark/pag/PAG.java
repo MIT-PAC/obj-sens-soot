@@ -31,6 +31,7 @@ import soot.FastHierarchy;
 import soot.G;
 import soot.Kind;
 import soot.Local;
+import soot.NullType;
 import soot.PointsToAnalysis;
 import soot.PointsToSet;
 import soot.RefLikeType;
@@ -80,8 +81,16 @@ import soot.util.queue.QueueReader;
  * @author Ondrej Lhotak
  */
 public class PAG implements PointsToAnalysis {
+    public static ObjectSensitiveAllocNode EMPTY_CONTEXT;
+
     public PAG( final SparkOptions opts ) {
         this.opts = opts;
+
+        if (opts.kobjsens() > 0) {
+            EMPTY_CONTEXT = new ObjectSensitiveAllocNode(this, null, NullType.v(), null, null);
+        } else 
+            EMPTY_CONTEXT = null;
+
         if( opts.add_tags() ) {
             nodeToTag = new HashMap<Node, Tag>();
         }
@@ -452,11 +461,30 @@ public class PAG implements PointsToAnalysis {
             nodeToTag.put( node, tag );
         }
     }
-    public AllocNode makeAllocNode( Object newExpr, Type type, SootMethod m ) {
+
+    public AllocNode makeAllocNode( Object newExpr, Type type, SootMethod m, Context context ) {
         if( opts.types_for_sites() || opts.vta() ) newExpr = type;
-        AllocNode ret = valToAllocNode.get( newExpr );
+
+        if (context == null) 
+            context = EMPTY_CONTEXT;
+
+        Pair<Object, Context> probe = new Pair<Object, Context>(newExpr, context);
+
+        AllocNode ret = valToAllocNode.get( probe );
+
         if( ret == null ) {
-            valToAllocNode.put( newExpr, ret = new AllocNode( this, newExpr, type, m ) );
+            //TODO: HORRIBLE HACK HERE THAT ASSUME ALL CONTEXT IS OF OBJECT SENSITIVE ALLOC NODE
+            if (context instanceof ObjectSensitiveAllocNode) { 
+                valToAllocNode.put( probe, ret = new ObjectSensitiveAllocNode( this, newExpr, type, m, 
+                    (ObjectSensitiveAllocNode)context ) );
+                System.out.println("Made node: " + ret);
+            }
+            else { //empty context because it was not an object sensitive alloc node 
+                //probably class constant node
+                valToAllocNode.put( probe, ret = new ObjectSensitiveAllocNode( this, newExpr, type, m, 
+                    null ) ); 
+            }
+            
             newAllocNodes.add( ret );
             addNodeTag( ret, m );
         } else if( !( ret.getType().equals( type ) ) ) {
@@ -465,13 +493,17 @@ public class PAG implements PointsToAnalysis {
         }
         return ret;
     }
+
     public AllocNode makeStringConstantNode( StringConstant s ) {
         if( opts.types_for_sites() || opts.vta() )
             return makeAllocNode( RefType.v( "java.lang.String" ),
-                RefType.v( "java.lang.String" ), null );
-        StringConstantNode ret = (StringConstantNode) valToAllocNode.get( s );
+                RefType.v( "java.lang.String" ), null , null);
+        
+        Pair<Object, Context> probe = new Pair<Object, Context>(s, EMPTY_CONTEXT);
+        
+        StringConstantNode ret = (StringConstantNode) valToAllocNode.get( probe );
         if( ret == null ) {
-            valToAllocNode.put( s, ret = new StringConstantNode( this, s ) );
+            valToAllocNode.put( probe, ret = new StringConstantNode( this, s ) );
             newAllocNodes.add( ret );
             addNodeTag( ret, null );
         }
@@ -480,10 +512,14 @@ public class PAG implements PointsToAnalysis {
     public AllocNode makeClassConstantNode( ClassConstant cc ) {
         if( opts.types_for_sites() || opts.vta() )
             return makeAllocNode( RefType.v( "java.lang.Class" ),
-                RefType.v( "java.lang.Class" ), null );
-        ClassConstantNode ret = (ClassConstantNode) valToAllocNode.get(cc);
+                RefType.v( "java.lang.Class" ), null, null );
+        
+        Pair<Object, Context> probe = new Pair<Object, Context>(cc, EMPTY_CONTEXT);
+        
+        ClassConstantNode ret = (ClassConstantNode) valToAllocNode.get(probe);
+        
         if( ret == null ) {
-            valToAllocNode.put(cc, ret = new ClassConstantNode(this, cc));
+            valToAllocNode.put(probe, ret = new ClassConstantNode(this, cc));
             newAllocNodes.add( ret );
             addNodeTag( ret, null );
         }
@@ -774,8 +810,8 @@ public class PAG implements PointsToAnalysis {
 
     final public void addCallTarget( Edge e ) {
         if( !e.passesParameters() ) return;
-        MethodPAG srcmpag = MethodPAG.v( this, e.src() );
-        MethodPAG tgtmpag = MethodPAG.v( this, e.tgt() );
+        MethodPAG srcmpag = MethodPAG.v( this, e.src(), e.srcCtxt() );
+        MethodPAG tgtmpag = MethodPAG.v( this, e.tgt(), e.tgtCtxt() );
         Pair<Node, Node> pval;
 
         if( e.isExplicit() || e.kind() == Kind.THREAD ) {
@@ -943,7 +979,7 @@ public class PAG implements PointsToAnalysis {
                 VarNode newObject = makeGlobalVarNode( cls, RefType.v( "java.lang.Object" ) );
                 SootClass tgtClass = e.getTgt().method().getDeclaringClass();
                 RefType tgtType = tgtClass.getType();                
-                AllocNode site = makeAllocNode( new Pair(cls, tgtClass), tgtType, null );
+                AllocNode site = makeAllocNode( new Pair(cls, tgtClass), tgtType, null, null );
                 addEdge( site, newObject );
 
                 //(2)
@@ -1126,10 +1162,10 @@ public class PAG implements PointsToAnalysis {
         }
         return ((Set<Node>) valueList).add( value );
     }
-    
+
     public Set<AllocNode> getAllocNodes() {
         Set<AllocNode> nodes = new HashSet<AllocNode>();
-        
+
         nodes.addAll(valToAllocNode.values());
 
         return nodes;
@@ -1137,9 +1173,10 @@ public class PAG implements PointsToAnalysis {
 
     private boolean runGeomPTA = false;
     protected Map<Pair, Set<Edge>> assign2edges = new HashMap<Pair, Set<Edge>>();
-    private final Map<Object, LocalVarNode> valToLocalVarNode = new HashMap<Object, LocalVarNode>(1000);
-    private final Map<Object, GlobalVarNode> valToGlobalVarNode = new HashMap<Object, GlobalVarNode>(1000);
-    private final Map<Object, AllocNode> valToAllocNode = new HashMap<Object, AllocNode>(1000);
+    private final Map<Object, LocalVarNode> valToLocalVarNode = new HashMap<Object, LocalVarNode>(100000);
+    private final Map<Object, GlobalVarNode> valToGlobalVarNode = new HashMap<Object, GlobalVarNode>(100000);
+    private final Map<Pair<Object,Context>, AllocNode> valToAllocNode = 
+            new HashMap<Pair<Object, Context>, AllocNode>(100000);
     private OnFlyCallGraph ofcg;
     private final ArrayList<VarNode> dereferences = new ArrayList<VarNode>();
     protected TypeManager typeManager;

@@ -37,11 +37,15 @@ import soot.jimple.FieldRef;
 import soot.jimple.ReachingTypeDumper;
 import soot.jimple.Stmt;
 import soot.jimple.spark.builder.ContextInsensitiveBuilder;
+import soot.jimple.spark.builder.ObjectSensitiveBuilder;
+import soot.jimple.spark.builder.PAGBuilder;
 import soot.jimple.spark.geom.geomPA.GeomPointsTo;
 import soot.jimple.spark.ondemand.DemandCSPointsTo;
 import soot.jimple.spark.pag.AllocDotField;
 import soot.jimple.spark.pag.AllocNode;
+import soot.jimple.spark.pag.MethodPAG;
 import soot.jimple.spark.pag.Node;
+import soot.jimple.spark.pag.ObjectSensitiveAllocNode;
 import soot.jimple.spark.pag.PAG;
 import soot.jimple.spark.pag.PAG2HTML;
 import soot.jimple.spark.pag.PAGDumper;
@@ -72,11 +76,23 @@ public class SparkTransformer extends SceneTransformer
 
     protected void internalTransform( String phaseName, Map options )
     {
+        //reset method pag cache
+        MethodPAG.reset();
+        
         SparkOptions opts = new SparkOptions( options );
         final String output_dir = SourceLocator.v().getOutputDir();
 
         // Build pointer assignment graph
-        ContextInsensitiveBuilder b = new ContextInsensitiveBuilder();
+        PAGBuilder b;
+        if (opts.kobjsens() > 0) {
+            b = new ObjectSensitiveBuilder();
+            //ugly, but set some global state so we don't have to pass around 
+            //the opts object
+            ObjectSensitiveAllocNode.k = opts.kobjsens();
+        } else 
+            b = new ContextInsensitiveBuilder();
+        
+        
         if( opts.pre_jimplify() ) b.preJimplify();
         if( opts.force_gc() ) doGC();
         Date startBuild = new Date();

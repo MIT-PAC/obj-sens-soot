@@ -32,21 +32,24 @@ public class VirtualCallSite
     private Stmt stmt;
     private SootMethod container;
     private NumberedString subSig;
+    private Context context;
     Kind kind;
 
-    public VirtualCallSite( Stmt stmt, SootMethod container,
+    public VirtualCallSite( Stmt stmt, SootMethod container, Context context,
             InstanceInvokeExpr iie, NumberedString subSig, Kind kind ) {
         this.stmt = stmt;
         this.container = container;
         this.iie = iie;
         this.subSig = subSig;
         this.kind = kind;
+        this.context = context;
     }
     public Stmt stmt() { return stmt; }
     public SootMethod container() { return container; }
     public InstanceInvokeExpr iie() { return iie; }
     public NumberedString subSig() { return subSig; }
     public Kind kind() { return kind; }
+    public Context context() { return context; }
 }
 
 

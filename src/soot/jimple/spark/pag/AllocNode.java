@@ -49,30 +49,30 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
     public AllocDotField dot( SparkField field ) 
     { return fields == null ? null : (AllocDotField) fields.get( field ); }
     public String toString() {
-	return "AllocNode "+getNumber()+" "+newExpr+" in method "+method;
+        return "AllocNode "+getNumber()+" "+newExpr+" in method "+method;
     }
 
     /* End of public methods. */
 
     AllocNode( PAG pag, Object newExpr, Type t, SootMethod m ) {
-	super( pag, t );
+        super( pag, t );
         this.method = m;
         if( t instanceof RefType ) {
             RefType rt = (RefType) t;
             if( rt.getSootClass().isAbstract()) {
-				boolean usesReflectionLog = new CGOptions(PhaseOptions.v().getPhaseOptions("cg")).reflection_log()!=null;
-				if (!usesReflectionLog) {
-				    throw new RuntimeException( "Attempt to create allocnode with abstract type "+t );
-				}
-			}
+                boolean usesReflectionLog = new CGOptions(PhaseOptions.v().getPhaseOptions("cg")).reflection_log()!=null;
+                if (!usesReflectionLog) {
+                    throw new RuntimeException( "Attempt to create allocnode with abstract type "+t );
+                }
+            }
         }
-	this.newExpr = newExpr;
+        this.newExpr = newExpr;
         if( newExpr instanceof ContextVarNode ) throw new RuntimeException();
         pag.getAllocNodeNumberer().add( this );
     }
     /** Registers a AllocDotField as having this node as its base. */
     void addField( AllocDotField adf, SparkField field ) {
-	if( fields == null ) fields = new HashMap();
+        if( fields == null ) fields = new HashMap();
         fields.put( field, adf );
     }
 
@@ -88,5 +88,7 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
 
     private SootMethod method;
     public SootMethod getMethod() { return method; }
+    
+    
 }
 

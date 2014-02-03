@@ -29,10 +29,13 @@ import soot.util.Numberable;
  * @author Ondrej Lhotak
  */
 public class Node implements ReferenceVariable, Numberable {
+    
     public final int hashCode() { return number; }
+    
     public final boolean equals( Object other ) { 
         return this == other;
     }
+    
     /** Returns the declared type of this node, null for unknown. */
     public Type getType() { return type; }
     /** Sets the declared type of this node, null for unknown. */

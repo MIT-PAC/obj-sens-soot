@@ -31,6 +31,7 @@ import soot.PointsToAnalysis;
 import soot.PointsToSet;
 import soot.Scene;
 import soot.Type;
+import soot.jimple.spark.pag.ObjectSensitiveAllocNode;
 import soot.util.queue.QueueReader;
 
 /** Models the call graph.
@@ -47,7 +48,10 @@ public final class CallGraphBuilder
     public ReachableMethods reachables() { return reachables; }
 
     public static ContextManager makeContextManager( CallGraph cg ) {
-        return new ContextInsensitiveContextManager( cg );
+        if (ObjectSensitiveAllocNode.k > 0)
+            return new ObjSensContextManager(cg);
+        else
+            return new ContextInsensitiveContextManager( cg );
     }
 
     /** This constructor builds a complete call graph using the given
@@ -79,6 +83,7 @@ public final class CallGraphBuilder
         ofcgb = new OnFlyCallGraphBuilder( cm, reachables, true );
     }
     public void build() {
+        //not called for object sensitivity
         QueueReader worklist = reachables.listener();
         while(true) {
             ofcgb.processReachables();

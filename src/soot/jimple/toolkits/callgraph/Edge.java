@@ -117,20 +117,36 @@ public final class Edge
     public boolean passesParameters() {
         return kind.passesParameters();
     }
-
+        
+    @Override
     public int hashCode() {
-        int ret = tgt.hashCode() + kind.getNumber();
-        if( src != null ) ret += src.hashCode();
-        if( srcUnit != null ) ret += srcUnit.hashCode();
-        return ret;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((kind == null) ? 0 : kind.hashCode());
+        result = prime * result + ((src == null) ? 0 : src.hashCode());
+        result = prime * result + ((srcUnit == null) ? 0 : srcUnit.hashCode());
+        result = prime * result + ((tgt == null) ? 0 : tgt.hashCode());
+        return result;
     }
-    public boolean equals( Object other ) {
-        Edge o = (Edge) other;
-        if( o == null ) return false;
-        if( o.src != src ) return false;
-        if( o.srcUnit != srcUnit ) return false;
-        if( o.tgt != tgt ) return false;
-        if( o.kind != kind ) return false;
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        Edge other = (Edge) obj;
+        if (kind == null) {
+            if (other.kind != null) return false;
+        } else if (!kind.equals(other.kind)) return false;
+        if (src == null) {
+            if (other.src != null) return false;
+        } else if (!src.equals(other.src)) return false;
+        if (srcUnit == null) {
+            if (other.srcUnit != null) return false;
+        } else if (!srcUnit.equals(other.srcUnit)) return false;
+        if (tgt == null) {
+            if (other.tgt != null) return false;
+        } else if (!tgt.equals(other.tgt)) return false;
         return true;
     }
     

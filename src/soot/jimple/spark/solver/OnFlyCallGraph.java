@@ -56,11 +56,13 @@ public class OnFlyCallGraph {
         processReachables();
         processCallEdges();
     }
+    
+    //TODO: redundant??
     private void processReachables() {
         reachableMethods.update();
         while(reachablesReader.hasNext()) {
             MethodOrMethodContext m = (MethodOrMethodContext) reachablesReader.next();
-            MethodPAG mpag = MethodPAG.v( pag, m.method() );
+            MethodPAG mpag = MethodPAG.v( pag, m.method(), m.context() );
             mpag.build();
             mpag.addToPAG(m.context());
         }
@@ -68,7 +70,7 @@ public class OnFlyCallGraph {
     private void processCallEdges() {
         while(callEdges.hasNext()) {
             Edge e = (Edge) callEdges.next();
-            MethodPAG amp = MethodPAG.v( pag, e.tgt() );
+            MethodPAG amp = MethodPAG.v( pag, e.tgt(), e.tgtCtxt() );
             amp.build();
             amp.addToPAG( e.tgtCtxt() );
             pag.addCallTarget( e );
@@ -84,7 +86,7 @@ public class OnFlyCallGraph {
         final Context context = vn.context();
 
         PointsToSetInternal p2set = vn.getP2Set().getNewSet();
-        if( ofcgb.wantTypes( receiver ) ) {
+        if( ofcgb.wantTypes( receiver, context ) ) {
             p2set.forall( new P2SetVisitor() {
             public final void visit( Node n ) { 
                 ofcgb.addType( receiver, context, n.getType(), (AllocNode) n );

@@ -37,12 +37,12 @@ public final class PropWorklist extends Propagator {
     public final void propagate() {
         ofcg = pag.getOnFlyCallGraph();
         new TopoSorter( pag, false ).sort();
-	for (Object object : pag.allocSources()) {
-	    handleAllocNode( (AllocNode) object );
-	}
+        for (Object object : pag.allocSources()) {
+            handleAllocNode( (AllocNode) object );
+        }
 
         boolean verbose = pag.getOpts().verbose();
-	do {
+        do {
             if( verbose ) {
                 G.v().out.println( "Worklist has "+varNodeWorkList.size()+
                         " nodes." );
@@ -61,7 +61,7 @@ public final class PropWorklist extends Propagator {
                 for (Node element0 : targets) {
                     final FieldRefNode target = (FieldRefNode) element0;
                     target.getBase().makeP2Set().forall( new P2SetVisitor() {
-                    public final void visit( Node n ) {
+                        public final void visit( Node n ) {
                             AllocDotField nDotF = pag.makeAllocDotField( 
                                 (AllocNode) n, target.getField() );
                             nDotF.makeP2Set().addAll( src.getP2Set(), null );
@@ -70,13 +70,13 @@ public final class PropWorklist extends Propagator {
                 }
             }
             HashSet<Object[]> edgesToPropagate = new HashSet<Object[]>();
-	    for (Object object : pag.loadSources()) {
+            for (Object object : pag.loadSources()) {
                 handleFieldRefNode( (FieldRefNode) object, edgesToPropagate );
-	    }
-	        IdentityHashSet<PointsToSetInternal> nodesToFlush = new IdentityHashSet<PointsToSetInternal>();
+            }
+            IdentityHashSet<PointsToSetInternal> nodesToFlush = new IdentityHashSet<PointsToSetInternal>();
             for (Object[] pair : edgesToPropagate) {
                 PointsToSetInternal nDotF = (PointsToSetInternal) pair[0];
-		PointsToSetInternal newP2Set = nDotF.getNewSet();
+                PointsToSetInternal newP2Set = nDotF.getNewSet();
                 VarNode loadTarget = (VarNode) pair[1];
                 if( loadTarget.makeP2Set().addAll( newP2Set, null ) ) {
                     varNodeWorkList.add( loadTarget );
@@ -86,7 +86,7 @@ public final class PropWorklist extends Propagator {
             for (PointsToSetInternal nDotF : nodesToFlush) {
                 nDotF.flushNew();
             }
-	} while( !varNodeWorkList.isEmpty() );
+        } while( !varNodeWorkList.isEmpty() );
     }
 
     /* End of public methods. */
@@ -95,27 +95,27 @@ public final class PropWorklist extends Propagator {
     /** Propagates new points-to information of node src to all its
      * successors. */
     protected final boolean handleAllocNode( AllocNode src ) {
-	boolean ret = false;
-	Node[] targets = pag.allocLookup( src );
-	for (Node element : targets) {
-	    if( element.makeP2Set().add( src ) ) {
+        boolean ret = false;
+        Node[] targets = pag.allocLookup( src );
+        for (Node element : targets) {
+            if( element.makeP2Set().add( src ) ) {
                 varNodeWorkList.add( (VarNode) element );
                 ret = true;
             }
-	}
-	return ret;
+        }
+        return ret;
     }
     /** Propagates new points-to information of node src to all its
      * successors. */
     protected final boolean handleVarNode( final VarNode src ) {
-	boolean ret = false;
+        boolean ret = false;
         boolean flush = true;
 
         if( src.getReplacement() != src ) throw new RuntimeException(
-                "Got bad node "+src+" with rep "+src.getReplacement() );
+            "Got bad node "+src+" with rep "+src.getReplacement() );
 
-	final PointsToSetInternal newP2Set = src.getP2Set().getNewSet();
-	if( newP2Set.isEmpty() ) return false;
+        final PointsToSetInternal newP2Set = src.getP2Set().getNewSet();
+        if( newP2Set.isEmpty() ) return false;
 
         if( ofcg != null ) {
             QueueReader addedEdges = pag.edgeReader();
@@ -147,68 +147,68 @@ public final class PropWorklist extends Propagator {
             }
         }
 
-	Node[] simpleTargets = pag.simpleLookup( src );
-	for (Node element : simpleTargets) {
-	    if( element.makeP2Set().addAll( newP2Set, null ) ) {
+        Node[] simpleTargets = pag.simpleLookup( src );
+        for (Node element : simpleTargets) {
+            if( element.makeP2Set().addAll( newP2Set, null ) ) {
                 varNodeWorkList.add( (VarNode) element );
                 if(element == src) flush = false;
                 ret = true;
             }
-	}
+        }
 
         Node[] storeTargets = pag.storeLookup( src );
         for (Node element : storeTargets) {
             final FieldRefNode fr = (FieldRefNode) element;
             final SparkField f = fr.getField();
             ret = fr.getBase().getP2Set().forall( new P2SetVisitor() {
-            public final void visit( Node n ) {
+                public final void visit( Node n ) {
                     AllocDotField nDotF = pag.makeAllocDotField( 
                         (AllocNode) n, f );
                     if( nDotF.makeP2Set().addAll( newP2Set, null ) ) {
                         returnValue = true;
                     }
-		}
-	    } ) | ret;
+                }
+            } ) | ret;
         }
 
         final HashSet<Node[]> storesToPropagate = new HashSet<Node[]>();
         final HashSet<Node[]> loadsToPropagate = new HashSet<Node[]>();
-	Collection fieldRefs = src.getAllFieldRefs();
-	for( Iterator frIt = fieldRefs.iterator(); frIt.hasNext(); ) {
-	    final FieldRefNode fr = (FieldRefNode) frIt.next();
-	    final SparkField field = fr.getField();
-	    final Node[] storeSources = pag.storeInvLookup( fr );
+        Collection fieldRefs = src.getAllFieldRefs();
+        for( Iterator frIt = fieldRefs.iterator(); frIt.hasNext(); ) {
+            final FieldRefNode fr = (FieldRefNode) frIt.next();
+            final SparkField field = fr.getField();
+            final Node[] storeSources = pag.storeInvLookup( fr );
             if( storeSources.length > 0 ) {
                 newP2Set.forall( new P2SetVisitor() {
-                public final void visit( Node n ) {
+                    public final void visit( Node n ) {
                         AllocDotField nDotF = pag.makeAllocDotField(
                             (AllocNode) n, field );
                         for (Node element : storeSources) {
                             Node[] pair = { element,
-                                nDotF.getReplacement() };
+                                            nDotF.getReplacement() };
                             storesToPropagate.add( pair );
                         }
                     }
                 } );
             }
 
-	    final Node[] loadTargets = pag.loadLookup( fr );
+            final Node[] loadTargets = pag.loadLookup( fr );
             if( loadTargets.length > 0 ) {
                 newP2Set.forall( new P2SetVisitor() {
-                public final void visit( Node n ) {
+                    public final void visit( Node n ) {
                         AllocDotField nDotF = pag.makeAllocDotField(
                             (AllocNode) n, field );
                         if( nDotF != null ) {
                             for (Node element : loadTargets) {
                                 Node[] pair = { nDotF.getReplacement(),
-                                    element };
+                                                element };
                                 loadsToPropagate.add( pair );
                             }
                         }
                     }
                 } );
             }
-	}
+        }
         if(flush) src.getP2Set().flushNew();
         for (Node[] p : storesToPropagate) {
             VarNode storeSource = (VarNode) p[0];
@@ -221,25 +221,25 @@ public final class PropWorklist extends Propagator {
             AllocDotField nDotF = (AllocDotField) p[0];
             VarNode loadTarget = (VarNode) p[1];
             if( loadTarget.makeP2Set().
-                addAll( nDotF.getP2Set(), null ) ) {
+                    addAll( nDotF.getP2Set(), null ) ) {
                 varNodeWorkList.add( loadTarget );
                 ret = true;
             }
         }
-	return ret;
+        return ret;
     }
 
     /** Propagates new points-to information of node src to all its
      * successors. */
     protected final void handleFieldRefNode( FieldRefNode src, 
-            final HashSet<Object[]> edgesToPropagate ) {
-	final Node[] loadTargets = pag.loadLookup( src );
-	if( loadTargets.length == 0 ) return;
+                                             final HashSet<Object[]> edgesToPropagate ) {
+        final Node[] loadTargets = pag.loadLookup( src );
+        if( loadTargets.length == 0 ) return;
         final SparkField field = src.getField();
 
-	src.getBase().getP2Set().forall( new P2SetVisitor() {
+        src.getBase().getP2Set().forall( new P2SetVisitor() {
 
-	public final void visit( Node n ) {
+            public final void visit( Node n ) {
                 AllocDotField nDotF = pag.makeAllocDotField( 
                     (AllocNode) n, field );
                 if( nDotF != null ) {
@@ -251,10 +251,10 @@ public final class PropWorklist extends Propagator {
                         }
                     }
                 }
-	    }
-	} );
+            }
+        } );
     }
-    
+
     protected PAG pag;
     protected OnFlyCallGraph ofcg;
 }
