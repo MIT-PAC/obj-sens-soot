@@ -32,6 +32,7 @@ import soot.ArrayType;
 import soot.Body;
 import soot.BooleanType;
 import soot.Local;
+import soot.MethodOrMethodContext;
 import soot.Modifier;
 import soot.PatchingChain;
 import soot.PhaseOptions;
@@ -139,7 +140,8 @@ public class ReflectiveCallsInliner extends SceneTransformer {
 			initialized = true;
 		}
 		
-		for(SootMethod m: RTI.methodsContainingReflectiveCalls()) {
+		for(MethodOrMethodContext momc: RTI.methodsContainingReflectiveCalls()) {
+		    SootMethod m = momc.method();
 			m.retrieveActiveBody();
 			Body b = m.getActiveBody();
 			{
@@ -202,7 +204,8 @@ public class ReflectiveCallsInliner extends SceneTransformer {
 		Chain<Unit> newUnits = new HashChain<Unit>();
 		SootClass setClass = Scene.v().getSootClass("java.util.Set");
 		SootMethodRef addMethodRef = setClass.getMethodByName("add").makeRef();
-		for(SootMethod m: RTI.methodsContainingReflectiveCalls()) {
+		for(MethodOrMethodContext momc: RTI.methodsContainingReflectiveCalls()) {
+		    SootMethod m = momc.method();
 			{	
 				if(!RTI.classForNameClassNames(m).isEmpty()) {
 					SootFieldRef fieldRef = Scene.v().makeFieldRef(reflCallsClass, "classForName", RefType.v("java.util.Set"), true);

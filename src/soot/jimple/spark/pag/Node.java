@@ -30,9 +30,9 @@ import soot.util.Numberable;
  */
 public class Node implements ReferenceVariable, Numberable {
     
-    public final int hashCode() { return number; }
+    public int hashCode() { return number; }
     
-    public final boolean equals( Object other ) { 
+    public boolean equals( Object other ) { 
         return this == other;
     }
     

@@ -1,17 +1,18 @@
 package soot.jimple.toolkits.callgraph;
 
 import soot.Context;
+import soot.MethodOrMethodContext;
 import soot.SootMethod;
 import soot.jimple.Stmt;
 
 public interface ReflectionModel {
 
-	void methodInvoke(SootMethod container, Stmt invokeStmt, Context c);
+	void methodInvoke(MethodOrMethodContext container, Stmt invokeStmt);
 
-	void classNewInstance(SootMethod source, Stmt s, Context c);
+	void classNewInstance(MethodOrMethodContext source, Stmt s);
 
-	void contructorNewInstance(SootMethod source, Stmt s, Context c);
+	void contructorNewInstance(MethodOrMethodContext source, Stmt s);
 
-	void classForName(SootMethod source, Stmt s, Context c);
+	void classForName(MethodOrMethodContext source, Stmt s);
 
 }

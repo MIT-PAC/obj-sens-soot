@@ -19,7 +19,10 @@
 
 package soot.jimple.toolkits.callgraph;
 import soot.*;
+
 import java.util.*;
+
+import soot.jimple.spark.SparkTransformer;
 import soot.util.queue.*;
 
 
@@ -51,11 +54,15 @@ public class ReachableMethods
     	this(graph, entryPoints.iterator());
     }
     private void addMethods( Iterator<MethodOrMethodContext> methods ) {
-        while( methods.hasNext() )
-            addMethod( (MethodOrMethodContext) methods.next() );
+        while( methods.hasNext() ) {
+            MethodOrMethodContext momc = methods.next();
+            addMethod(momc);
+        }
     }
     private void addMethod( MethodOrMethodContext m ) {
             if( set.add( m ) ) {
+                //System.out.println("ReachableMethods: addMethod: " + m + " " + m.hashCode());
+              
                 reachables.add( m );
             }
     }
@@ -64,7 +71,13 @@ public class ReachableMethods
     public void update() {
         while(edgeSource.hasNext()) {
             Edge e = (Edge) edgeSource.next();
-            if( set.contains( e.getSrc() ) ) addMethod( e.getTgt() );
+            SparkTransformer.println("ReachableMethods: update(): " + e);
+            SparkTransformer.println("ReachableMethods: update() " + e.getSrc() + "  " + set.contains( e.getSrc() ) + " " + 
+                    e.getSrc().hashCode());
+            if( set.contains( e.getSrc() ) ) {
+                
+                addMethod( e.getTgt() );
+            }
         }
         while(unprocessedMethods.hasNext()) {
             MethodOrMethodContext m = (MethodOrMethodContext) unprocessedMethods.next();

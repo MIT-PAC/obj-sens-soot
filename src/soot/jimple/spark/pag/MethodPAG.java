@@ -36,7 +36,6 @@ import soot.SootMethod;
 import soot.VoidType;
 import soot.jimple.Stmt;
 import soot.jimple.spark.builder.MethodNodeFactory;
-import soot.toolkits.scalar.Pair;
 import soot.util.NumberedString;
 import soot.util.SingletonList;
 import soot.util.queue.ChunkedQueue;
@@ -47,22 +46,20 @@ import soot.util.queue.QueueReader;
  * @author Ondrej Lhotak
  */
 public final class MethodPAG {
-    private static HashMap<Pair<SootMethod, Context>, MethodPAG> MethodPAG_methodToPag = 
-            new HashMap<Pair<SootMethod, Context>, MethodPAG>();
+    private static HashMap<SootMethod, MethodPAG> MethodPAG_methodToPag = 
+            new HashMap<SootMethod, MethodPAG>();
     private PAG pag;
     public PAG pag() { return pag; }
-    private Context context;
 
     public static void reset() {
         MethodPAG_methodToPag = 
-                new HashMap<Pair<SootMethod, Context>, MethodPAG>();
+                new HashMap<SootMethod, MethodPAG>();
     }
     
-    protected MethodPAG( PAG pag, SootMethod m, Context context ) {
+    protected MethodPAG( PAG pag, SootMethod m ) {
         this.pag = pag;
         this.method = m;
-        this.context = context;
-        this.nodeFactory = new MethodNodeFactory( pag, this, context );
+        this.nodeFactory = new MethodNodeFactory( pag, this);
     }
 
     private Set<Context> addedContexts;
@@ -137,12 +134,11 @@ public final class MethodPAG {
     protected MethodNodeFactory nodeFactory;
     public MethodNodeFactory nodeFactory() { return nodeFactory; }
 
-    public static MethodPAG v( PAG pag, SootMethod m, Context context ) {
-        Pair<SootMethod,Context> probe = new Pair<SootMethod,Context>(m, context);
-        MethodPAG ret = MethodPAG_methodToPag.get( probe );
+    public static MethodPAG v( PAG pag, SootMethod m) {
+        MethodPAG ret = MethodPAG_methodToPag.get( m );
         if( ret == null ) { 
-            ret = new MethodPAG( pag, m, context );
-            MethodPAG_methodToPag.put( probe, ret );
+            ret = new MethodPAG( pag, m);
+            MethodPAG_methodToPag.put( m, ret );
         }
         return ret;
     }
@@ -168,17 +164,26 @@ public final class MethodPAG {
         //System.out.println( "parameterizing "+vn+" with "+varNodeParameter );
         return pag().makeContextVarNode( vn, varNodeParameter );
     }
+    
     protected FieldRefNode parameterize( FieldRefNode frn, Context varNodeParameter ) {
         return pag().makeFieldRefNode(
                 (VarNode) parameterize( frn.getBase(), varNodeParameter ),
                 frn.getField() );
     }
+    
+    protected ObjectSensitiveAllocNode parameterize(AllocNode node, Context context) {
+        return pag().makeObjSensAllocNode(node, context);
+    }
+    
     public Node parameterize( Node n, Context varNodeParameter ) {
         if( varNodeParameter == null ) return n;
         if( n instanceof LocalVarNode ) 
             return parameterize( (LocalVarNode) n, varNodeParameter);
         if( n instanceof FieldRefNode )
             return parameterize( (FieldRefNode) n, varNodeParameter);
+        if (n instanceof AllocNode) 
+            return parameterize((AllocNode)n, varNodeParameter);
+       
         return n;
     }
     protected boolean hasBeenAdded = false;

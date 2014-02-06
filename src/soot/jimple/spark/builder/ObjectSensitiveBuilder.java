@@ -35,7 +35,7 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
             ofcg = new OnFlyCallGraph( pag );
             pag.setOnFlyCallGraph( ofcg );
         } else {
-            cgb = new CallGraphBuilder( DumbPointerAnalysis.v() );
+            throw new RuntimeException("Improperly configured!");
         }
         return pag;
     }
@@ -61,14 +61,14 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
         while(callEdges.hasNext()) {
             Edge e = (Edge) callEdges.next();
             if(!e.getTgt().method().getDeclaringClass().isPhantom()) {
-                MethodPAG.v( pag, e.tgt(), e.tgtCtxt() ).addToPAG(e.tgtCtxt());
+                MethodPAG.v( pag, e.tgt() ).addToPAG(e.tgtCtxt());
                 pag.addCallTarget( e );
             }
         }
     }
 
     protected void handleClass( SootClass c ) {
-        System.out.println("Called handleClass(), should be called once.");
+        //System.out.println("Called handleClass(), should be called once.");
         boolean incedClasses = false;
         Iterator methodsIt = c.methodIterator();
         while( methodsIt.hasNext() ) 
@@ -77,7 +77,7 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
             if( !m.isConcrete() && !m.isNative() ) continue;
             totalMethods++;
             if( reachables.contains( m ) ) {
-                MethodPAG mpag = MethodPAG.v( pag, m, PAG.EMPTY_CONTEXT);
+                MethodPAG mpag = MethodPAG.v( pag, m);
                 mpag.build();
                 mpag.addToPAG(null);
                 analyzedMethods++;

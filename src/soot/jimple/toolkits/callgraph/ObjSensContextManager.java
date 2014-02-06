@@ -33,7 +33,7 @@ public class ObjSensContextManager implements ContextManager
     }
 
     public void addStaticEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind ) {
-        cg.addEdge( new Edge( src, srcUnit, MethodContext.v(target, PAG.EMPTY_CONTEXT), kind ) );
+        cg.addEdge( new Edge( src, srcUnit, target, kind ) );
     }
 
     public void addVirtualEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind, Context typeContext ) {

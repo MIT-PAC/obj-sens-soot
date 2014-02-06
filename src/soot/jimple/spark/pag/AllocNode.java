@@ -49,13 +49,14 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
     public AllocDotField dot( SparkField field ) 
     { return fields == null ? null : (AllocDotField) fields.get( field ); }
     public String toString() {
-        return "AllocNode "+getNumber()+" "+newExpr+" in method "+method;
+        return "AllocNode "+hashCode()+" "+newExpr+" in method "+method;
     }
 
     /* End of public methods. */
 
     AllocNode( PAG pag, Object newExpr, Type t, SootMethod m ) {
         super( pag, t );
+        cvns = new HashMap<Object, ObjectSensitiveAllocNode>();
         this.method = m;
         if( t instanceof RefType ) {
             RefType rt = (RefType) t;
@@ -84,11 +85,53 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
     /* End of package methods. */
 
     protected Object newExpr;
-    protected Map fields;
+    protected Map<SparkField, AllocDotField> fields;
 
     private SootMethod method;
+
     public SootMethod getMethod() { return method; }
-    
-    
+
+    @Override
+    public int hashCode() {
+        int result = ((newExpr == null) ? 0 : newExpr.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (getClass() != obj.getClass()) return false;
+        AllocNode other = (AllocNode) obj;
+        if (newExpr == null) {
+            if (other.newExpr != null) return false;
+        } else if (!newExpr.equals(other.newExpr)) return false;
+        return true;
+    }
+
+
+    public ObjectSensitiveAllocNode context( Object context ) 
+    { 
+        //if we have seen this context before, just return the context object for this alloc node
+        if (cvns.containsKey(context))
+            return cvns.get(context);
+
+        //have not seen this context before, so add it and its obj sens node
+        if (context instanceof AllocNode) {
+            ObjectSensitiveAllocNode objsensnode = ObjectSensitiveAllocNode.getObjSensNode(pag, this, (Context)context);
+
+            cvns.put(context, objsensnode );
+
+        } else {
+            throw new RuntimeException("Invalid context object: " + context);
+        }
+
+        return cvns.get(context);
+    }
+
+
+    /* End of package methods. */
+
+    protected Map<Object, ObjectSensitiveAllocNode> cvns;
+
 }
 

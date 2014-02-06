@@ -55,7 +55,7 @@ public class AllocNodesFinder{
 						Type type = ((NewExpr)rightOp).getType();
 						AllocNode allocNode = pag.makeAllocNode(
 								PointsToAnalysis.STRING_NODE,
-								RefType.v( "java.lang.String" ), null, PAG.EMPTY_CONTEXT );
+								RefType.v( "java.lang.String" ), null );
 						//AllocNode allocNode = pag.makeAllocNode((NewExpr)rightOp, type, sm);
 						//  System.out.println("make alloc node: "+allocNode);
 						allocNodes.add(allocNode);
@@ -67,7 +67,7 @@ public class AllocNodesFinder{
 						Value rightOp = ((DefinitionStmt)unit).getRightOp();
 						if (rightOp instanceof NewExpr){
 							Type type = ((NewExpr)rightOp).getType();
-							AllocNode allocNode = pag.makeAllocNode(rightOp, type, sm, PAG.EMPTY_CONTEXT);
+							AllocNode allocNode = pag.makeAllocNode(rightOp, type, sm);
 							//System.out.println("make alloc node: "+allocNode);
 							allocNodes.add(allocNode);
 							multiRunAllocNodes.add(allocNode);
@@ -90,7 +90,7 @@ public class AllocNodesFinder{
 					if (clinitMethods.contains(sm)  && unit instanceof AssignStmt){
 						AllocNode allocNode = pag.makeAllocNode(
 								PointsToAnalysis.STRING_NODE,
-								RefType.v( "java.lang.String" ), null, PAG.EMPTY_CONTEXT );
+								RefType.v( "java.lang.String" ), null );
 						//   AllocNode allocNode = pag.makeAllocNode((NewExpr)rightOp, type, sm);
 						//System.out.println("make alloc node: "+allocNode);
 						allocNodes.add(allocNode);
@@ -103,7 +103,7 @@ public class AllocNodesFinder{
 						Value rightOp = ((DefinitionStmt)unit).getRightOp();
 						if (rightOp instanceof NewExpr){
 							Type type = ((NewExpr)rightOp).getType();
-							AllocNode allocNode = pag.makeAllocNode(rightOp, type, sm,PAG.EMPTY_CONTEXT);
+							AllocNode allocNode = pag.makeAllocNode(rightOp, type, sm);
 							//System.out.println("make alloc node: "+allocNode);
 							allocNodes.add(allocNode);
 							if (fs.contains(unit)){

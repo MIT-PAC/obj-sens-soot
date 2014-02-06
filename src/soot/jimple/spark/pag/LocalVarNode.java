@@ -36,19 +36,19 @@ public class LocalVarNode extends VarNode {
         return method;
     }
     public String toString() {
-	return "LocalVarNode "+getNumber()+" "+variable+" "+method;
+        return "LocalVarNode "+getNumber()+" "+variable+" "+method;
     }
     /* End of public methods. */
 
     LocalVarNode( PAG pag, Object variable, Type t, SootMethod m ) {
-	super( pag, variable, t );
+        super( pag, variable, t );
         this.method = m;
         //if( m == null ) throw new RuntimeException( "method shouldn't be null" );
     }
     /** Registers a cvn as having this node as its base. */
     void addContext( ContextVarNode cvn, Object context ) {
-	if( cvns == null ) cvns = new HashMap<Object, ContextVarNode>();
-	cvns.put( context, cvn );
+        if( cvns == null ) cvns = new HashMap<Object, ContextVarNode>();
+        cvns.put( context, cvn );
     }
 
     /* End of package methods. */

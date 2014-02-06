@@ -36,7 +36,7 @@ public class SparkNativeHelper extends NativeHelper {
     protected void assignObjectToImpl(ReferenceVariable lhs, AbstractObject obj) {
 	AllocNode objNode = pag.makeAllocNode( 
 		new Pair( "AbstractObject", obj.getType() ),
-		 obj.getType(), null , pag.EMPTY_CONTEXT);
+		 obj.getType(), null );
 
         VarNode var;
         if( lhs instanceof FieldRefNode ) {
@@ -50,7 +50,7 @@ public class SparkNativeHelper extends NativeHelper {
     protected void throwExceptionImpl(AbstractObject obj) {
 	AllocNode objNode = pag.makeAllocNode( 
 		new Pair( "AbstractObject", obj.getType() ),
-		 obj.getType(), null , pag.EMPTY_CONTEXT);
+		 obj.getType(), null );
         pag.addEdge( objNode, pag.nodeFactory().caseThrow() );
     }
     protected ReferenceVariable arrayElementOfImpl(ReferenceVariable base) {

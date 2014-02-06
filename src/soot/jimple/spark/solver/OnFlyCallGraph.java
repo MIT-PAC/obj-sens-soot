@@ -18,11 +18,11 @@
  */
 
 package soot.jimple.spark.solver;
+import soot.jimple.spark.SparkTransformer;
 import soot.jimple.spark.sets.*;
 import soot.jimple.spark.pag.*;
 import soot.jimple.toolkits.callgraph.*;
 import soot.*;
-
 import soot.util.queue.*;
 
 
@@ -47,7 +47,7 @@ public class OnFlyCallGraph {
         Scene.v().setCallGraph( callGraph );
         ContextManager cm = CallGraphBuilder.makeContextManager(callGraph);
         reachableMethods = Scene.v().getReachableMethods();
-        ofcgb = new OnFlyCallGraphBuilder( cm, reachableMethods );
+        ofcgb = new OnFlyCallGraphBuilder( pag, cm, reachableMethods );
         reachablesReader = reachableMethods.listener();
         callEdges = cm.callGraph().listener();
     }
@@ -62,7 +62,8 @@ public class OnFlyCallGraph {
         reachableMethods.update();
         while(reachablesReader.hasNext()) {
             MethodOrMethodContext m = (MethodOrMethodContext) reachablesReader.next();
-            MethodPAG mpag = MethodPAG.v( pag, m.method(), m.context() );
+            SparkTransformer.println("OnFlyCallGraph.processReachables: " + m);
+            MethodPAG mpag = MethodPAG.v( pag, m.method());
             mpag.build();
             mpag.addToPAG(m.context());
         }
@@ -70,7 +71,8 @@ public class OnFlyCallGraph {
     private void processCallEdges() {
         while(callEdges.hasNext()) {
             Edge e = (Edge) callEdges.next();
-            MethodPAG amp = MethodPAG.v( pag, e.tgt(), e.tgtCtxt() );
+            SparkTransformer.println("OnFlyCallGraph.processCallEdge: " + e);
+            MethodPAG amp = MethodPAG.v( pag, e.tgt());
             amp.build();
             amp.addToPAG( e.tgtCtxt() );
             pag.addCallTarget( e );
@@ -79,17 +81,24 @@ public class OnFlyCallGraph {
 
     public OnFlyCallGraphBuilder ofcgb() { return ofcgb; }
 
-    public void updatedNode( VarNode vn ) {
+    public void updatedNode( final VarNode vn ) {
         Object r = vn.getVariable();
         if( !(r instanceof Local) ) return;
         final Local receiver = (Local) r;
         final Context context = vn.context();
 
         PointsToSetInternal p2set = vn.getP2Set().getNewSet();
-        if( ofcgb.wantTypes( receiver, context ) ) {
+        if( ofcgb.wantTypes( vn ) ) {
+            final boolean debug =
+                    vn.getType().toString().contains("PickContact") ;
+            
+            if (debug)
+                SparkTransformer.println(receiver + " " + vn.getType());
+            
             p2set.forall( new P2SetVisitor() {
-            public final void visit( Node n ) { 
-                ofcgb.addType( receiver, context, n.getType(), (AllocNode) n );
+            public final void visit( Node n ) {
+                if (debug) SparkTransformer.println("\t" + n);
+                ofcgb.addType( vn, n.getType(), (AllocNode) n , debug);
             }} );
         }
         if( ofcgb.wantStringConstants( receiver ) ) {
@@ -97,9 +106,9 @@ public class OnFlyCallGraph {
             public final void visit( Node n ) {
                 if( n instanceof StringConstantNode ) {
                     String constant = ((StringConstantNode)n).getString();
-                    ofcgb.addStringConstant( receiver, context, constant );
+                    ofcgb.addStringConstant( receiver, constant );
                 } else {
-                    ofcgb.addStringConstant( receiver, context, null );
+                    ofcgb.addStringConstant( receiver, null );
                 }
             }} );
         }

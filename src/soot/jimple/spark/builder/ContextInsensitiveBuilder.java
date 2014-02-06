@@ -47,7 +47,7 @@ public class ContextInsensitiveBuilder extends PAGBuilder {
             ofcg = new OnFlyCallGraph( pag );
             pag.setOnFlyCallGraph( ofcg );
         } else {
-            cgb = new CallGraphBuilder( DumbPointerAnalysis.v() );
+            cgb = new CallGraphBuilder(null );
         }
         return pag;
     }
@@ -71,7 +71,7 @@ public class ContextInsensitiveBuilder extends PAGBuilder {
         while(callEdges.hasNext()) {
             Edge e = (Edge) callEdges.next();
             if(!e.getTgt().method().getDeclaringClass().isPhantom()) {
-                MethodPAG.v( pag, e.tgt(), pag.EMPTY_CONTEXT ).addToPAG(null);
+                MethodPAG.v( pag, e.tgt() ).addToPAG(null);
                 pag.addCallTarget( e );
             }
         }
@@ -94,7 +94,7 @@ public class ContextInsensitiveBuilder extends PAGBuilder {
             if( !m.isConcrete() && !m.isNative() ) continue;
             totalMethods++;
             if( reachables.contains( m ) ) {
-                MethodPAG mpag = MethodPAG.v( pag, m, pag.EMPTY_CONTEXT );
+                MethodPAG mpag = MethodPAG.v( pag, m );
                 mpag.build();
                 mpag.addToPAG(null);
                 analyzedMethods++;

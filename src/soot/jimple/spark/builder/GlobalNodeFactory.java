@@ -33,7 +33,7 @@ public class GlobalNodeFactory {
     final public Node caseDefaultClassLoader() {
         AllocNode a = pag.makeAllocNode( 
             PointsToAnalysis.DEFAULT_CLASS_LOADER,
-            AnySubType.v( RefType.v( "java.lang.ClassLoader" ) ), null, pag.EMPTY_CONTEXT );
+            AnySubType.v( RefType.v( "java.lang.ClassLoader" ) ), null );
         VarNode v = pag.makeGlobalVarNode(
             PointsToAnalysis.DEFAULT_CLASS_LOADER_LOCAL,
             RefType.v( "java.lang.ClassLoader" ) );
@@ -43,7 +43,7 @@ public class GlobalNodeFactory {
     final public Node caseMainClassNameString() {
         AllocNode a = pag.makeAllocNode( 
             PointsToAnalysis.MAIN_CLASS_NAME_STRING,
-            RefType.v( "java.lang.String" ), null , pag.EMPTY_CONTEXT);
+            RefType.v( "java.lang.String" ), null );
         VarNode v = pag.makeGlobalVarNode(
             PointsToAnalysis.MAIN_CLASS_NAME_STRING_LOCAL,
             RefType.v( "java.lang.String" ) );
@@ -53,7 +53,7 @@ public class GlobalNodeFactory {
     final public Node caseMainThreadGroup() {
         AllocNode threadGroupNode = pag.makeAllocNode( 
             PointsToAnalysis.MAIN_THREAD_GROUP_NODE,
-            RefType.v("java.lang.ThreadGroup"), null , pag.EMPTY_CONTEXT);
+            RefType.v("java.lang.ThreadGroup"), null );
         VarNode threadGroupNodeLocal = pag.makeGlobalVarNode(
             PointsToAnalysis.MAIN_THREAD_GROUP_NODE_LOCAL,
             RefType.v("java.lang.ThreadGroup") );
@@ -63,7 +63,7 @@ public class GlobalNodeFactory {
     final public Node casePrivilegedActionException() {
         AllocNode a = pag.makeAllocNode( 
             PointsToAnalysis.PRIVILEGED_ACTION_EXCEPTION,
-            AnySubType.v( RefType.v( "java.security.PrivilegedActionException" ) ), null, pag.EMPTY_CONTEXT );
+            AnySubType.v( RefType.v( "java.security.PrivilegedActionException" ) ), null );
         VarNode v = pag.makeGlobalVarNode(
             PointsToAnalysis.PRIVILEGED_ACTION_EXCEPTION_LOCAL,
             RefType.v( "java.security.PrivilegedActionException" ) );
@@ -73,7 +73,7 @@ public class GlobalNodeFactory {
     final public Node caseCanonicalPath() {
         AllocNode a = pag.makeAllocNode( 
             PointsToAnalysis.CANONICAL_PATH,
-            RefType.v( "java.lang.String" ) , null, pag.EMPTY_CONTEXT);
+            RefType.v( "java.lang.String" ) , null);
         VarNode v = pag.makeGlobalVarNode(
             PointsToAnalysis.CANONICAL_PATH_LOCAL,
             RefType.v( "java.lang.String" ) );
@@ -83,7 +83,7 @@ public class GlobalNodeFactory {
     final public Node caseMainThread() {
         AllocNode threadNode = pag.makeAllocNode( 
             PointsToAnalysis.MAIN_THREAD_NODE,
-            RefType.v("java.lang.Thread"), null, pag.EMPTY_CONTEXT );
+            RefType.v("java.lang.Thread"), null);
         VarNode threadNodeLocal = pag.makeGlobalVarNode(
             PointsToAnalysis.MAIN_THREAD_NODE_LOCAL,
             RefType.v("java.lang.Thread") );
@@ -96,13 +96,13 @@ public class GlobalNodeFactory {
     final public Node caseArgv() {
         AllocNode argv = pag.makeAllocNode( 
             PointsToAnalysis.STRING_ARRAY_NODE,
-            ArrayType.v(RefType.v( "java.lang.String" ), 1), null, pag.EMPTY_CONTEXT );
+            ArrayType.v(RefType.v( "java.lang.String" ), 1), null );
         VarNode sanl = pag.makeGlobalVarNode(
             PointsToAnalysis.STRING_ARRAY_NODE_LOCAL,
             ArrayType.v(RefType.v( "java.lang.String" ), 1) );
         AllocNode stringNode = pag.makeAllocNode( 
             PointsToAnalysis.STRING_NODE,
-            RefType.v( "java.lang.String" ), null, pag.EMPTY_CONTEXT );
+            RefType.v( "java.lang.String" ), null );
         VarNode stringNodeLocal = pag.makeGlobalVarNode(
             PointsToAnalysis.STRING_NODE_LOCAL,
             RefType.v( "java.lang.String" ) );
@@ -117,7 +117,7 @@ public class GlobalNodeFactory {
         if( cls instanceof ContextVarNode ) cls = pag.findLocalVarNode( cls.getVariable() );
         VarNode local = pag.makeGlobalVarNode( cls, RefType.v( "java.lang.Object" ) );
         for (SootClass cl : Scene.v().dynamicClasses()) {
-            AllocNode site = pag.makeAllocNode( new Pair(cls, cl), cl.getType(), null, pag.EMPTY_CONTEXT );
+            AllocNode site = pag.makeAllocNode( new Pair(cls, cl), cl.getType(), null );
             pag.addEdge( site, local );
         }
         return local;

@@ -35,7 +35,7 @@ import soot.Body;
 import soot.G;
 import soot.Scene;
 import soot.SootClass;
-import soot.SootMethod;
+import soot.MethodOrMethodContext;
 import soot.Unit;
 import soot.tagkit.Host;
 import soot.tagkit.LineNumberTag;
@@ -45,25 +45,25 @@ public class ReflectionTraceInfo {
 	
 	public enum Kind { ClassForName, ClassNewInstance, ConstructorNewInstance, MethodInvoke, FieldSet, FieldGet }
 	
-	protected Map<SootMethod,Set<String>> classForNameReceivers;
+	protected Map<MethodOrMethodContext,Set<String>> classForNameReceivers;
 	
-	protected Map<SootMethod,Set<String>> classNewInstanceReceivers;
+	protected Map<MethodOrMethodContext,Set<String>> classNewInstanceReceivers;
 
-	protected Map<SootMethod,Set<String>> constructorNewInstanceReceivers;
+	protected Map<MethodOrMethodContext,Set<String>> constructorNewInstanceReceivers;
 
-	protected Map<SootMethod,Set<String>> methodInvokeReceivers;
+	protected Map<MethodOrMethodContext,Set<String>> methodInvokeReceivers;
 
-	protected Map<SootMethod,Set<String>> fieldSetReceivers;
+	protected Map<MethodOrMethodContext,Set<String>> fieldSetReceivers;
 
-	protected Map<SootMethod,Set<String>> fieldGetReceivers;
+	protected Map<MethodOrMethodContext,Set<String>> fieldGetReceivers;
 
 	public ReflectionTraceInfo(String logFile) {
-		classForNameReceivers = new LinkedHashMap<SootMethod, Set<String>>();
-		classNewInstanceReceivers = new LinkedHashMap<SootMethod, Set<String>>();
-		constructorNewInstanceReceivers = new LinkedHashMap<SootMethod, Set<String>>();
-		methodInvokeReceivers = new LinkedHashMap<SootMethod, Set<String>>();
-		fieldSetReceivers = new LinkedHashMap<SootMethod, Set<String>>();
-		fieldGetReceivers = new LinkedHashMap<SootMethod, Set<String>>();
+		classForNameReceivers = new LinkedHashMap<MethodOrMethodContext, Set<String>>();
+		classNewInstanceReceivers = new LinkedHashMap<MethodOrMethodContext, Set<String>>();
+		constructorNewInstanceReceivers = new LinkedHashMap<MethodOrMethodContext, Set<String>>();
+		methodInvokeReceivers = new LinkedHashMap<MethodOrMethodContext, Set<String>>();
+		fieldSetReceivers = new LinkedHashMap<MethodOrMethodContext, Set<String>>();
+		fieldGetReceivers = new LinkedHashMap<MethodOrMethodContext, Set<String>>();
 
 		if(logFile==null) {
 			throw new InternalError("Trace based refection model enabled but no trace file given!?");
@@ -81,8 +81,8 @@ public class ReflectionTraceInfo {
 					String source = portions[2];
 					int lineNumber = portions[3].length()==0 ? -1 : Integer.parseInt(portions[3]);
 
-					Set<SootMethod> possibleSourceMethods = inferSource(source, lineNumber);
-					for (SootMethod sourceMethod : possibleSourceMethods) {
+					Set<MethodOrMethodContext> possibleSourceMethods = inferSource(source, lineNumber);
+					for (MethodOrMethodContext sourceMethod : possibleSourceMethods) {
 						if(kind.equals("Class.forName")) {
 							Set<String> receiverNames;
 							if((receiverNames=classForNameReceivers.get(sourceMethod))==null) {
@@ -156,7 +156,7 @@ public class ReflectionTraceInfo {
 		}
 	}
 	
-	private Set<SootMethod> inferSource(String source, int lineNumber) {
+	private Set<MethodOrMethodContext> inferSource(String source, int lineNumber) {
 		String className = source.substring(0,source.lastIndexOf("."));
 		String methodName = source.substring(source.lastIndexOf(".")+1);
 		if(!Scene.v().containsClass(className)) {
@@ -168,9 +168,9 @@ public class ReflectionTraceInfo {
 		}
 
 		SootClass sootClass = Scene.v().getSootClass(className);
-		Set<SootMethod> methodsWithRightName = new LinkedHashSet<SootMethod>();
-		for (SootMethod m: sootClass.getMethods()) {
-			if(m.isConcrete() && m.getName().equals(methodName)) {
+		Set<MethodOrMethodContext> methodsWithRightName = new LinkedHashSet<MethodOrMethodContext>();
+		for (MethodOrMethodContext m: sootClass.getMethods()) {
+			if(m.method().isConcrete() && m.method().getName().equals(methodName)) {
 				methodsWithRightName.add(m);
 			}
 		} 
@@ -181,19 +181,19 @@ public class ReflectionTraceInfo {
 			return Collections.singleton(methodsWithRightName.iterator().next());
 		} else {
 			//more than one method with that name
-			for (SootMethod sootMethod : methodsWithRightName) {
-				if(coversLineNumber(lineNumber, sootMethod)) {
-					return Collections.singleton(sootMethod);
+			for (MethodOrMethodContext momc : methodsWithRightName) {
+				if(coversLineNumber(lineNumber, momc.method())) {
+					return Collections.singleton(momc);
 				}
-				if(sootMethod.isConcrete()) {
-					if(!sootMethod.hasActiveBody()) sootMethod.retrieveActiveBody();
-					Body body = sootMethod.getActiveBody();
+				if(momc.method().isConcrete()) {
+					if(!momc.method().hasActiveBody()) momc.method().retrieveActiveBody();
+					Body body = momc.method().getActiveBody();
 					if(coversLineNumber(lineNumber, body)) {
-						return Collections.singleton(sootMethod);
+						return Collections.singleton(momc);
 					}
 					for (Unit u : body.getUnits()) {
 						if(coversLineNumber(lineNumber, u)) {
-							return Collections.singleton(sootMethod);
+							return Collections.singleton(momc);
 						}
 					}
 				}
@@ -225,12 +225,12 @@ public class ReflectionTraceInfo {
 		return false;
 	}
 	
-	public Set<String> classForNameClassNames(SootMethod container) {
+	public Set<String> classForNameClassNames(MethodOrMethodContext container) {
 		if(!classForNameReceivers.containsKey(container)) return Collections.emptySet();
 		return classForNameReceivers.get(container);
 	}
 
-	public Set<SootClass> classForNameClasses(SootMethod container) {
+	public Set<SootClass> classForNameClasses(MethodOrMethodContext container) {
 		Set<SootClass> result = new LinkedHashSet<SootClass>();
 		for(String className: classForNameClassNames(container)) {
 			result.add(Scene.v().getSootClass(className));
@@ -238,12 +238,12 @@ public class ReflectionTraceInfo {
 		return result;
 	}
 	
-	public Set<String> classNewInstanceClassNames(SootMethod container) {
+	public Set<String> classNewInstanceClassNames(MethodOrMethodContext container) {
 		if(!classNewInstanceReceivers.containsKey(container)) return Collections.emptySet();
 		return classNewInstanceReceivers.get(container);
 	}
 	
-	public Set<SootClass> classNewInstanceClasses(SootMethod container) {
+	public Set<SootClass> classNewInstanceClasses(MethodOrMethodContext container) {
 		Set<SootClass> result = new LinkedHashSet<SootClass>();
 		for(String className: classNewInstanceClassNames(container)) {
 			result.add(Scene.v().getSootClass(className));
@@ -251,34 +251,34 @@ public class ReflectionTraceInfo {
 		return result;
 	}
 	
-	public Set<String> constructorNewInstanceSignatures(SootMethod container) {
+	public Set<String> constructorNewInstanceSignatures(MethodOrMethodContext container) {
 		if(!constructorNewInstanceReceivers.containsKey(container)) return Collections.emptySet();
 		return constructorNewInstanceReceivers.get(container);
 	}
 	
-	public Set<SootMethod> constructorNewInstanceConstructors(SootMethod container) {
-		Set<SootMethod> result = new LinkedHashSet<SootMethod>();
+	public Set<MethodOrMethodContext> constructorNewInstanceConstructors(MethodOrMethodContext container) {
+		Set<MethodOrMethodContext> result = new LinkedHashSet<MethodOrMethodContext>();
 		for(String signature: constructorNewInstanceSignatures(container)) {
 			result.add(Scene.v().getMethod(signature));
 		}
 		return result;
 	}
 	
-	public Set<String> methodInvokeSignatures(SootMethod container) {
+	public Set<String> methodInvokeSignatures(MethodOrMethodContext container) {
 		if(!methodInvokeReceivers.containsKey(container)) return Collections.emptySet();
 		return methodInvokeReceivers.get(container);
 	}
 
-	public Set<SootMethod> methodInvokeMethods(SootMethod container) {
-		Set<SootMethod> result = new LinkedHashSet<SootMethod>();
+	public Set<MethodOrMethodContext> methodInvokeMethods(MethodOrMethodContext container) {
+		Set<MethodOrMethodContext> result = new LinkedHashSet<MethodOrMethodContext>();
 		for(String signature: methodInvokeSignatures(container)) {
 			result.add(Scene.v().getMethod(signature));
 		}
 		return result;
 	}
 	
-	public Set<SootMethod> methodsContainingReflectiveCalls() {
-		Set<SootMethod> res = new LinkedHashSet<SootMethod>();
+	public Set<MethodOrMethodContext> methodsContainingReflectiveCalls() {
+		Set<MethodOrMethodContext> res = new LinkedHashSet<MethodOrMethodContext>();
 		res.addAll(classForNameReceivers.keySet());
 		res.addAll(classNewInstanceReceivers.keySet());
 		res.addAll(constructorNewInstanceReceivers.keySet());
@@ -286,12 +286,12 @@ public class ReflectionTraceInfo {
 		return res;
 	}
 
-	public Set<String> fieldSetSignatures(SootMethod container) {
+	public Set<String> fieldSetSignatures(MethodOrMethodContext container) {
 		if(!fieldSetReceivers.containsKey(container)) return Collections.emptySet();
 		return fieldSetReceivers.get(container);
 	}
 
-	public Set<String> fieldGetSignatures(SootMethod container) {
+	public Set<String> fieldGetSignatures(MethodOrMethodContext container) {
 		if(!fieldGetReceivers.containsKey(container)) return Collections.emptySet();
 		return fieldGetReceivers.get(container);
 	}

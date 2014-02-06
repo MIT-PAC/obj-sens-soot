@@ -74,6 +74,18 @@ public class SparkTransformer extends SceneTransformer
     public SparkTransformer( Singletons.Global g ) {}
     public static SparkTransformer v() { return G.v().soot_jimple_spark_SparkTransformer(); }
 
+    public static boolean debug = false;
+
+    public static void println(String str) {
+        if (debug)
+            System.out.println(str);
+    }
+    
+    public static void printf(String arg, Object... args) {
+        if (debug)
+            System.out.printf(arg, args);
+    }
+    
     protected void internalTransform( String phaseName, Map options )
     {
         //reset method pag cache
@@ -88,7 +100,7 @@ public class SparkTransformer extends SceneTransformer
             b = new ObjectSensitiveBuilder();
             //ugly, but set some global state so we don't have to pass around 
             //the opts object
-            ObjectSensitiveAllocNode.k = opts.kobjsens();
+            ObjectSensitiveAllocNode.reset(opts.kobjsens());
         } else 
             b = new ContextInsensitiveBuilder();
         

@@ -81,15 +81,10 @@ import soot.util.queue.QueueReader;
  * @author Ondrej Lhotak
  */
 public class PAG implements PointsToAnalysis {
-    public static ObjectSensitiveAllocNode EMPTY_CONTEXT;
+    
 
     public PAG( final SparkOptions opts ) {
         this.opts = opts;
-
-        if (opts.kobjsens() > 0) {
-            EMPTY_CONTEXT = new ObjectSensitiveAllocNode(this, null, NullType.v(), null, null);
-        } else 
-            EMPTY_CONTEXT = null;
 
         if( opts.add_tags() ) {
             nodeToTag = new HashMap<Node, Tag>();
@@ -462,29 +457,14 @@ public class PAG implements PointsToAnalysis {
         }
     }
 
-    public AllocNode makeAllocNode( Object newExpr, Type type, SootMethod m, Context context ) {
+    public AllocNode makeAllocNode( Object newExpr, Type type, SootMethod m) {
         if( opts.types_for_sites() || opts.vta() ) newExpr = type;
 
-        if (context == null) 
-            context = EMPTY_CONTEXT;
-
-        Pair<Object, Context> probe = new Pair<Object, Context>(newExpr, context);
-
-        AllocNode ret = valToAllocNode.get( probe );
+        AllocNode ret = valToAllocNode.get( newExpr );
 
         if( ret == null ) {
-            //TODO: HORRIBLE HACK HERE THAT ASSUME ALL CONTEXT IS OF OBJECT SENSITIVE ALLOC NODE
-            if (context instanceof ObjectSensitiveAllocNode) { 
-                valToAllocNode.put( probe, ret = new ObjectSensitiveAllocNode( this, newExpr, type, m, 
-                    (ObjectSensitiveAllocNode)context ) );
-                System.out.println("Made node: " + ret);
-            }
-            else { //empty context because it was not an object sensitive alloc node 
-                //probably class constant node
-                valToAllocNode.put( probe, ret = new ObjectSensitiveAllocNode( this, newExpr, type, m, 
-                    null ) ); 
-            }
-            
+            valToAllocNode.put( newExpr, ret = new AllocNode( this, newExpr, type, m) );
+            //System.out.println("Making alloc node: " + ret);
             newAllocNodes.add( ret );
             addNodeTag( ret, m );
         } else if( !( ret.getType().equals( type ) ) ) {
@@ -497,13 +477,11 @@ public class PAG implements PointsToAnalysis {
     public AllocNode makeStringConstantNode( StringConstant s ) {
         if( opts.types_for_sites() || opts.vta() )
             return makeAllocNode( RefType.v( "java.lang.String" ),
-                RefType.v( "java.lang.String" ), null , null);
+                RefType.v( "java.lang.String" ), null );
         
-        Pair<Object, Context> probe = new Pair<Object, Context>(s, EMPTY_CONTEXT);
-        
-        StringConstantNode ret = (StringConstantNode) valToAllocNode.get( probe );
+        StringConstantNode ret = (StringConstantNode) valToAllocNode.get( s );
         if( ret == null ) {
-            valToAllocNode.put( probe, ret = new StringConstantNode( this, s ) );
+            valToAllocNode.put( s, ret = new StringConstantNode( this, s ) );
             newAllocNodes.add( ret );
             addNodeTag( ret, null );
         }
@@ -512,14 +490,13 @@ public class PAG implements PointsToAnalysis {
     public AllocNode makeClassConstantNode( ClassConstant cc ) {
         if( opts.types_for_sites() || opts.vta() )
             return makeAllocNode( RefType.v( "java.lang.Class" ),
-                RefType.v( "java.lang.Class" ), null, null );
+                RefType.v( "java.lang.Class" ), null );
         
-        Pair<Object, Context> probe = new Pair<Object, Context>(cc, EMPTY_CONTEXT);
-        
-        ClassConstantNode ret = (ClassConstantNode) valToAllocNode.get(probe);
+               
+        ClassConstantNode ret = (ClassConstantNode) valToAllocNode.get(cc);
         
         if( ret == null ) {
-            valToAllocNode.put(probe, ret = new ClassConstantNode(this, cc));
+            valToAllocNode.put(cc, ret = new ClassConstantNode(this, cc));
             newAllocNodes.add( ret );
             addNodeTag( ret, null );
         }
@@ -607,6 +584,7 @@ public class PAG implements PointsToAnalysis {
         LocalVarNode base = makeLocalVarNode( baseValue, baseType, method );
         return makeContextVarNode( base, context );
     }
+    
     /** Finds or creates the ContextVarNode for base variable base and context
      * context, of type type. */
     public ContextVarNode makeContextVarNode( LocalVarNode base, Context context ) {
@@ -617,6 +595,15 @@ public class PAG implements PointsToAnalysis {
         }
         return ret;
     }
+    
+    public ObjectSensitiveAllocNode makeObjSensAllocNode(AllocNode node, Context context) {
+        ObjectSensitiveAllocNode objSensNode = node.context(context);
+        
+        addNodeTag(objSensNode, node.getMethod());
+                
+        return objSensNode;
+    }
+    
     /** Finds the FieldRefNode for base variable value and field
      * field, or returns null. */
     public FieldRefNode findLocalFieldRefNode( Object baseValue, SparkField field ) {
@@ -810,8 +797,8 @@ public class PAG implements PointsToAnalysis {
 
     final public void addCallTarget( Edge e ) {
         if( !e.passesParameters() ) return;
-        MethodPAG srcmpag = MethodPAG.v( this, e.src(), e.srcCtxt() );
-        MethodPAG tgtmpag = MethodPAG.v( this, e.tgt(), e.tgtCtxt() );
+        MethodPAG srcmpag = MethodPAG.v( this, e.src() );
+        MethodPAG tgtmpag = MethodPAG.v( this, e.tgt() );
         Pair<Node, Node> pval;
 
         if( e.isExplicit() || e.kind() == Kind.THREAD ) {
@@ -979,7 +966,7 @@ public class PAG implements PointsToAnalysis {
                 VarNode newObject = makeGlobalVarNode( cls, RefType.v( "java.lang.Object" ) );
                 SootClass tgtClass = e.getTgt().method().getDeclaringClass();
                 RefType tgtType = tgtClass.getType();                
-                AllocNode site = makeAllocNode( new Pair(cls, tgtClass), tgtType, null, null );
+                AllocNode site = makeAllocNode( new Pair(cls, tgtClass), tgtType, null );
                 addEdge( site, newObject );
 
                 //(2)
@@ -1175,8 +1162,8 @@ public class PAG implements PointsToAnalysis {
     protected Map<Pair, Set<Edge>> assign2edges = new HashMap<Pair, Set<Edge>>();
     private final Map<Object, LocalVarNode> valToLocalVarNode = new HashMap<Object, LocalVarNode>(100000);
     private final Map<Object, GlobalVarNode> valToGlobalVarNode = new HashMap<Object, GlobalVarNode>(100000);
-    private final Map<Pair<Object,Context>, AllocNode> valToAllocNode = 
-            new HashMap<Pair<Object, Context>, AllocNode>(100000);
+    private final Map<Object, AllocNode> valToAllocNode = 
+            new HashMap<Object, AllocNode>(10000);
     private OnFlyCallGraph ofcg;
     private final ArrayList<VarNode> dereferences = new ArrayList<VarNode>();
     protected TypeManager typeManager;
