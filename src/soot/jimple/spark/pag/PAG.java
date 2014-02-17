@@ -81,7 +81,7 @@ import soot.util.queue.QueueReader;
  * @author Ondrej Lhotak
  */
 public class PAG implements PointsToAnalysis {
-    
+
 
     public PAG( final SparkOptions opts ) {
         this.opts = opts;
@@ -170,15 +170,35 @@ public class PAG implements PointsToAnalysis {
 
     /** Returns the set of objects pointed to by variable l. */
     public PointsToSet reachingObjects( Local l ) {
-        VarNode n = findLocalVarNode( l );
+        LocalVarNode n = findLocalVarNode( l );
         if( n == null ) {
             return EmptyPointsToSet.v();
         }
-        return n.getP2Set();
+
+        //find all context nodes, and collect their answers
+
+        final PointsToSetInternal ret = setFactory.newSet( 
+            l.getType(), this );
+
+        //just in case is no context
+        ret.addAll(n.getP2Set(), null);
+
+        if (n.getContextVarMap() != null) {
+            //add all context nodes
+            for (Map.Entry<Context,ContextVarNode> entry : n.getContextVarMap().entrySet()) {
+                ret.addAll((PointsToSetInternal)reachingObjects(entry.getKey(), l), null);
+            }
+        }
+
+        return ret;
     }
 
     /** Returns the set of objects pointed to by variable l in context c. */
     public PointsToSet reachingObjects( Context c, Local l ) {
+        if (c == null) {
+            throw new RuntimeException("Context should not be null!");
+        }
+
         VarNode n = findContextVarNode( l, c );
         if( n == null ) {
             return EmptyPointsToSet.v();
@@ -442,6 +462,10 @@ public class PAG implements PointsToAnalysis {
     /** Returns the set of objects pointed to by instance field f
      * of the objects pointed to by l in context c. */
     public PointsToSet reachingObjects( Context c, Local l, SootField f ) {
+        if (c == null) {
+            throw new RuntimeException("Context should not be null!");
+        }
+
         return reachingObjects( reachingObjects(c, l), f );
     }
 
@@ -478,7 +502,7 @@ public class PAG implements PointsToAnalysis {
         if( opts.types_for_sites() || opts.vta() )
             return makeAllocNode( RefType.v( "java.lang.String" ),
                 RefType.v( "java.lang.String" ), null );
-        
+
         StringConstantNode ret = (StringConstantNode) valToAllocNode.get( s );
         if( ret == null ) {
             valToAllocNode.put( s, ret = new StringConstantNode( this, s ) );
@@ -491,10 +515,10 @@ public class PAG implements PointsToAnalysis {
         if( opts.types_for_sites() || opts.vta() )
             return makeAllocNode( RefType.v( "java.lang.Class" ),
                 RefType.v( "java.lang.Class" ), null );
-        
-               
+
+
         ClassConstantNode ret = (ClassConstantNode) valToAllocNode.get(cc);
-        
+
         if( ret == null ) {
             valToAllocNode.put(cc, ret = new ClassConstantNode(this, cc));
             newAllocNodes.add( ret );
@@ -584,7 +608,7 @@ public class PAG implements PointsToAnalysis {
         LocalVarNode base = makeLocalVarNode( baseValue, baseType, method );
         return makeContextVarNode( base, context );
     }
-    
+
     /** Finds or creates the ContextVarNode for base variable base and context
      * context, of type type. */
     public ContextVarNode makeContextVarNode( LocalVarNode base, Context context ) {
@@ -595,15 +619,24 @@ public class PAG implements PointsToAnalysis {
         }
         return ret;
     }
-    
-    public ObjectSensitiveAllocNode makeObjSensAllocNode(AllocNode node, Context context) {
-        ObjectSensitiveAllocNode objSensNode = node.context(context);
-        
-        addNodeTag(objSensNode, node.getMethod());
-                
-        return objSensNode;
+
+    public AllocNode makeObjSensAllocNode(AllocNode node, Context context) {
+        if (ObjectSensitiveAllocNode.noContext(node.getType())) {
+            //no context desired
+            return node;
+        } if (node instanceof StringConstantNode || node instanceof ClassConstantNode) {
+            //don't create context nodes for constants
+            return node;
+        } else {
+            //context desired, create a node if needed
+            ObjectSensitiveAllocNode objSensNode = node.context(context);
+
+            addNodeTag(objSensNode, node.getMethod());
+
+            return objSensNode;
+        }
     }
-    
+
     /** Finds the FieldRefNode for base variable value and field
      * field, or returns null. */
     public FieldRefNode findLocalFieldRefNode( Object baseValue, SparkField field ) {

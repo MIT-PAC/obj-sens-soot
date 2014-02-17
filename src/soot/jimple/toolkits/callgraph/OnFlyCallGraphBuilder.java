@@ -75,7 +75,9 @@ import soot.jimple.StringConstant;
 import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.spark.SparkTransformer;
 import soot.jimple.spark.pag.AllocNode;
+import soot.jimple.spark.pag.ClassConstantNode;
 import soot.jimple.spark.pag.PAG;
+import soot.jimple.spark.pag.StringConstantNode;
 import soot.jimple.spark.pag.VarNode;
 import soot.jimple.toolkits.reflection.ReflectionTraceInfo;
 import soot.options.CGOptions;
@@ -404,13 +406,15 @@ public final class OnFlyCallGraphBuilder
 
     private final ChunkedQueue targetsQueue = new ChunkedQueue();
     private final QueueReader targets = targetsQueue.reader();
-
+    private StringConstantNode stringConstantContext;
+    
 
     public OnFlyCallGraphBuilder( PAG pag, ContextManager cm, ReachableMethods rm ) {
         this.cm = cm;
         this.rm = rm;
         this.pag = pag;
         worklist = rm.listener();
+        stringConstantContext = new StringConstantNode(pag,StringConstant.v("<CONTEXT>"));
         //initialize the receiver to sites map with the number of locals * an estimate for the number of contexts per methods
         receiverToSites = new HashMap<VarNode, List<VirtualCallSite>>(Scene.v().getLocalNumberer().size()); 
         options = new CGOptions( PhaseOptions.v().getPhaseOptions("cg") );
@@ -462,6 +466,11 @@ public final class OnFlyCallGraphBuilder
     //and context, the last context is the context for the target (ObjectSensitiveAllocNode)
     public void addType( VarNode receiver, Type type, Context tgtContext, boolean debug ) {
         FastHierarchy fh = Scene.v().getOrMakeFastHierarchy();
+
+        //do not call methods with context for constants!
+        if (tgtContext instanceof StringConstantNode)
+            tgtContext = stringConstantContext;
+      
 
         SparkTransformer.println("OFCB: addType " + receiver + " " + tgtContext);
 
@@ -650,15 +659,15 @@ public final class OnFlyCallGraphBuilder
 
     private void getImplicitTargets( MethodOrMethodContext source) {
         SootMethod sourceMethod = source.method();
-        
+
         final SootClass scl = sourceMethod.getDeclaringClass();
         if( sourceMethod.method().isNative() || sourceMethod.isPhantom() ) return;
         if( sourceMethod.getSubSignature().indexOf( "<init>" ) >= 0 && source.context() instanceof AllocNode) {
             //handle finalize
             RefType type = (RefType)((AllocNode)source.context()).getType();
-            
+
             SootMethod target = VirtualCalls.v().resolveNonSpecial(type, sigFinalize);
-            
+
             if (target != null)
                 cm.addVirtualEdge(source, null, target, Kind.FINALIZE, source.context());
         }

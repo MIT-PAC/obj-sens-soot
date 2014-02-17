@@ -89,16 +89,10 @@ public class OnFlyCallGraph {
 
         PointsToSetInternal p2set = vn.getP2Set().getNewSet();
         if( ofcgb.wantTypes( vn ) ) {
-            final boolean debug =
-                    vn.getType().toString().contains("PickContact") ;
-            
-            if (debug)
-                SparkTransformer.println(receiver + " " + vn.getType());
             
             p2set.forall( new P2SetVisitor() {
             public final void visit( Node n ) {
-                if (debug) SparkTransformer.println("\t" + n);
-                ofcgb.addType( vn, n.getType(), (AllocNode) n , debug);
+                ofcgb.addType( vn, n.getType(), (AllocNode) n , false);
             }} );
         }
         if( ofcgb.wantStringConstants( receiver ) ) {

@@ -21,6 +21,7 @@ package soot.jimple.spark.pag;
 import java.util.HashMap;
 import java.util.Map;
 
+import soot.Context;
 import soot.SootMethod;
 import soot.Type;
 
@@ -29,7 +30,7 @@ import soot.Type;
  * @author Ondrej Lhotak
  */
 public class LocalVarNode extends VarNode {
-    public ContextVarNode context( Object context ) 
+    public ContextVarNode context( Context context ) 
     { return cvns == null ? null : cvns.get( context ); }
 
     public SootMethod getMethod() {
@@ -46,14 +47,18 @@ public class LocalVarNode extends VarNode {
         //if( m == null ) throw new RuntimeException( "method shouldn't be null" );
     }
     /** Registers a cvn as having this node as its base. */
-    void addContext( ContextVarNode cvn, Object context ) {
-        if( cvns == null ) cvns = new HashMap<Object, ContextVarNode>();
+    void addContext( ContextVarNode cvn, Context context ) {
+        if( cvns == null ) cvns = new HashMap<Context, ContextVarNode>();
         cvns.put( context, cvn );
     }
 
     /* End of package methods. */
 
-    protected Map<Object, ContextVarNode> cvns;
+    protected Map<Context, ContextVarNode> cvns;
     protected SootMethod method;
+    
+    public Map<Context, ContextVarNode> getContextVarMap() {
+        return cvns;
+    }
 }
 

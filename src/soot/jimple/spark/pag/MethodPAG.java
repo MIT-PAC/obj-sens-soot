@@ -171,8 +171,11 @@ public final class MethodPAG {
                 frn.getField() );
     }
     
-    protected ObjectSensitiveAllocNode parameterize(AllocNode node, Context context) {
-        return pag().makeObjSensAllocNode(node, context);
+    protected AllocNode parameterize(AllocNode node, Context context) {
+        if (context == null) {
+            return node;
+        } else 
+            return pag().makeObjSensAllocNode(node, context);
     }
     
     public Node parameterize( Node n, Context varNodeParameter ) {

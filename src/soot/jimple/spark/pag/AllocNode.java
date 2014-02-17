@@ -52,11 +52,10 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
         return "AllocNode "+hashCode()+" "+newExpr+" in method "+method;
     }
 
-    /* End of public methods. */
-
-    AllocNode( PAG pag, Object newExpr, Type t, SootMethod m ) {
+        
+    public AllocNode( PAG pag, Object newExpr, Type t, SootMethod m ) {
         super( pag, t );
-        cvns = new HashMap<Object, ObjectSensitiveAllocNode>();
+        cvns = new HashMap<Context, ObjectSensitiveAllocNode>();
         this.method = m;
         if( t instanceof RefType ) {
             RefType rt = (RefType) t;
@@ -109,7 +108,7 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
     }
 
 
-    public ObjectSensitiveAllocNode context( Object context ) 
+    public ObjectSensitiveAllocNode context( Context context ) 
     { 
         //if we have seen this context before, just return the context object for this alloc node
         if (cvns.containsKey(context))
@@ -128,10 +127,13 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
         return cvns.get(context);
     }
 
-
+    public Map<Context, ObjectSensitiveAllocNode> getContextNodeMap() {
+        return cvns;
+    }
+    
     /* End of package methods. */
 
-    protected Map<Object, ObjectSensitiveAllocNode> cvns;
+    protected Map<Context, ObjectSensitiveAllocNode> cvns;
 
 }
 

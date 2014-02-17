@@ -36,7 +36,7 @@ public class StringConstantNode extends AllocNode implements IStringConstantNode
 
     /* End of public methods. */
 
-    StringConstantNode( PAG pag, StringConstant sc ) {
+    public StringConstantNode( PAG pag, StringConstant sc ) {
         super( pag, sc, RefType.v( "java.lang.String" ), null );
     }
 }

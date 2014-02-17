@@ -16,6 +16,7 @@ import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Type;
+import soot.jimple.spark.SparkTransformer;
 import soot.options.CGOptions;
 
 /**
@@ -30,9 +31,9 @@ public class ObjectSensitiveAllocNode extends AllocNode {
     
     private static final String NO_CONTEXT_INCLUDING_SUBCLASSES[] = 
             new String[]{
-                         "java.lang.String", 
+                        /* "java.lang.String", 
                          "java.lang.StringBuffer",
-                         "java.lang.StringBuilder",
+                         "java.lang.StringBuilder", */
                          "java.lang.Throwable",
                          "java.math.BigInt",
                          "java.math.BigInteger"
@@ -55,11 +56,15 @@ public class ObjectSensitiveAllocNode extends AllocNode {
     public static ObjectSensitiveAllocNode getObjSensNode(PAG pag, AllocNode base, Context context) {
         ObjectSensitiveAllocNode probe = new ObjectSensitiveAllocNode(pag, base, context);
         if (!universe.containsKey(probe)) {
-            //System.out.println("Adding " + probe);
+            SparkTransformer.println("Adding " + probe);
             universe.put(probe, probe);
         }
             
         return universe.get(probe);        
+    }
+    
+    public static int numberOfObjSensNodes() {
+        return universe.size();
     }
     
     public static void installIgnoreList() {
@@ -80,7 +85,7 @@ public class ObjectSensitiveAllocNode extends AllocNode {
             (newExpr == null ? 0 : newExpr.hashCode()), 
             getMethod()));
 
-        for (int i = 0; i < k; i++) {
+        for (int i = 0; i < contextAllocs.length; i++) {
             if (contextAllocs[i] != null)
                 buf.append(String.format("[%s (%s)]", contextAllocs[i], 
                     (contextAllocs[i] == null ? 0 : contextAllocs[i].hashCode())));
@@ -88,16 +93,27 @@ public class ObjectSensitiveAllocNode extends AllocNode {
 
         return buf.toString();
     }
+    
+    public Object[] getContext() {
+        return contextAllocs;
+    }
+    
+    public Object getContext(int i) {
+        if (i < 1 || i >= k)
+            throw new RuntimeException("Invalid context index for object sensitive node: " + i);
+        
+        return contextAllocs[i - 1];
+    }
 
     /* End of public methods. */
 
     private ObjectSensitiveAllocNode( PAG pag, AllocNode base, Context context ) {
         super( pag, base.newExpr, base.type, base.getMethod());
         
-        contextAllocs = new Object[k];
+        contextAllocs = new Object[k - 1];
         
         //short-circuit context for some types
-        if (noContext(base))
+        if (noContext(base.getType()))
             return;
         
         if (context instanceof ObjectSensitiveAllocNode) {
@@ -125,7 +141,6 @@ public class ObjectSensitiveAllocNode extends AllocNode {
                 }
             }
         } else if (context instanceof AllocNode) {
-            contextAllocs = new Object[k];
             contextAllocs[0] = ((AllocNode)context).newExpr;
         } else {
             throw new RuntimeException("Unsupported context on alloc node: " + context);
@@ -140,12 +155,10 @@ public class ObjectSensitiveAllocNode extends AllocNode {
         return false;
     }
 
-    private boolean noContext(AllocNode base) {
+    public static boolean noContext(Type type) {
 
-        if (base.getType() instanceof RefType) {
-            RefType type = null;
-            type = (RefType)base.getType();
-            SootClass clz = type.getSootClass();
+        if (type instanceof RefType) {
+            SootClass clz = ((RefType)type).getSootClass();
             return ignoreList.contains(clz);
         }
         //context for everything else?
