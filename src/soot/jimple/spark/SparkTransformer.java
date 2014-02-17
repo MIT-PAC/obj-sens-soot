@@ -19,6 +19,7 @@
 
 package soot.jimple.spark;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -65,6 +66,7 @@ import soot.options.SparkOptions;
 import soot.tagkit.Host;
 import soot.tagkit.StringTag;
 import soot.tagkit.Tag;
+import soot.util.Numberable;
 
 /** Main entry point for Spark.
  * @author Ondrej Lhotak
@@ -90,19 +92,24 @@ public class SparkTransformer extends SceneTransformer
     {
         //reset method pag cache
         MethodPAG.reset();
+        G.v().Parm_pairToElement = new HashMap();
+        
         
         SparkOptions opts = new SparkOptions( options );
         final String output_dir = SourceLocator.v().getOutputDir();
 
+        //always reset the obj sens universe because we might switch back and forth 
+        //between obj sens and no sens, definitely ugly, but better than passing around
+        //global state
+        ObjectSensitiveAllocNode.reset(opts.kobjsens(), opts.obj_sens_no_context_list());
+        
         // Build pointer assignment graph
         PAGBuilder b;
         if (opts.kobjsens() > 0) {
             b = new ObjectSensitiveBuilder();
-            //ugly, but set some global state so we don't have to pass around 
-            //the opts object
-            ObjectSensitiveAllocNode.reset(opts.kobjsens(), opts.obj_sens_no_context_list());
-        } else 
+        } else {
             b = new ContextInsensitiveBuilder();
+        }
         
         
         if( opts.pre_jimplify() ) b.preJimplify();
@@ -126,6 +133,8 @@ public class SparkTransformer extends SceneTransformer
             G.v().out.println( "FieldRefNodes: "+pag.getFieldRefNodeNumberer().size() );
             G.v().out.println( "AllocNodes: "+pag.getAllocNodeNumberer().size() );
         }
+        
+      
 
         // Simplify pag
         Date startSimplify = new Date();
@@ -225,6 +234,15 @@ public class SparkTransformer extends SceneTransformer
         		reportTime( "Initialized on-demand refinement-based context-sensitive analysis", startOnDemand, endOndemand );
         		Scene.v().setPointsToAnalysis(onDemandAnalysis);
         }
+        /*
+        System.out.println( "AllocNodes: "+pag.getAllocNodeNumberer().size() );
+        Iterator it = pag.getAllocNodeNumberer().iterator(); 
+        while(it.hasNext()) {
+            Numberable number = (Numberable)it.next();
+            
+            System.out.println(number.getNumber() + number.toString());
+        }
+        */
     }
     
     protected void addTags( PAG pag ) {

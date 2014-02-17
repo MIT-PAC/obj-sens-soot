@@ -59,7 +59,8 @@ public class SparkOptions
      * information about its execution. 
      */
     public boolean verbose() {
-        return soot.PhaseOptions.getBoolean( options, "verbose" );
+        return true;
+        //return soot.PhaseOptions.getBoolean( options, "verbose" );
     }
     
     /** Ignore Types Entirely --

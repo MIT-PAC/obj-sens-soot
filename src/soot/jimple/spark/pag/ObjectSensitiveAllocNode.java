@@ -34,6 +34,7 @@ public class ObjectSensitiveAllocNode extends AllocNode {
     private Object[] contextAllocs;
     /** depth of the object sensitivity on heap and method */
     public static int k = 0;
+    private static int numObjs = 0;
 
     /**
      * Reset the universe of object sensitive allocation nodes.  Set the depth to the first argument.
@@ -44,24 +45,30 @@ public class ObjectSensitiveAllocNode extends AllocNode {
         universe = new HashMap<ObjectSensitiveAllocNode,ObjectSensitiveAllocNode>(10000);
         k = depth;
         //System.out.println("Object Sensitivity Depth: " + k);
-        installNoContextList(noContextList);
+        if (noContextList != null) 
+            installNoContextList(noContextList);
+        numObjs = 0;
     }
-    
+
     public static ObjectSensitiveAllocNode getObjSensNode(PAG pag, AllocNode base, Context context) {
         ObjectSensitiveAllocNode probe = new ObjectSensitiveAllocNode(pag, base, context);
         if (!universe.containsKey(probe)) {
-            SparkTransformer.println("Adding " + probe);
             universe.put(probe, probe);
-        }
-            
+            pag.getAllocNodeNumberer().add( probe );
+        } 
+        
         return universe.get(probe);        
     }
+
     
     public static int numberOfObjSensNodes() {
+   
+    
         if (universe != null)
             return universe.size();
         else 
             return 0;
+        
     }
     
     /**
@@ -111,7 +118,7 @@ public class ObjectSensitiveAllocNode extends AllocNode {
 
     /* End of public methods. */
 
-    private ObjectSensitiveAllocNode( PAG pag, AllocNode base, Context context ) {
+    public ObjectSensitiveAllocNode( PAG pag, AllocNode base, Context context ) {
         super( pag, base.newExpr, base.type, base.getMethod());
         
         contextAllocs = new Object[k - 1];

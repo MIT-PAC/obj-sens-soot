@@ -488,6 +488,7 @@ public class PAG implements PointsToAnalysis {
 
         if( ret == null ) {
             valToAllocNode.put( newExpr, ret = new AllocNode( this, newExpr, type, m) );
+            getAllocNodeNumberer().add( ret );
             //System.out.println("Making alloc node: " + ret);
             newAllocNodes.add( ret );
             addNodeTag( ret, m );

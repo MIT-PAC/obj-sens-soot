@@ -27,10 +27,12 @@ import java.util.*;
  */
 
 public class ArrayNumberer<E> implements IterableNumberer<E> {
-    Numberable[] numberToObj = new Numberable[1024];
+    Numberable[] numberToObj = new Numberable[10240];
     int lastNumber = 0;
 
     public void add( E oo ) {
+        if (oo == null)
+            throw new RuntimeException("adding null object to array numberer");
         Numberable o = (Numberable) oo;
         if( o.getNumber() != 0 ) return;
         
@@ -55,7 +57,7 @@ public class ArrayNumberer<E> implements IterableNumberer<E> {
 	public E get( long number ) {
         if( number == 0 ) return null;
         E ret = (E) numberToObj[(int) number];
-        if( ret == null ) throw new RuntimeException( "no object with number "+number );
+        if( ret == null ) throw new RuntimeException( "no object with number "+number + " of " + lastNumber);
         return ret;
     }
 

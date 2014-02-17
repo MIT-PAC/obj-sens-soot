@@ -53,7 +53,7 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
     }
 
         
-    public AllocNode( PAG pag, Object newExpr, Type t, SootMethod m ) {
+    public AllocNode( PAG pag, Object newExpr, Type t, SootMethod m) {
         super( pag, t );
         cvns = new HashMap<Context, ObjectSensitiveAllocNode>();
         this.method = m;
@@ -68,7 +68,7 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
         }
         this.newExpr = newExpr;
         if( newExpr instanceof ContextVarNode ) throw new RuntimeException();
-        pag.getAllocNodeNumberer().add( this );
+    
     }
     /** Registers a AllocDotField as having this node as its base. */
     void addField( AllocDotField adf, SparkField field ) {
@@ -110,9 +110,11 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
 
     public ObjectSensitiveAllocNode context( Context context ) 
     { 
+                
         //if we have seen this context before, just return the context object for this alloc node
-        if (cvns.containsKey(context))
+        if (cvns.containsKey(context)) {
             return cvns.get(context);
+        }
 
         //have not seen this context before, so add it and its obj sens node
         if (context instanceof AllocNode) {

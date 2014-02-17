@@ -38,6 +38,7 @@ public class ClassConstantNode extends AllocNode implements IClassConstantNode {
 
     public ClassConstantNode( PAG pag, ClassConstant cc ) {
         super( pag, cc, RefType.v( "java.lang.Class" ), null );
+        pag.getAllocNodeNumberer().add( this );
     }
 }
 

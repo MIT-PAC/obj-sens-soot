@@ -232,6 +232,12 @@ public final class HybridPointsToSet extends PointsToSetInternal {
             convertToBits();
         }
         boolean ret = bits.set( n.getNumber() );
+        
+        if (pag.getAllocNodeNumberer().size() < n.getNumber()) {
+            System.out.printf("Adding strange object to bit vector: %s, %d / %d\n", n.toString(), n.getNumber(), pag.getAllocNodeNumberer().size());
+            throw new RuntimeException();
+        }
+        
         if( ret ) empty = false;
         return ret;
     }
