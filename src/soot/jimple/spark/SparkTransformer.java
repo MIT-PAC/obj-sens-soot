@@ -100,7 +100,7 @@ public class SparkTransformer extends SceneTransformer
             b = new ObjectSensitiveBuilder();
             //ugly, but set some global state so we don't have to pass around 
             //the opts object
-            ObjectSensitiveAllocNode.reset(opts.kobjsens());
+            ObjectSensitiveAllocNode.reset(opts.kobjsens(), opts.obj_sens_no_context_list());
         } else 
             b = new ContextInsensitiveBuilder();
         

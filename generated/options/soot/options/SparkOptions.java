@@ -49,6 +49,8 @@ public class SparkOptions
         return soot.PhaseOptions.getInt(options, "kobjsens");
     }
     
+    
+    
     /** Verbose --
     
      * Print detailed information about the execution of Spark.
@@ -535,6 +537,10 @@ public class SparkOptions
      */
     public String geom_dump_verbose() {
         return soot.PhaseOptions.getString( options, "geom-dump-verbose" );
+    }
+    
+    public String obj_sens_no_context_list() {
+        return soot.PhaseOptions.getString( options, "obj-sens-no-context-list");
     }
     
     /** Verification file --

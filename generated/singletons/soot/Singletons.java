@@ -653,13 +653,13 @@ public class Singletons {
         return instance_soot_baf_WordType;
     }
 
-    private soot.jimple.spark.fieldrw.FieldReadTagAggregator instance_soot_jimple_spark_fieldrw_FieldReadTagAggregator;
+    public soot.jimple.spark.fieldrw.FieldReadTagAggregator instance_soot_jimple_spark_fieldrw_FieldReadTagAggregator;
     public soot.jimple.spark.fieldrw.FieldReadTagAggregator soot_jimple_spark_fieldrw_FieldReadTagAggregator() {
         if( instance_soot_jimple_spark_fieldrw_FieldReadTagAggregator == null ) instance_soot_jimple_spark_fieldrw_FieldReadTagAggregator = new soot.jimple.spark.fieldrw.FieldReadTagAggregator( g );
         return instance_soot_jimple_spark_fieldrw_FieldReadTagAggregator;
     }
 
-    private soot.jimple.spark.fieldrw.FieldWriteTagAggregator instance_soot_jimple_spark_fieldrw_FieldWriteTagAggregator;
+    public soot.jimple.spark.fieldrw.FieldWriteTagAggregator instance_soot_jimple_spark_fieldrw_FieldWriteTagAggregator;
     public soot.jimple.spark.fieldrw.FieldWriteTagAggregator soot_jimple_spark_fieldrw_FieldWriteTagAggregator() {
         if( instance_soot_jimple_spark_fieldrw_FieldWriteTagAggregator == null ) instance_soot_jimple_spark_fieldrw_FieldWriteTagAggregator = new soot.jimple.spark.fieldrw.FieldWriteTagAggregator( g );
         return instance_soot_jimple_spark_fieldrw_FieldWriteTagAggregator;

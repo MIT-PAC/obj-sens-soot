@@ -28,29 +28,23 @@ import soot.options.CGOptions;
  */
 public class ObjectSensitiveAllocNode extends AllocNode {
     public static Map<ObjectSensitiveAllocNode,ObjectSensitiveAllocNode> universe;
-    
-    private static final String NO_CONTEXT_INCLUDING_SUBCLASSES[] = 
-            new String[]{
-                        /* "java.lang.String", 
-                         "java.lang.StringBuffer",
-                         "java.lang.StringBuilder", */
-                         "java.lang.Throwable",
-                         "java.math.BigInt",
-                         "java.math.BigInteger"
-        };
-    
+    /** list of classes for which we do not add context */
     private static Set<SootClass> ignoreList;
-    
-
     /** Array for context of allocation (new exprs) */
     private Object[] contextAllocs;
     /** depth of the object sensitivity on heap and method */
     public static int k = 0;
 
-    public static void reset(int depth) {
+    /**
+     * Reset the universe of object sensitive allocation nodes.  Set the depth to the first argument.
+     * Do not track context for classes (and their subclasses) defined in the noContextList 
+     * which is a comma separated list of fully-qualified class names.
+     */
+    public static void reset(int depth, String noContextList) {
         universe = new HashMap<ObjectSensitiveAllocNode,ObjectSensitiveAllocNode>(10000);
         k = depth;
-        installIgnoreList();
+        //System.out.println("Object Sensitivity Depth: " + k);
+        installNoContextList(noContextList);
     }
     
     public static ObjectSensitiveAllocNode getObjSensNode(PAG pag, AllocNode base, Context context) {
@@ -64,14 +58,24 @@ public class ObjectSensitiveAllocNode extends AllocNode {
     }
     
     public static int numberOfObjSensNodes() {
-        return universe.size();
+        if (universe != null)
+            return universe.size();
+        else 
+            return 0;
     }
     
-    public static void installIgnoreList() {
+    /**
+     * Install no context list for classes given plus all subclasses.
+     */
+    private static void installNoContextList(String csl) {
         ignoreList = new HashSet<SootClass>();
         Hierarchy h = Scene.v().getActiveHierarchy();
         
-        for (String str : NO_CONTEXT_INCLUDING_SUBCLASSES) {
+        String[] classes = csl.split(",");
+        
+        for (String str : classes) {
+            str = str.trim();
+            //System.out.println("Adding class plus subclasses to ignore list: " + str);
             SootClass clz = Scene.v().getSootClass(str);
             ignoreList.addAll(h.getSubclassesOfIncluding(clz));
         }
