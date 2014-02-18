@@ -630,7 +630,7 @@ public class PAG implements PointsToAnalysis {
             return node;
         } else {
             //context desired, create a node if needed
-            ObjectSensitiveAllocNode objSensNode = node.context(context);
+            AllocNode objSensNode = node.context(context);
 
             addNodeTag(objSensNode, node.getMethod());
 

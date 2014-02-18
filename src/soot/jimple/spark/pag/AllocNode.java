@@ -55,7 +55,7 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
         
     public AllocNode( PAG pag, Object newExpr, Type t, SootMethod m) {
         super( pag, t );
-        cvns = new HashMap<Context, ObjectSensitiveAllocNode>();
+        cvns = new HashMap<Context, AllocNode>();
         this.method = m;
         if( t instanceof RefType ) {
             RefType rt = (RefType) t;
@@ -108,13 +108,20 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
     }
 
 
-    public ObjectSensitiveAllocNode context( Context context ) 
+    public AllocNode context( Context context ) 
     { 
                 
         //if we have seen this context before, just return the context object for this alloc node
         if (cvns.containsKey(context)) {
             return cvns.get(context);
         }
+        
+        //short cut for k == 1
+        if (ObjectSensitiveAllocNode.k == 1) {
+            cvns.put(context, this);
+            return this;
+        }
+            
 
         //have not seen this context before, so add it and its obj sens node
         if (context instanceof AllocNode) {
@@ -129,13 +136,13 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
         return cvns.get(context);
     }
 
-    public Map<Context, ObjectSensitiveAllocNode> getContextNodeMap() {
+    public Map<Context, AllocNode> getContextNodeMap() {
         return cvns;
     }
     
     /* End of package methods. */
 
-    protected Map<Context, ObjectSensitiveAllocNode> cvns;
+    protected Map<Context, AllocNode> cvns;
 
 }
 

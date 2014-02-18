@@ -152,7 +152,8 @@ public class ObjectSensitiveAllocNode extends AllocNode {
                 }
             }
         } else if (context instanceof AllocNode) {
-            contextAllocs[0] = ((AllocNode)context).newExpr;
+            if (k > 1) 
+                contextAllocs[0] = ((AllocNode)context).newExpr;
         } else {
             throw new RuntimeException("Unsupported context on alloc node: " + context);
         }
