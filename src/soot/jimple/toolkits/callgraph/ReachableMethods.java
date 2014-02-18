@@ -71,9 +71,9 @@ public class ReachableMethods
     public void update() {
         while(edgeSource.hasNext()) {
             Edge e = (Edge) edgeSource.next();
-            SparkTransformer.println("ReachableMethods: update(): " + e);
-            SparkTransformer.println("ReachableMethods: update() " + e.getSrc() + "  " + set.contains( e.getSrc() ) + " " + 
-                    e.getSrc().hashCode());
+            //SparkTransformer.println("ReachableMethods: update(): " + e);
+            //SparkTransformer.println("ReachableMethods: update() " + e.getSrc() + "  " + set.contains( e.getSrc() ) + " " + 
+            //        e.getSrc().hashCode());
             if( set.contains( e.getSrc() ) ) {
                 
                 addMethod( e.getTgt() );

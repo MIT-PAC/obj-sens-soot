@@ -454,7 +454,7 @@ public final class OnFlyCallGraphBuilder
     //used to determine if an update to the pag should notify the call graph
     //called by pag
     public boolean wantTypes( VarNode vn) {
-        SparkTransformer.println("OFCGG: wantTypes " + vn + " " + vn.hashCode() + " " + (receiverToSites.get(vn) != null));
+        //sSparkTransformer.println("OFCGG: wantTypes " + vn + " " + vn.hashCode() + " " + (receiverToSites.get(vn) != null));
 
         if (vn == null)
             throw new RuntimeException("Null varnode in OnFlyCallGraphBuilder");
@@ -472,7 +472,7 @@ public final class OnFlyCallGraphBuilder
             tgtContext = stringConstantContext;
       
 
-        SparkTransformer.println("OFCB: addType " + receiver + " " + tgtContext);
+        //SparkTransformer.println("OFCB: addType " + receiver + " " + tgtContext);
 
         for( Iterator siteIt = ((Collection) receiverToSites.get( receiver )).iterator(); siteIt.hasNext(); ) {
             final VirtualCallSite site = (VirtualCallSite) siteIt.next();
@@ -495,9 +495,9 @@ public final class OnFlyCallGraphBuilder
                     targetsQueue.add( target );            		
                 } 
             } else {
-                if (debug) 
+                /*if (debug) 
                     SparkTransformer.printf("\tResolve: %s %s %s %s\n", type, 
-                        receiver.getType(), site.subSig(), site.container().method());
+                        receiver.getType(), site.subSig(), site.container().method());*/
 
                 VirtualCalls.v().resolve( type,
                     receiver.getType(),
@@ -583,7 +583,7 @@ public final class OnFlyCallGraphBuilder
             receivers.add(receiver);
         }
 
-        SparkTransformer.println("OFCGB: addVirtualCallSite: " + receiver + " " + receiver.hashCode() + " " + iie);
+        //SparkTransformer.println("OFCGB: addVirtualCallSite: " + receiver + " " + receiver.hashCode() + " " + iie);
 
         sites.add(new VirtualCallSite(s, m, iie, subSig, kind));
     }
@@ -630,7 +630,7 @@ public final class OnFlyCallGraphBuilder
                     SootMethod tgt = ie.getMethod();
                     if(tgt!=null) {
                         //static invoke or dynamic invoke
-                        SparkTransformer.println("OFCGB: findReceivers: " + m + " " + s + " " + tgt);
+                        //SparkTransformer.println("OFCGB: findReceivers: " + m + " " + s + " " + tgt);
                         addEdge(m, s, tgt);
 
                         /* not needed for android
@@ -732,7 +732,7 @@ public final class OnFlyCallGraphBuilder
         while( it.hasNext() ) {
             Edge e = (Edge) it.next();
             cm.addStaticEdge( momc, e.srcUnit(), e.tgt(), e.kind() );
-            SparkTransformer.println("OFCGB: processNewMethodContext: " + e);
+            //SparkTransformer.println("OFCGB: processNewMethodContext: " + e);
         }
     }
 

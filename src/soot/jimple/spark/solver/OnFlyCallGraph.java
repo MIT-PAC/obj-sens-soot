@@ -62,7 +62,7 @@ public class OnFlyCallGraph {
         reachableMethods.update();
         while(reachablesReader.hasNext()) {
             MethodOrMethodContext m = (MethodOrMethodContext) reachablesReader.next();
-            SparkTransformer.println("OnFlyCallGraph.processReachables: " + m);
+            //SparkTransformer.println("OnFlyCallGraph.processReachables: " + m);
             MethodPAG mpag = MethodPAG.v( pag, m.method());
             mpag.build();
             mpag.addToPAG(m.context());
@@ -71,7 +71,7 @@ public class OnFlyCallGraph {
     private void processCallEdges() {
         while(callEdges.hasNext()) {
             Edge e = (Edge) callEdges.next();
-            SparkTransformer.println("OnFlyCallGraph.processCallEdge: " + e);
+            //SparkTransformer.println("OnFlyCallGraph.processCallEdge: " + e);
             MethodPAG amp = MethodPAG.v( pag, e.tgt());
             amp.build();
             amp.addToPAG( e.tgtCtxt() );
