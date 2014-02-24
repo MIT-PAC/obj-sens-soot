@@ -34,30 +34,32 @@ import java.util.*;
 public class TopologicalOrderer
 {
     CallGraph cg;
-    List<SootMethod> order = new ArrayList<SootMethod>();
-    NumberedSet visited = new NumberedSet( Scene.v().getMethodNumberer() );
+    List<MethodOrMethodContext> order = new ArrayList<MethodOrMethodContext>();
+    HashSet<MethodOrMethodContext> visited;
+    
     public TopologicalOrderer( CallGraph cg ) {
         this.cg = cg;
     }
 
     public void go() {
-        Iterator methods = cg.sourceMethods();
+        visited = new HashSet<MethodOrMethodContext>(cg.numSources());
+        Iterator<MethodOrMethodContext> methods = cg.sourceMethods();
         while( methods.hasNext() ) {
-            SootMethod m = (SootMethod) methods.next();
+            MethodOrMethodContext m = (MethodOrMethodContext) methods.next();
             dfsVisit( m );
         }
     }
 
-    private void dfsVisit( SootMethod m ) {
+    private void dfsVisit( MethodOrMethodContext m ) {
         if( visited.contains( m ) ) return;
         visited.add( m );
-        Iterator targets = new Targets( cg.edgesOutOf(m) );
+        Iterator<MethodOrMethodContext> targets = new Targets( cg.edgesOutOf(m) );
         while( targets.hasNext() ) {
-            SootMethod target = (SootMethod) targets.next();
+            MethodOrMethodContext target = (MethodOrMethodContext) targets.next();
             dfsVisit( target );
         }
         order.add( m );
     }
 
-    public List<SootMethod> order() { return order; }
+    public List<MethodOrMethodContext> order() { return order; }
 }

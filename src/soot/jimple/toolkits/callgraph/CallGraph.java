@@ -134,6 +134,11 @@ public class CallGraph
     public Iterator<MethodOrMethodContext> sourceMethods() {
         return srcMethodToEdge.keySet().iterator();
     }
+    
+    public int numSources() {
+        return srcMethodToEdge.keySet().size();
+    }
+    
     /** Returns an iterator over all edges that have u as their source unit. */
     public Iterator<Edge> edgesOutOf( Unit u ) {
         return new TargetsOfUnitIterator( u );

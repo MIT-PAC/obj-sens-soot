@@ -41,6 +41,10 @@ public class StaticInliner extends SceneTransformer
     protected void internalTransform(String phaseName, Map options)
     {
         Filter explicitInvokesFilter = new Filter( new ExplicitEdgesPred() );
+        
+        if (true)
+            throw new RuntimeException("does not correctly support method and context when obj sensitive");
+        
         if(Options.v().verbose())
             G.v().out.println("[] Inlining methods...");
 
@@ -64,18 +68,20 @@ public class StaticInliner extends SceneTransformer
         {
             TopologicalOrderer orderer = new TopologicalOrderer(cg);
             orderer.go();
-            List<SootMethod> order = orderer.order();
-            ListIterator<SootMethod> it = order.listIterator(order.size());
+            List<MethodOrMethodContext> order = orderer.order();
+            ListIterator<MethodOrMethodContext> it = order.listIterator(order.size());
     
             while (it.hasPrevious())
             {
-                SootMethod container = it.previous();
+                MethodOrMethodContext momc = it.previous();
+                SootMethod container = momc.method();
+                
                 if( methodToOriginalSize.get(container) == null ) continue;
     
                 if (!container.isConcrete())
                     continue;
     
-                if (!explicitInvokesFilter.wrap( cg.edgesOutOf(container) ).hasNext())
+                if (!explicitInvokesFilter.wrap( cg.edgesOutOf(momc) ).hasNext())
                     continue;
     
                 JimpleBody b = (JimpleBody)container.retrieveActiveBody();

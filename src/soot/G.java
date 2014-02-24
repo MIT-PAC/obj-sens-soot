@@ -75,7 +75,6 @@ public class G extends Singletons
     public Timer Timer_forcedGarbageCollectionTimer = new Timer("gc");
     public int Timer_count;
     public final Map<Scene, ClassHierarchy> ClassHierarchy_classHierarchyMap = new HashMap<Scene, ClassHierarchy>();
-    public final Map<MethodContext, MethodContext> MethodContext_map = new HashMap<MethodContext, MethodContext>();
 
     public ShimpleFactory shimpleFactory = new DefaultShimpleFactory();
 

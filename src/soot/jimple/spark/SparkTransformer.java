@@ -25,6 +25,7 @@ import java.util.Map;
 
 import soot.G;
 import soot.Local;
+import soot.MethodContext;
 import soot.PointsToAnalysis;
 import soot.Scene;
 import soot.SceneTransformer;
@@ -93,6 +94,7 @@ public class SparkTransformer extends SceneTransformer
         //reset method pag cache
         MethodPAG.reset();
         G.v().Parm_pairToElement = new HashMap();
+        MethodContext.clearUniverse();
         
         
         SparkOptions opts = new SparkOptions( options );

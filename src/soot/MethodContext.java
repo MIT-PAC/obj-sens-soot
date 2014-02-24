@@ -25,6 +25,9 @@ import java.util.*;
  */
 public final class MethodContext implements MethodOrMethodContext
 { 
+    private static final Map<MethodContext, MethodContext> MethodContext_map = 
+            new HashMap<MethodContext, MethodContext>();
+    
     private SootMethod method;
     public SootMethod method() { return method; }
     private Context context;
@@ -33,11 +36,19 @@ public final class MethodContext implements MethodOrMethodContext
         this.method = method;
         this.context = context;
     }
+    
+    public static void clearUniverse() {
+        MethodContext_map.clear();
+    }
+    
+    public static int universeSize() {
+        return MethodContext_map.size();
+    }
   
     public static MethodOrMethodContext v( SootMethod method, Context context ) {
         if( context == null ) return method;
         MethodContext probe = new MethodContext( method, context );
-        Map<MethodContext, MethodContext> map = G.v().MethodContext_map;
+        Map<MethodContext, MethodContext> map = MethodContext_map;
         MethodContext ret = map.get( probe );
         if( ret == null ) {
             map.put( probe, probe );
