@@ -107,7 +107,18 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
         return true;
     }
 
-
+    /**
+     * Force the context map to include a map from context -> cNode, denoting
+     * that cNode the context-sensitive version of this allocnode for <context>
+     */
+    public void addContext(Context context, AllocNode cNode) {
+        cvns.put(context, cNode);
+    }
+    
+    /**
+     * Return the context sensitive allocation node associated with this alloc node.
+     * Create the context sensitive allocation node if we have not seen it before.
+     */
     public AllocNode context( Context context ) 
     { 
                 
