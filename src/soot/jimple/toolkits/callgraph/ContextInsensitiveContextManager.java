@@ -31,7 +31,7 @@ public class ContextInsensitiveContextManager implements ContextManager
         this.cg = cg;
     }
 
-    public void addStaticEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind ) {
+    public void addStaticEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind, Context typeContext ) {
         cg.addEdge( new Edge( src, srcUnit, target, kind ) );
     }
 

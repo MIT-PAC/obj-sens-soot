@@ -63,6 +63,7 @@ import soot.jimple.spark.solver.PropWorklist;
 import soot.jimple.spark.solver.Propagator;
 import soot.jimple.spark.solver.SCCCollapser;
 import soot.jimple.toolkits.callgraph.CallGraphBuilder;
+import soot.jimple.toolkits.callgraph.ObjSensContextManager;
 import soot.options.SparkOptions;
 import soot.tagkit.Host;
 import soot.tagkit.StringTag;
@@ -104,10 +105,13 @@ public class SparkTransformer extends SceneTransformer
         //between obj sens and no sens, definitely ugly, but better than passing around
         //global state
         ObjectSensitiveAllocNode.reset(opts.kobjsens(), opts.obj_sens_no_context_list());
+        ObjSensContextManager.OBJ_SENS_CONTEXT_FOR_STATIC_METHODS = false;
         
         // Build pointer assignment graph
         PAGBuilder b;
         if (opts.kobjsens() > 0) {
+            if (opts.obj_sens_context_for_static_methods())
+                ObjSensContextManager.OBJ_SENS_CONTEXT_FOR_STATIC_METHODS = true;
             b = new ObjectSensitiveBuilder();
         } else {
             b = new ContextInsensitiveBuilder();

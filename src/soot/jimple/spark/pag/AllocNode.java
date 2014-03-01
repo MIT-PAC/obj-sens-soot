@@ -49,7 +49,7 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
     public AllocDotField dot( SparkField field ) 
     { return fields == null ? null : (AllocDotField) fields.get( field ); }
     public String toString() {
-        return "AllocNode "+hashCode()+" "+newExpr+" in method "+method;
+        return "AllocNode "+hashCode()+" "+newExpr+" in method "+method + " type: " + getType() + " " + getType().hashCode();
     }
 
         

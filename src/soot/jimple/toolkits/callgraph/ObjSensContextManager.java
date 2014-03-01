@@ -27,13 +27,18 @@ import soot.jimple.spark.pag.PAG;
 public class ObjSensContextManager implements ContextManager 
 { 
     private CallGraph cg;
+    
+    public static boolean OBJ_SENS_CONTEXT_FOR_STATIC_METHODS = false;
 
     public ObjSensContextManager( CallGraph cg ) {
         this.cg = cg;
     }
 
-    public void addStaticEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind ) {
-        cg.addEdge( new Edge( src, srcUnit, target, kind ) );
+    public void addStaticEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind, Context typeContext ) {
+        if (OBJ_SENS_CONTEXT_FOR_STATIC_METHODS)
+            cg.addEdge( new Edge( src, srcUnit, MethodContext.v(target, typeContext), kind ) );
+        else 
+            cg.addEdge( new Edge( src, srcUnit, target, kind ) );
     }
 
     public void addVirtualEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind, Context typeContext ) {

@@ -38,9 +38,9 @@ public final class PropIter extends Propagator {
             handleAllocNode( (AllocNode) object );
         }
         int iteration = 1;
-	boolean change;
-	do {
-	    change = false;
+        boolean change;
+        do {
+            change = false;
             TreeSet<Object> simpleSources = new TreeSet<Object>( pag.simpleSources() );
             if( pag.getOpts().verbose() ) {
                 G.v().out.println( "Iteration "+(iteration++) );
@@ -71,13 +71,13 @@ public final class PropIter extends Propagator {
                     new TopoSorter( pag, false ).sort();
                 }
             }
-	    for (Object object : pag.loadSources()) {
+            for (Object object : pag.loadSources()) {
                 change = handleLoads( (FieldRefNode) object ) | change;
-	    }
-	    for (Object object : pag.storeSources()) {
+            }
+            for (Object object : pag.storeSources()) {
                 change = handleStores( (VarNode) object ) | change;
-	    }
-	} while( change );
+            }
+        } while( change );
     }
 
     /* End of public methods. */
@@ -86,35 +86,35 @@ public final class PropIter extends Propagator {
     /** Propagates new points-to information of node src to all its
      * successors. */
     protected final boolean handleAllocNode( AllocNode src ) {
-	boolean ret = false;
-	Node[] targets = pag.allocLookup( src );
-	for (Node element : targets) {
-	    ret = element.makeP2Set().add( src ) | ret;
-	}
-	return ret;
+        boolean ret = false;
+        Node[] targets = pag.allocLookup( src );
+        for (Node element : targets) {
+            ret = element.makeP2Set().add( src ) | ret;
+        }
+        return ret;
     }
 
     protected final boolean handleSimples( VarNode src ) {
-	boolean ret = false;
-	PointsToSetInternal srcSet = src.getP2Set();
-	if( srcSet.isEmpty() ) return false;
-	Node[] simpleTargets = pag.simpleLookup( src );
-	for (Node element : simpleTargets) {
-	    ret = element.makeP2Set().addAll( srcSet, null ) | ret;
-	}
+        boolean ret = false;
+        PointsToSetInternal srcSet = src.getP2Set();
+        if( srcSet.isEmpty() ) return false;
+        Node[] simpleTargets = pag.simpleLookup( src );
+        for (Node element : simpleTargets) {
+            ret = element.makeP2Set().addAll( srcSet, null ) | ret;
+        }
         return ret;
     }
 
     protected final boolean handleStores( VarNode src ) {
-	boolean ret = false;
-	final PointsToSetInternal srcSet = src.getP2Set();
-	if( srcSet.isEmpty() ) return false;
-	Node[] storeTargets = pag.storeLookup( src );
-	for (Node element : storeTargets) {
+        boolean ret = false;
+        final PointsToSetInternal srcSet = src.getP2Set();
+        if( srcSet.isEmpty() ) return false;
+        Node[] storeTargets = pag.storeLookup( src );
+        for (Node element : storeTargets) {
             final FieldRefNode fr = (FieldRefNode) element;
             final SparkField f = fr.getField();
             ret = fr.getBase().getP2Set().forall( new P2SetVisitor() {
-            public final void visit( Node n ) {
+                public final void visit( Node n ) {
                     AllocDotField nDotF = pag.makeAllocDotField( 
                         (AllocNode) n, f );
                     if( nDotF.makeP2Set().addAll( srcSet, null ) ) {
@@ -122,16 +122,16 @@ public final class PropIter extends Propagator {
                     }
                 }
             } ) | ret;
-	}
+        }
         return ret;
     }
 
     protected final boolean handleLoads( FieldRefNode src ) {
-	boolean ret = false;
-	final Node[] loadTargets = pag.loadLookup( src );
+        boolean ret = false;
+        final Node[] loadTargets = pag.loadLookup( src );
         final SparkField f = src.getField();
         ret = src.getBase().getP2Set().forall( new P2SetVisitor() {
-        public final void visit( Node n ) {
+            public final void visit( Node n ) {
                 AllocDotField nDotF = ((AllocNode)n).dot( f );
                 if( nDotF == null ) return;
                 PointsToSetInternal set = nDotF.getP2Set();

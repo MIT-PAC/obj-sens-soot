@@ -55,6 +55,7 @@ public class ObjectSensitiveAllocNode extends AllocNode {
         if (!universe.containsKey(probe)) {
             universe.put(probe, probe);
             pag.getAllocNodeNumberer().add( probe );
+            pag.newAllocNodes.add(probe);
         } 
         
         return universe.get(probe);        
@@ -101,7 +102,9 @@ public class ObjectSensitiveAllocNode extends AllocNode {
                 buf.append(String.format("[%s (%s)]", contextAllocs[i], 
                     (contextAllocs[i] == null ? 0 : contextAllocs[i].hashCode())));
         }
-
+        
+        buf.append(" " + getType() + " " + getType().hashCode() + " " + getNumber());
+        
         return buf.toString();
     }
     

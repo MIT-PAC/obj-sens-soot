@@ -49,6 +49,10 @@ public class SparkOptions
         return soot.PhaseOptions.getInt(options, "kobjsens");
     }
     
+    public boolean obj_sens_context_for_static_methods() {
+        return soot.PhaseOptions.getBoolean(options, "objsens-context-for-static-methods");
+    }
+    
     
     
     /** Verbose --

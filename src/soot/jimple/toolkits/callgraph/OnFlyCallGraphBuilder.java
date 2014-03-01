@@ -559,7 +559,7 @@ public final class OnFlyCallGraphBuilder
                             site.container(),
                             site.stmt(),
                             clinit,
-                            Kind.CLINIT );
+                            Kind.CLINIT, null );
                     }
                 }
             }
@@ -731,7 +731,7 @@ public final class OnFlyCallGraphBuilder
         Iterator it = cicg.edgesOutOf(momc);
         while( it.hasNext() ) {
             Edge e = (Edge) it.next();
-            cm.addStaticEdge( momc, e.srcUnit(), e.tgt(), e.kind() );
+            cm.addStaticEdge( momc, e.srcUnit(), e.tgt(), e.kind(), momc.context() );
             //SparkTransformer.println("OFCGB: processNewMethodContext: " + e);
         }
     }
