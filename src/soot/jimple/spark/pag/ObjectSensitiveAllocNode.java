@@ -106,7 +106,7 @@ public class ObjectSensitiveAllocNode extends AllocNode {
         contextAllocs = new Object[ObjectSensitiveConfig.v().k() - 1];
         
         //short-circuit context for some types
-        if (ObjectSensitiveConfig.v().noContext(base))
+        if (ObjectSensitiveConfig.v().limitContextDepth(base))
             return;
         
         if (context instanceof ObjectSensitiveAllocNode) {

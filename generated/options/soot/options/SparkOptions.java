@@ -50,7 +50,7 @@ public class SparkOptions
     }
     
     public boolean obj_sens_context_for_static_methods() {
-        return soot.PhaseOptions.getBoolean(options, "objsens-context-for-static-methods");
+        return soot.PhaseOptions.getBoolean(options, "kobjsens-context-for-static-methods");
     }
     
     
@@ -545,7 +545,15 @@ public class SparkOptions
     }
     
     public String obj_sens_no_context_list() {
-        return soot.PhaseOptions.getString( options, "obj-sens-no-context-list");
+        return soot.PhaseOptions.getString( options, "kobjsens-no-context-list");
+    }
+    
+    public String obj_sens_important_allocators() {
+        return soot.PhaseOptions.getString( options, "kobjsens-important-allocators");
+    }
+    
+    public boolean obj_sens_precise_strings() {
+        return soot.PhaseOptions.getBoolean( options, "kobjsens-precise-strings");
     }
     
     /** Verification file --
