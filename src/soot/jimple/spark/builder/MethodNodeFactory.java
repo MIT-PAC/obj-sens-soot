@@ -238,7 +238,7 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
     final public void caseNewExpr( NewExpr ne ) {
         if( (pag.getOpts().merge_stringbuffer() 
                 && isStringBuffer(ne.getType())) ||
-             (ObjectSensitiveAllocNode.k > 0 && ObjectSensitiveAllocNode.noContext(ne.getType()))   ) {
+             (ObjectSensitiveConfig.isObjectSensitive() && ObjectSensitiveConfig.v().noContext(ne.getType(), method))   ) {
             setResult( pag.makeAllocNode( ne.getType(), ne.getType(), null ) );
         } else {
             setResult( pag.makeAllocNode( ne, ne.getType(), method ) );

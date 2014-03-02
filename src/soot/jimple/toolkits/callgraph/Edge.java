@@ -21,6 +21,7 @@ package soot.jimple.toolkits.callgraph;
 import soot.*;
 import soot.jimple.*;
 import soot.jimple.spark.pag.ObjectSensitiveAllocNode;
+import soot.jimple.spark.pag.ObjectSensitiveConfig;
 
 /** Represents a single edge in a call graph.
  * @author Ondrej Lhotak
@@ -75,7 +76,7 @@ public final class Edge
     }
     
     private void check() {
-        if (ObjectSensitiveAllocNode.k > 0) {
+        if (ObjectSensitiveConfig.isObjectSensitive() && ObjectSensitiveConfig.v().k() > 0) {
             if (src != null && !src().isStatic() && !(src instanceof MethodContext))
                 throw new RuntimeException("Virtual method source without context in call graph: " + src);
         

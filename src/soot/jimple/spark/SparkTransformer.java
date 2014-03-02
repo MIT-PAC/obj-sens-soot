@@ -48,6 +48,7 @@ import soot.jimple.spark.pag.AllocNode;
 import soot.jimple.spark.pag.MethodPAG;
 import soot.jimple.spark.pag.Node;
 import soot.jimple.spark.pag.ObjectSensitiveAllocNode;
+import soot.jimple.spark.pag.ObjectSensitiveConfig;
 import soot.jimple.spark.pag.PAG;
 import soot.jimple.spark.pag.PAG2HTML;
 import soot.jimple.spark.pag.PAGDumper;
@@ -104,17 +105,20 @@ public class SparkTransformer extends SceneTransformer
         //always reset the obj sens universe because we might switch back and forth 
         //between obj sens and no sens, definitely ugly, but better than passing around
         //global state
-        ObjectSensitiveAllocNode.reset(opts.kobjsens(), opts.obj_sens_no_context_list());
-        ObjSensContextManager.OBJ_SENS_CONTEXT_FOR_STATIC_METHODS = false;
+        ObjectSensitiveAllocNode.reset();
+       
         
         // Build pointer assignment graph
         PAGBuilder b;
         if (opts.kobjsens() > 0) {
-            if (opts.obj_sens_context_for_static_methods())
-                ObjSensContextManager.OBJ_SENS_CONTEXT_FOR_STATIC_METHODS = true;
+            ObjectSensitiveConfig.initialize(opts.kobjsens(), opts.obj_sens_no_context_list(), 
+                opts.obj_sens_context_for_static_methods());
+
             b = new ObjectSensitiveBuilder();
+            
         } else {
             b = new ContextInsensitiveBuilder();
+            ObjectSensitiveConfig.noObjectSens();
         }
         
         

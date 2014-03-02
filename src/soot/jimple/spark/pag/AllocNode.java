@@ -128,7 +128,7 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
         }
         
         //short cut for k == 1
-        if (ObjectSensitiveAllocNode.k == 1) {
+        if (ObjectSensitiveConfig.isObjectSensitive() && ObjectSensitiveConfig.v().k() == 1) {
             cvns.put(context, this);
             return this;
         }

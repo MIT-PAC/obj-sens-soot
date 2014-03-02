@@ -17,6 +17,7 @@ import soot.SootClass;
 import soot.SootMethod;
 import soot.Type;
 import soot.jimple.spark.SparkTransformer;
+import soot.jimple.toolkits.callgraph.ObjSensContextManager;
 import soot.options.CGOptions;
 
 /**
@@ -28,12 +29,10 @@ import soot.options.CGOptions;
  */
 public class ObjectSensitiveAllocNode extends AllocNode {
     public static Map<ObjectSensitiveAllocNode,ObjectSensitiveAllocNode> universe;
-    /** list of classes for which we do not add context */
-    private static Set<SootClass> ignoreList;
+   
     /** Array for context of allocation (new exprs) */
     private Object[] contextAllocs;
-    /** depth of the object sensitivity on heap and method */
-    public static int k = 0;
+  
     private static int numObjs = 0;
 
     /**
@@ -41,12 +40,8 @@ public class ObjectSensitiveAllocNode extends AllocNode {
      * Do not track context for classes (and their subclasses) defined in the noContextList 
      * which is a comma separated list of fully-qualified class names.
      */
-    public static void reset(int depth, String noContextList) {
+    public static void reset() {
         universe = new HashMap<ObjectSensitiveAllocNode,ObjectSensitiveAllocNode>(10000);
-        k = depth;
-        //System.out.println("Object Sensitivity Depth: " + k);
-        if (noContextList != null) 
-            installNoContextList(noContextList);
         numObjs = 0;
     }
 
@@ -71,23 +66,7 @@ public class ObjectSensitiveAllocNode extends AllocNode {
             return 0;
         
     }
-    
-    /**
-     * Install no context list for classes given plus all subclasses.
-     */
-    private static void installNoContextList(String csl) {
-        ignoreList = new HashSet<SootClass>();
-        Hierarchy h = Scene.v().getActiveHierarchy();
-        
-        String[] classes = csl.split(",");
-        
-        for (String str : classes) {
-            str = str.trim();
-            //System.out.println("Adding class plus subclasses to ignore list: " + str);
-            SootClass clz = Scene.v().getSootClass(str);
-            ignoreList.addAll(h.getSubclassesOfIncluding(clz));
-        }
-    }
+   
     
     public String toString() {
         StringBuffer buf = new StringBuffer();
@@ -113,7 +92,7 @@ public class ObjectSensitiveAllocNode extends AllocNode {
     }
     
     public Object getContext(int i) {
-        if (i < 1 || i >= k)
+        if (i < 1 || i >= ObjectSensitiveConfig.v().k())
             throw new RuntimeException("Invalid context index for object sensitive node: " + i);
         
         return contextAllocs[i - 1];
@@ -124,17 +103,17 @@ public class ObjectSensitiveAllocNode extends AllocNode {
     public ObjectSensitiveAllocNode( PAG pag, AllocNode base, Context context ) {
         super( pag, base.newExpr, base.type, base.getMethod());
         
-        contextAllocs = new Object[k - 1];
+        contextAllocs = new Object[ObjectSensitiveConfig.v().k() - 1];
         
         //short-circuit context for some types
-        if (noContext(base.getType()))
+        if (ObjectSensitiveConfig.v().noContext(base))
             return;
         
         if (context instanceof ObjectSensitiveAllocNode) {
             ObjectSensitiveAllocNode osan = (ObjectSensitiveAllocNode)context;
             
             //add context from the context node, plus k  - 1 of object
-            if (k > 1 && context != null) {
+            if (ObjectSensitiveConfig.v().k() > 1 && context != null) {
                
                 /*
                 //don't add a node twice
@@ -145,17 +124,11 @@ public class ObjectSensitiveAllocNode extends AllocNode {
                 contextAllocs[0] = osan.newExpr;
                 
                 for (int i = 1; i < osan.contextAllocs.length; i++) {
-                    //don't add a node twice, break context at recursive alloc chain
-                    /*
-                    if (osan.contextAllocs[i - 1] == null || 
-                            containsNewExprContext(osan.contextAllocs[i - 1]))
-                        return;
-                    */
                     contextAllocs[i] = osan.contextAllocs[i - 1];
                 }
             }
         } else if (context instanceof AllocNode) {
-            if (k > 1) 
+            if (ObjectSensitiveConfig.v().k() > 1) 
                 contextAllocs[0] = ((AllocNode)context).newExpr;
         } else {
             throw new RuntimeException("Unsupported context on alloc node: " + context);
@@ -167,16 +140,6 @@ public class ObjectSensitiveAllocNode extends AllocNode {
             if (contextAlloc.equals(contextAllocs[i]))
                 return true;
         }
-        return false;
-    }
-
-    public static boolean noContext(Type type) {
-
-        if (type instanceof RefType) {
-            SootClass clz = ((RefType)type).getSootClass();
-            return ignoreList.contains(clz);
-        }
-        //context for everything else?
         return false;
     }
 

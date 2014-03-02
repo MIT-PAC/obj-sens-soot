@@ -32,6 +32,7 @@ import soot.PointsToSet;
 import soot.Scene;
 import soot.Type;
 import soot.jimple.spark.pag.ObjectSensitiveAllocNode;
+import soot.jimple.spark.pag.ObjectSensitiveConfig;
 import soot.jimple.spark.pag.PAG;
 import soot.util.queue.QueueReader;
 
@@ -49,7 +50,7 @@ public final class CallGraphBuilder
     public ReachableMethods reachables() { return reachables; }
 
     public static ContextManager makeContextManager( CallGraph cg ) {
-        if (ObjectSensitiveAllocNode.k > 0)
+        if (ObjectSensitiveConfig.isObjectSensitive() && ObjectSensitiveConfig.v().k() > 0)
             return new ObjSensContextManager(cg);
         else
             return new ContextInsensitiveContextManager( cg );

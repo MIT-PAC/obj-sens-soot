@@ -18,7 +18,11 @@
  */
 
 package soot.jimple.toolkits.callgraph;
+import java.util.HashSet;
+import java.util.Set;
+
 import soot.*;
+import soot.jimple.spark.pag.ObjectSensitiveConfig;
 import soot.jimple.spark.pag.PAG;
 
 /** A context manager which creates an object-sensitive call graph.
@@ -27,15 +31,15 @@ import soot.jimple.spark.pag.PAG;
 public class ObjSensContextManager implements ContextManager 
 { 
     private CallGraph cg;
-    
-    public static boolean OBJ_SENS_CONTEXT_FOR_STATIC_METHODS = false;
+   
 
     public ObjSensContextManager( CallGraph cg ) {
         this.cg = cg;
     }
+    
 
     public void addStaticEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind, Context typeContext ) {
-        if (OBJ_SENS_CONTEXT_FOR_STATIC_METHODS)
+        if (ObjectSensitiveConfig.isObjectSensitive() && ObjectSensitiveConfig.v().contextForAllStaticMethods())
             cg.addEdge( new Edge( src, srcUnit, MethodContext.v(target, typeContext), kind ) );
         else 
             cg.addEdge( new Edge( src, srcUnit, target, kind ) );

@@ -622,7 +622,8 @@ public class PAG implements PointsToAnalysis {
     }
 
     public AllocNode makeObjSensAllocNode(AllocNode node, Context context) {
-        if (ObjectSensitiveAllocNode.noContext(node.getType())) {
+        if (ObjectSensitiveConfig.isObjectSensitive() &&
+                ObjectSensitiveConfig.v().noContext(node)) {
             //no context desired
             //but remember that this node is the context sensitive version of itself
             node.addContext(context, node);
