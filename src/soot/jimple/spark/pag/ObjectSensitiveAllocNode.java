@@ -45,6 +45,10 @@ public class ObjectSensitiveAllocNode extends AllocNode {
         numObjs = 0;
     }
 
+    public AllocNode getRepFromUniverse() {
+        return universe.get(this);
+    }
+    
     public static ObjectSensitiveAllocNode getObjSensNode(PAG pag, AllocNode base, Context context) {
         ObjectSensitiveAllocNode probe = new ObjectSensitiveAllocNode(pag, base, context);
         if (!universe.containsKey(probe)) {

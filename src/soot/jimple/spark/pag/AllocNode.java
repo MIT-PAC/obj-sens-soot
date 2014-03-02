@@ -52,7 +52,6 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
         return "AllocNode "+hashCode()+" "+newExpr+" in method "+method + " type: " + getType() + " " + getType().hashCode();
     }
 
-        
     public AllocNode( PAG pag, Object newExpr, Type t, SootMethod m) {
         super( pag, t );
         cvns = new HashMap<Context, AllocNode>();
