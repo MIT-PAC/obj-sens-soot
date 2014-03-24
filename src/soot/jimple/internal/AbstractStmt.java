@@ -40,13 +40,23 @@ public abstract class AbstractStmt extends AbstractUnit implements Stmt, Convert
 {
     public void convertToBaf(JimpleToBafContext context, List<Unit> out)
     {
-	Unit u = Baf.v().newNopInst();
+        Unit u = Baf.v().newNopInst();
         out.add(u);
-	Iterator it = getTags().iterator();
-	while(it.hasNext()) {
-	    u.addTag((Tag) it.next());
-	}
+        Iterator it = getTags().iterator();
+        while(it.hasNext()) {
+            u.addTag((Tag) it.next());
+        }
     }
+
+    public final int getNumber() {
+        return number;
+    }
+    public final void setNumber(int number) {
+        this.number = number;
+    }
+    private int number = 0;
+
+
 
     public boolean containsInvokeExpr()
     {
@@ -65,32 +75,32 @@ public abstract class AbstractStmt extends AbstractUnit implements Stmt, Convert
 
     public boolean containsArrayRef()
     {
-	return false;
+        return false;
     }
 
     public ArrayRef getArrayRef()
     {
-	throw new RuntimeException("getArrayRef() called with no ArrayRef present!");
+        throw new RuntimeException("getArrayRef() called with no ArrayRef present!");
     }
 
     public ValueBox getArrayRefBox()
     {
-	throw new RuntimeException("getArrayRefBox() called with no ArrayRef present!");
+        throw new RuntimeException("getArrayRefBox() called with no ArrayRef present!");
     }
 
     public boolean containsFieldRef()
     {
-	return false;
+        return false;
     }
 
     public FieldRef getFieldRef()
     {
-	throw new RuntimeException("getFieldRef() called with no FieldRef present!");
+        throw new RuntimeException("getFieldRef() called with no FieldRef present!");
     }
 
     public ValueBox getFieldRefBox()
     {
-	throw new RuntimeException("getFieldRefBox() called with no FieldRef present!");
+        throw new RuntimeException("getFieldRefBox() called with no FieldRef present!");
     }
 
 }

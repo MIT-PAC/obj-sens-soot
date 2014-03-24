@@ -18,6 +18,9 @@
  */
 
 package soot.jimple.spark.solver;
+import java.util.LinkedList;
+import java.util.List;
+
 import soot.jimple.spark.SparkTransformer;
 import soot.jimple.spark.sets.*;
 import soot.jimple.spark.pag.*;
@@ -41,12 +44,36 @@ public class OnFlyCallGraph {
     public ReachableMethods reachableMethods() { return reachableMethods; }
     public CallGraph callGraph() { return callGraph; }
 
+    /**
+     * When object sensitive, create a list of reachable methods with NoContext,
+     * and then install them in the scene!
+     * 
+     * @param cg
+     */    
+    private void resetReachableMethodsWithContext(CallGraph cg) {
+
+        List<MethodOrMethodContext> withNoContext = new LinkedList<MethodOrMethodContext>();
+        for (SootMethod method : Scene.v().getEntryPoints()) {
+            withNoContext.add(MethodContext.v(method, EntryContext.v()));
+        }
+
+        ReachableMethods reachableMethods = new ReachableMethods(
+            cg, withNoContext );
+
+
+        Scene.v().setReachableMethods(reachableMethods);
+    }
+
     public OnFlyCallGraph( PAG pag ) {
         this.pag = pag;
         callGraph = new CallGraph();
         Scene.v().setCallGraph( callGraph );
-        ContextManager cm = CallGraphBuilder.makeContextManager(callGraph);
+        //change reachable methods list of entry points to have method contexts with NoContext
+        if (ObjectSensitiveConfig.isObjectSensitive())
+            resetReachableMethodsWithContext(callGraph);
+
         reachableMethods = Scene.v().getReachableMethods();
+        ContextManager cm = CallGraphBuilder.makeContextManager(callGraph, pag);
         ofcgb = new OnFlyCallGraphBuilder( pag, cm, reachableMethods );
         reachablesReader = reachableMethods.listener();
         callEdges = cm.callGraph().listener();
@@ -56,7 +83,7 @@ public class OnFlyCallGraph {
         processReachables();
         processCallEdges();
     }
-    
+
     //TODO: redundant??
     private void processReachables() {
         reachableMethods.update();
@@ -65,7 +92,12 @@ public class OnFlyCallGraph {
             //SparkTransformer.println("OnFlyCallGraph.processReachables: " + m);
             MethodPAG mpag = MethodPAG.v( pag, m.method());
             mpag.build();
-            mpag.addToPAG(m.context());
+            Context context = m.context();
+            if (ObjectSensitiveConfig.isObjectSensitive() && context == null) {
+                throw new RuntimeException("context should not be null");
+            }
+
+            mpag.addToPAG(context);
         }
     }
     private void processCallEdges() {
@@ -82,29 +114,50 @@ public class OnFlyCallGraph {
     public OnFlyCallGraphBuilder ofcgb() { return ofcgb; }
 
     public void updatedNode( final VarNode vn ) {
-        Object r = vn.getVariable();
+        final Object r = vn.getVariable();
+       
+        //is the vn a this ref, if so, test its pt set!
+        if (ObjectSensitiveConfig.isObjectSensitive() && (vn.isThisPtr() && vn instanceof ContextVarNode)) {
+            PointsToSetInternal p2set = vn.getP2Set().getNewSet();
+            final Context context = vn.context();
+            p2set.forall( new P2SetVisitor() {
+                public final void visit( Node n ) {
+                    if (context instanceof NoContext) {
+                        if (n instanceof ObjectSensitiveAllocNode && !((ObjectSensitiveAllocNode)n).noContext())
+                            throw new RuntimeException("Failed this ref test: " + vn + " " + r + " " 
+                                    + context + " " + n);            
+                    } else {
+                        if (!context.equals(n))
+                            throw new RuntimeException("Failed this ref test: " + vn + " " + r + " " 
+                                    + context + " " + n);                        
+                    }
+                }} );
+
+        }
+        
+        
         if( !(r instanceof Local) ) return;
         final Local receiver = (Local) r;
-        final Context context = vn.context();
-
+       
         PointsToSetInternal p2set = vn.getP2Set().getNewSet();
+         
         if( ofcgb.wantTypes( vn ) ) {
-            
             p2set.forall( new P2SetVisitor() {
-            public final void visit( Node n ) {
-                ofcgb.addType( vn, n.getType(), (AllocNode) n , false);
-            }} );
+                public final void visit( Node n ) {
+
+                    ofcgb.addType( vn, n.getType(), (AllocNode) n , false);
+                }} );
         }
         if( ofcgb.wantStringConstants( receiver ) ) {
             p2set.forall( new P2SetVisitor() {
-            public final void visit( Node n ) {
-                if( n instanceof StringConstantNode ) {
-                    String constant = ((StringConstantNode)n).getString();
-                    ofcgb.addStringConstant( receiver, constant );
-                } else {
-                    ofcgb.addStringConstant( receiver, null );
-                }
-            }} );
+                public final void visit( Node n ) {
+                    if( n instanceof StringConstantNode ) {
+                        String constant = ((StringConstantNode)n).getString();
+                        ofcgb.addStringConstant( receiver, constant );
+                    } else {
+                        ofcgb.addStringConstant( receiver, null );
+                    }
+                }} );
         }
     }
 

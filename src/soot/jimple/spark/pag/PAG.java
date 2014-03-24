@@ -195,9 +195,6 @@ public class PAG implements PointsToAnalysis {
 
     /** Returns the set of objects pointed to by variable l in context c. */
     public PointsToSet reachingObjects( Context c, Local l ) {
-        if (c == null) {
-            throw new RuntimeException("Context should not be null!");
-        }
 
         VarNode n = findContextVarNode( l, c );
         if( n == null ) {
@@ -462,10 +459,6 @@ public class PAG implements PointsToAnalysis {
     /** Returns the set of objects pointed to by instance field f
      * of the objects pointed to by l in context c. */
     public PointsToSet reachingObjects( Context c, Local l, SootField f ) {
-        if (c == null) {
-            throw new RuntimeException("Context should not be null!");
-        }
-
         return reachingObjects( reachingObjects(c, l), f );
     }
 
@@ -487,7 +480,7 @@ public class PAG implements PointsToAnalysis {
         AllocNode ret = valToAllocNode.get( newExpr );
 
         if( ret == null ) {
-            valToAllocNode.put( newExpr, ret = new AllocNode( this, newExpr, type, m) );
+            valToAllocNode.put( newExpr, ret = new InsensitiveAllocNode( this, newExpr, type, m) );
             getAllocNodeNumberer().add( ret );
             //System.out.println("Making alloc node: " + ret);
             newAllocNodes.add( ret );
@@ -597,9 +590,14 @@ public class PAG implements PointsToAnalysis {
     }
     /** Finds the ContextVarNode for base variable value and context
      * context, or returns null. */
-    public ContextVarNode findContextVarNode( Object baseValue, Context context ) {
+    public LocalVarNode findContextVarNode( Object baseValue, Context context ) {
         LocalVarNode base = findLocalVarNode( baseValue );
-        if( base == null ) return null;
+        if ( base == null ) 
+            return null;
+        //the null context is just the local var node
+        if (context == null)
+            throw new RuntimeException("Context is null when tryin to get a context var node");
+        //if context, then get the context sensitive node
         return base.context( context );
     }
     /** Finds or creates the ContextVarNode for base variable baseValue and context
@@ -621,26 +619,13 @@ public class PAG implements PointsToAnalysis {
         return ret;
     }
 
-    public AllocNode makeObjSensAllocNode(AllocNode node, Context context) {
-        if (ObjectSensitiveConfig.isObjectSensitive() &&
-                ObjectSensitiveConfig.v().limitContextDepth(node)) {
-            //no context desired
-            //but remember that this node is the context sensitive version of itself
-            node.addContext(context, node);
-            return node;
-        } if (node instanceof StringConstantNode || node instanceof ClassConstantNode) {
-            //don't create context nodes for constants
-            //but remember this node is a context sensitive version of itself
-            node.addContext(context, node);
-            return node;
-        } else {
-            //context desired, create a node if needed
-            AllocNode objSensNode = node.context(context);
+    public ObjectSensitiveAllocNode makeObjSensAllocNode(InsensitiveAllocNode node, Context context) {
+        //context desired, create a node if needed
+        ObjectSensitiveAllocNode objSensNode = node.context(context);
 
-            addNodeTag(objSensNode, node.getMethod());
+        addNodeTag(objSensNode, node.getMethod());
 
-            return objSensNode;
-        }
+        return objSensNode;
     }
 
     /** Finds the FieldRefNode for base variable value and field
@@ -1187,6 +1172,24 @@ public class PAG implements PointsToAnalysis {
              */
         }
         return ((Set<Node>) valueList).add( value );
+    }
+
+    public PointsToSetInternal prunePTSetForThisPtr(final VarNode node, PointsToSetInternal pts) {
+        if (!node.isThisPtr() || !ObjectSensitiveConfig.isObjectSensitive())
+            return pts;
+    
+        final PointsToSetInternal newPts = setFactory.newSet(pts.getType(), this);
+
+        pts.forall( new P2SetVisitor() {
+            public final void visit( Node n ) {
+                if (ObjectSensitiveConfig.v().thisPtrShouldAdd((AllocNode)n, node))
+                    newPts.add(n);
+            }} );
+
+         if (newPts.size() != pts.size())
+             return newPts;
+         else 
+             return pts;
     }
 
     public Set<AllocNode> getAllocNodes() {

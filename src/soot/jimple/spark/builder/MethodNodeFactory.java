@@ -29,6 +29,7 @@ import soot.shimple.*;
  * @author Ondrej Lhotak
  */
 public class MethodNodeFactory extends AbstractShimpleValueSwitch {
+   
     
     public MethodNodeFactory( PAG pag, MethodPAG mpag ) {
         this.pag = pag;
@@ -281,19 +282,21 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
     @Override
     final public void caseStringConstant( StringConstant sc ) {
         AllocNode stringConstant;
-        if( pag.getOpts().string_constants()
+        if( (pag.getOpts().string_constants()
                 || Scene.v().containsClass(sc.value) 
-                || ( sc.value.length() > 0 && sc.value.charAt(0) == '[' ) ) {
+                || ( sc.value.length() > 0 && sc.value.charAt(0) == '[' ))) {
             stringConstant = pag.makeStringConstantNode( sc );
         } else {
             stringConstant = pag.makeAllocNode(
                 PointsToAnalysis.STRING_NODE,
                 RefType.v( "java.lang.String" ), null );
         }
+     
         VarNode stringConstantLocal = pag.makeGlobalVarNode(
             stringConstant,
             RefType.v( "java.lang.String" ) );
-        pag.addEdge( stringConstant, stringConstantLocal );
+        //pag.addEdge( stringConstant, stringConstantLocal );
+        mpag.addInternalEdge( stringConstant, stringConstantLocal );
         setResult( stringConstantLocal );
     }
 
@@ -313,7 +316,8 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
         VarNode classConstantLocal = pag.makeGlobalVarNode(
             classConstant,
             RefType.v( "java.lang.Class" ) );
-        pag.addEdge(classConstant, classConstantLocal);
+        //pag.addEdge(classConstant, classConstantLocal);
+        mpag.addInternalEdge(classConstant, classConstantLocal);
         setResult(classConstantLocal);
     }
 

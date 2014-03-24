@@ -55,7 +55,7 @@ public final class MethodPAG {
         MethodPAG_methodToPag = 
                 new HashMap<SootMethod, MethodPAG>();
     }
-    
+
     protected MethodPAG( PAG pag, SootMethod m ) {
         this.pag = pag;
         this.method = m;
@@ -158,35 +158,56 @@ public final class MethodPAG {
         addMiscEdges();
     }
 
-    protected VarNode parameterize( LocalVarNode vn, Context varNodeParameter ) {
+    protected Node parameterize( LocalVarNode vn, Context context ) {
         SootMethod m = vn.getMethod();
         if( m != method && m != null ) throw new RuntimeException( "VarNode "+vn+" with method "+m+" parameterized in method "+method );
         //System.out.println( "parameterizing "+vn+" with "+varNodeParameter );
-        return pag().makeContextVarNode( vn, varNodeParameter );
+        /*
+        if (ObjectSensitiveConfig.isObjectSensitive() && vn.isThisPtr()) {
+            //do something special for this pointer...
+            if (context instanceof AllocNode ) {
+                return (AllocNode)context;
+            }
+            else if (context instanceof NoContext) 
+                return null;
+            else 
+                throw new RuntimeException("Strange context for this reference when parameterizing: " + context.getClass());
+        } else 
+            
+            */
+        return pag().makeContextVarNode( vn, context ); 
     }
-    
+
     protected FieldRefNode parameterize( FieldRefNode frn, Context varNodeParameter ) {
         return pag().makeFieldRefNode(
-                (VarNode) parameterize( frn.getBase(), varNodeParameter ),
-                frn.getField() );
+            (VarNode) parameterize( frn.getBase(), varNodeParameter ),
+            frn.getField() );
     }
-    
-    protected AllocNode parameterize(AllocNode node, Context context) {
-        if (context == null) {
-            return node;
-        } else 
-            return pag().makeObjSensAllocNode(node, context);
+
+    protected AllocNode parameterize(InsensitiveAllocNode node, Context context) {
+        return pag().makeObjSensAllocNode(node, context);
     }
-    
+
     public Node parameterize( Node n, Context varNodeParameter ) {
-        if( varNodeParameter == null ) return n;
+        
+        if( varNodeParameter == null) {
+            //if obj sens, we should never have the null context!
+            if (ObjectSensitiveConfig.isObjectSensitive())
+                varNodeParameter = NoContext.v();
+            else  //if not obj sens, then just return if null
+                return n;
+        }
+               
         if( n instanceof LocalVarNode ) 
             return parameterize( (LocalVarNode) n, varNodeParameter);
         if( n instanceof FieldRefNode )
             return parameterize( (FieldRefNode) n, varNodeParameter);
-        if (n instanceof AllocNode) 
-            return parameterize((AllocNode)n, varNodeParameter);
-       
+        if (n instanceof InsensitiveAllocNode) 
+            return parameterize((InsensitiveAllocNode)n, varNodeParameter);
+
+        if (n instanceof ObjectSensitiveAllocNode)
+            throw new RuntimeException("Strange type in parameterize: " + n.getClass());
+
         return n;
     }
     protected boolean hasBeenAdded = false;
@@ -205,15 +226,15 @@ public final class MethodPAG {
         ValNode thisNode = null;
         ValNode retNode = null; 
         if( !method.isStatic() ) { 
-	    thisNode = (ValNode) nodeFactory.caseThis();
+            thisNode = (ValNode) nodeFactory.caseThis();
         }
         if( method.getReturnType() instanceof RefLikeType ) {
-	    retNode = (ValNode) nodeFactory.caseRet();
-	}
+            retNode = (ValNode) nodeFactory.caseRet();
+        }
         ValNode[] args = new ValNode[ method.getParameterCount() ];
         for( int i = 0; i < method.getParameterCount(); i++ ) {
             if( !( method.getParameterType(i) instanceof RefLikeType ) ) continue;
-	    args[i] = (ValNode) nodeFactory.caseParm(i);
+            args[i] = (ValNode) nodeFactory.caseParm(i);
         }
         pag.nativeMethodDriver.process( method, thisNode, retNode, args );
     }
@@ -224,43 +245,43 @@ public final class MethodPAG {
             addInEdge( pag().nodeFactory().caseArgv(), nodeFactory.caseParm(0) );
         } else
 
-        if( method.getSignature().equals(
+            if( method.getSignature().equals(
                     "<java.lang.Thread: void <init>(java.lang.ThreadGroup,java.lang.String)>" ) ) {
-            addInEdge( pag().nodeFactory().caseMainThread(), nodeFactory.caseThis() );
-            addInEdge( pag().nodeFactory().caseMainThreadGroup(), nodeFactory.caseParm( 0 ) );
-        } else
+                addInEdge( pag().nodeFactory().caseMainThread(), nodeFactory.caseThis() );
+                addInEdge( pag().nodeFactory().caseMainThreadGroup(), nodeFactory.caseParm( 0 ) );
+            } else
 
-        if (method.getSignature().equals(
-                "<java.lang.ref.Finalizer: void <init>(java.lang.Object)>")) {
-            addInEdge( nodeFactory.caseThis(), pag().nodeFactory().caseFinalizeQueue());
-        } else
-        	
-        if (method.getSignature().equals(
-                "<java.lang.ref.Finalizer: void runFinalizer()>")) {
-            addInEdge(pag.nodeFactory().caseFinalizeQueue(), nodeFactory.caseThis());
-        } else
+                if (method.getSignature().equals(
+                        "<java.lang.ref.Finalizer: void <init>(java.lang.Object)>")) {
+                    addInEdge( nodeFactory.caseThis(), pag().nodeFactory().caseFinalizeQueue());
+                } else
 
-        if (method.getSignature().equals(
-                "<java.lang.ref.Finalizer: void access$100(java.lang.Object)>")) {
-            addInEdge(pag.nodeFactory().caseFinalizeQueue(), nodeFactory.caseParm(0));
-        } else
+                    if (method.getSignature().equals(
+                            "<java.lang.ref.Finalizer: void runFinalizer()>")) {
+                        addInEdge(pag.nodeFactory().caseFinalizeQueue(), nodeFactory.caseThis());
+                    } else
 
-        if (method.getSignature().equals(
-                "<java.lang.ClassLoader: void <init>()>")) {
-            addInEdge(pag.nodeFactory().caseDefaultClassLoader(), nodeFactory.caseThis());
-        } else
+                        if (method.getSignature().equals(
+                                "<java.lang.ref.Finalizer: void access$100(java.lang.Object)>")) {
+                            addInEdge(pag.nodeFactory().caseFinalizeQueue(), nodeFactory.caseParm(0));
+                        } else
 
-        if (method.getSignature().equals("<java.lang.Thread: void exit()>")) {
-            addInEdge(pag.nodeFactory().caseMainThread(), nodeFactory.caseThis());
-        } else
+                            if (method.getSignature().equals(
+                                    "<java.lang.ClassLoader: void <init>()>")) {
+                                addInEdge(pag.nodeFactory().caseDefaultClassLoader(), nodeFactory.caseThis());
+                            } else
 
-        if (method
-                .getSignature()
-                .equals(
-                        "<java.security.PrivilegedActionException: void <init>(java.lang.Exception)>")) {
-            addInEdge(pag.nodeFactory().caseThrow(), nodeFactory.caseParm(0));
-            addInEdge(pag.nodeFactory().casePrivilegedActionException(), nodeFactory.caseThis());
-        }
+                                if (method.getSignature().equals("<java.lang.Thread: void exit()>")) {
+                                    addInEdge(pag.nodeFactory().caseMainThread(), nodeFactory.caseThis());
+                                } else
+
+                                    if (method
+                                            .getSignature()
+                                            .equals(
+                                                    "<java.security.PrivilegedActionException: void <init>(java.lang.Exception)>")) {
+                                        addInEdge(pag.nodeFactory().caseThrow(), nodeFactory.caseParm(0));
+                                        addInEdge(pag.nodeFactory().casePrivilegedActionException(), nodeFactory.caseThis());
+                                    }
 
         if (method.getNumberedSubSignature().equals(sigCanonicalize)) {
             SootClass cl = method.getDeclaringClass();
@@ -276,12 +297,12 @@ public final class MethodPAG {
 
         boolean isImplicit = false;
         for (SootMethod implicitMethod : EntryPoints.v().implicit()) {
-         if (implicitMethod.getNumberedSubSignature().equals(
-		    method.getNumberedSubSignature())) {
-        	 isImplicit = true;
-        	 break;
-         }
-      }
+            if (implicitMethod.getNumberedSubSignature().equals(
+                method.getNumberedSubSignature())) {
+                isImplicit = true;
+                break;
+            }
+        }
         if (isImplicit) {
             SootClass c = method.getDeclaringClass();
             outer: do {
@@ -294,15 +315,15 @@ public final class MethodPAG {
                 if (method.getName().equals("<init>"))
                     continue;
                 addInEdge(pag().nodeFactory().caseDefaultClassLoader(),
-                        nodeFactory.caseThis());
+                    nodeFactory.caseThis());
                 addInEdge(pag().nodeFactory().caseMainClassNameString(),
-                        nodeFactory.caseParm(0));
+                    nodeFactory.caseParm(0));
             } while (false);
         }
     }
 
 
     protected final NumberedString sigCanonicalize = Scene.v().getSubSigNumberer().
-    findOrAdd("java.lang.String canonicalize(java.lang.String)");
+            findOrAdd("java.lang.String canonicalize(java.lang.String)");
 }
 

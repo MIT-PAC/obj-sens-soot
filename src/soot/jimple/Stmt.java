@@ -30,8 +30,9 @@
 package soot.jimple;
 
 import soot.*;
+import soot.util.Numberable;
 
-public interface Stmt extends Unit
+public interface Stmt extends Unit, Numberable
 {
     public void toString(UnitPrinter up);
 

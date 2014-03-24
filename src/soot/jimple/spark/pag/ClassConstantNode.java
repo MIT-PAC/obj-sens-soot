@@ -18,6 +18,7 @@
  */
 
 package soot.jimple.spark.pag;
+import soot.Context;
 import soot.RefType;
 import soot.jimple.ClassConstant;
 import soot.jimple.toolkits.pta.IClassConstantNode;
@@ -26,7 +27,9 @@ import soot.jimple.toolkits.pta.IClassConstantNode;
  * object.
  * @author Ondrej Lhotak
  */
-public class ClassConstantNode extends AllocNode implements IClassConstantNode { // (LWG) implements IClassConstantNode
+public class ClassConstantNode extends InsensitiveAllocNode 
+    implements IClassConstantNode, ContextElement { // (LWG) implements IClassConstantNode
+    
     public String toString() {
 	return "ClassConstantNode "+getNumber()+" "+newExpr;
     }

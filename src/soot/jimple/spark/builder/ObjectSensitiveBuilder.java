@@ -3,12 +3,15 @@ package soot.jimple.spark.builder;
 import java.util.Iterator;
 
 import soot.G;
+import soot.MethodContext;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.jimple.spark.geom.geomPA.GeomPointsTo;
 import soot.jimple.spark.internal.SparkNativeHelper;
+import soot.jimple.spark.pag.EntryContext;
 import soot.jimple.spark.pag.MethodPAG;
+import soot.jimple.spark.pag.NoContext;
 import soot.jimple.spark.pag.PAG;
 import soot.jimple.spark.solver.OnFlyCallGraph;
 import soot.jimple.toolkits.callgraph.CallGraphBuilder;
@@ -67,6 +70,8 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
         }
     }
 
+    
+    //TODO: no idea what to do here!
     protected void handleClass( SootClass c ) {
         //System.out.println("Called handleClass(), should be called once.");
         boolean incedClasses = false;
@@ -76,9 +81,12 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
             SootMethod m = (SootMethod) methodsIt.next();
             if( !m.isConcrete() && !m.isNative() ) continue;
             totalMethods++;
-            if( reachables.contains( m ) ) {
+            if( reachables.contains( MethodContext.v(m, NoContext.v())) ||
+                    reachables.contains(MethodContext.v(m, EntryContext.v()))) {
                 MethodPAG mpag = MethodPAG.v( pag, m);
                 mpag.build();
+                //TODO: why call this here with null?  Should not make a difference
+                //only for entry points
                 mpag.addToPAG(null);
                 analyzedMethods++;
                 if( !incedClasses ) {

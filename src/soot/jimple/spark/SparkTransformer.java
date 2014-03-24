@@ -21,11 +21,14 @@ package soot.jimple.spark;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import soot.G;
 import soot.Local;
 import soot.MethodContext;
+import soot.MethodOrMethodContext;
 import soot.PointsToAnalysis;
 import soot.Scene;
 import soot.SceneTransformer;
@@ -46,12 +49,14 @@ import soot.jimple.spark.ondemand.DemandCSPointsTo;
 import soot.jimple.spark.pag.AllocDotField;
 import soot.jimple.spark.pag.AllocNode;
 import soot.jimple.spark.pag.MethodPAG;
+import soot.jimple.spark.pag.NoContext;
 import soot.jimple.spark.pag.Node;
 import soot.jimple.spark.pag.ObjectSensitiveAllocNode;
 import soot.jimple.spark.pag.ObjectSensitiveConfig;
 import soot.jimple.spark.pag.PAG;
 import soot.jimple.spark.pag.PAG2HTML;
 import soot.jimple.spark.pag.PAGDumper;
+import soot.jimple.spark.pag.StaticInitContext;
 import soot.jimple.spark.pag.VarNode;
 import soot.jimple.spark.sets.P2SetVisitor;
 import soot.jimple.spark.sets.PointsToSetInternal;
@@ -65,11 +70,13 @@ import soot.jimple.spark.solver.Propagator;
 import soot.jimple.spark.solver.SCCCollapser;
 import soot.jimple.toolkits.callgraph.CallGraphBuilder;
 import soot.jimple.toolkits.callgraph.ObjSensContextManager;
+import soot.jimple.toolkits.callgraph.ReachableMethods;
 import soot.options.SparkOptions;
 import soot.tagkit.Host;
 import soot.tagkit.StringTag;
 import soot.tagkit.Tag;
 import soot.util.Numberable;
+import soot.util.queue.QueueReader;
 
 /** Main entry point for Spark.
  * @author Ondrej Lhotak
@@ -80,16 +87,6 @@ public class SparkTransformer extends SceneTransformer
     public static SparkTransformer v() { return G.v().soot_jimple_spark_SparkTransformer(); }
 
     public static boolean debug = false;
-
-    public static void println(String str) {
-        if (debug)
-            System.out.println(str);
-    }
-    
-    public static void printf(String arg, Object... args) {
-        if (debug)
-            System.out.printf(arg, args);
-    }
     
     protected void internalTransform( String phaseName, Map options )
     {
@@ -106,7 +103,7 @@ public class SparkTransformer extends SceneTransformer
         //between obj sens and no sens, definitely ugly, but better than passing around
         //global state
         ObjectSensitiveAllocNode.reset();
-       
+        StaticInitContext.reset();
         
         // Build pointer assignment graph
         PAGBuilder b;
@@ -115,7 +112,8 @@ public class SparkTransformer extends SceneTransformer
                 opts.obj_sens_no_context_list(),
                 opts.obj_sens_important_allocators(),
                 opts.obj_sens_precise_strings(),
-                opts.obj_sens_context_for_static_methods());
+                opts.obj_sens_context_for_static_inits(),
+                opts.obj_sens_types_for_context());
 
             b = new ObjectSensitiveBuilder();
             

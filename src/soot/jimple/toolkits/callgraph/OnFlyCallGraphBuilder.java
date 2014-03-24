@@ -76,6 +76,8 @@ import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.spark.SparkTransformer;
 import soot.jimple.spark.pag.AllocNode;
 import soot.jimple.spark.pag.ClassConstantNode;
+import soot.jimple.spark.pag.NoContext;
+import soot.jimple.spark.pag.ObjectSensitiveConfig;
 import soot.jimple.spark.pag.PAG;
 import soot.jimple.spark.pag.StringConstantNode;
 import soot.jimple.spark.pag.VarNode;
@@ -115,12 +117,14 @@ public final class OnFlyCallGraphBuilder
                 Local constant = (Local) className;
                 if( options.safe_forname() ) {
                     for (SootMethod tgt : EntryPoints.v().clinits()) {
+                        System.out.println("Adding clinit call for safety: " + tgt);
                         addEdge( source, s, tgt, Kind.CLINIT );
                     }
                 } else {
                     for (SootClass cls : Scene.v().dynamicClasses()) {
                         for (SootMethod clinit : EntryPoints.v().clinitsOf(cls)) {
                             addEdge( source,  s, clinit, Kind.CLINIT);
+                            System.out.println("Adding clinit call for dynamic?: " + clinit);
                         }
                     }
                     VirtualCallSite site = new VirtualCallSite( s, source, null, null, Kind.CLINIT );
@@ -406,15 +410,13 @@ public final class OnFlyCallGraphBuilder
 
     private final ChunkedQueue targetsQueue = new ChunkedQueue();
     private final QueueReader targets = targetsQueue.reader();
-    private StringConstantNode stringConstantContext;
-    
+       
 
     public OnFlyCallGraphBuilder( PAG pag, ContextManager cm, ReachableMethods rm ) {
         this.cm = cm;
         this.rm = rm;
         this.pag = pag;
         worklist = rm.listener();
-        stringConstantContext = new StringConstantNode(pag,StringConstant.v("<CONTEXT>"));
         //initialize the receiver to sites map with the number of locals * an estimate for the number of contexts per methods
         receiverToSites = new HashMap<VarNode, List<VirtualCallSite>>(Scene.v().getLocalNumberer().size()); 
         options = new CGOptions( PhaseOptions.v().getPhaseOptions("cg") );
@@ -464,21 +466,21 @@ public final class OnFlyCallGraphBuilder
 
     //used to update the call graph with additional points to information for the local 
     //and context, the last context is the context for the target (ObjectSensitiveAllocNode)
-    public void addType( VarNode receiver, Type type, Context tgtContext, boolean debug ) {
+    public void addType( VarNode receiver, Type type, AllocNode receiverNode, boolean debug ) {
         FastHierarchy fh = Scene.v().getOrMakeFastHierarchy();
-
-        //do not call methods with context for constants!
-        if (tgtContext instanceof StringConstantNode)
-            tgtContext = stringConstantContext;
-      
+    
+        //calculate if we want to add context for this alloc node
+        Context tgtContext = NoContext.v();
+              
+        if (receiverNode instanceof Context)
+            tgtContext = (Context)receiverNode;
+         
 
         //SparkTransformer.println("OFCB: addType " + receiver + " " + tgtContext);
 
         for( Iterator siteIt = ((Collection) receiverToSites.get( receiver )).iterator(); siteIt.hasNext(); ) {
             final VirtualCallSite site = (VirtualCallSite) siteIt.next();
             InstanceInvokeExpr iie = site.iie();
-
-            if (debug) SparkTransformer.println("\t" + site.container() + " " + tgtContext);
 
             if( site.kind() == Kind.THREAD 
                     && !fh.canStoreType( type, clRunnable ) )
@@ -509,9 +511,6 @@ public final class OnFlyCallGraphBuilder
             while(targets.hasNext()) {
 
                 SootMethod target = (SootMethod) targets.next();
-
-                if (debug)
-                    SparkTransformer.printf("\tResolved: %s %s\n", target, tgtContext);
 
                 cm.addVirtualEdge(
                     site.container(),
@@ -555,11 +554,19 @@ public final class OnFlyCallGraphBuilder
                         sootcls.setLibraryClass();
                     }
                     for (SootMethod clinit : EntryPoints.v().clinitsOf(sootcls)) {
+                        System.out.println("Adding static edge for string constant used in reflection: " + site.container() + " -> " +
+                                clinit);
+                        
+                        Context context = null;
+                        
+                        if (ObjectSensitiveConfig.isObjectSensitive())
+                            context = NoContext.v();
+                        
                         cm.addStaticEdge(
                             site.container(),
                             site.stmt(),
                             clinit,
-                            Kind.CLINIT, null );
+                            Kind.CLINIT, context );
                     }
                 }
             }
@@ -610,6 +617,9 @@ public final class OnFlyCallGraphBuilder
                     VarNode recNode = null;
 
                     //find the context or non-context node for the receiver local
+                    if (ObjectSensitiveConfig.isObjectSensitive() && m.context() == null)
+                        throw new RuntimeException("With object sensitive context should never be null!");
+                    
                     if (m.context() != null)
                         recNode = pag.makeContextVarNode(receiver, receiver.getType(),m.context(), m.method());
                     else 
@@ -750,6 +760,7 @@ public final class OnFlyCallGraphBuilder
                             " it as such; graph will be incomplete!" );
                 }
             } else {
+                
                 SootClass sootcls = Scene.v().getSootClass( cls );
                 if (!sootcls.isPhantomClass()) {
                     if( !sootcls.isApplicationClass() ) {
@@ -757,6 +768,7 @@ public final class OnFlyCallGraphBuilder
                     }
                     for (SootMethod clinit : EntryPoints.v().clinitsOf(sootcls)) {
                         addEdge( src, srcUnit,  clinit, Kind.CLINIT );
+                        System.out.println("Adding clinit for reflective for/getName(): " + sootcls);
                     }
                 }
 

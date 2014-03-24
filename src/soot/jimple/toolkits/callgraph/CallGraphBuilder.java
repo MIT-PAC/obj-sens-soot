@@ -21,16 +21,20 @@ package soot.jimple.toolkits.callgraph;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import soot.EntryPoints;
 import soot.G;
 import soot.Local;
+import soot.MethodContext;
 import soot.MethodOrMethodContext;
 import soot.PointsToAnalysis;
 import soot.PointsToSet;
 import soot.Scene;
+import soot.SootMethod;
 import soot.Type;
+import soot.jimple.spark.pag.NoContext;
 import soot.jimple.spark.pag.ObjectSensitiveAllocNode;
 import soot.jimple.spark.pag.ObjectSensitiveConfig;
 import soot.jimple.spark.pag.PAG;
@@ -49,21 +53,27 @@ public final class CallGraphBuilder
     public CallGraph getCallGraph() { return cg; }
     public ReachableMethods reachables() { return reachables; }
 
-    public static ContextManager makeContextManager( CallGraph cg ) {
+    public static ContextManager makeContextManager( CallGraph cg, PAG pag ) {
         if (ObjectSensitiveConfig.isObjectSensitive() && ObjectSensitiveConfig.v().k() > 0)
-            return new ObjSensContextManager(cg);
+            return new ObjSensContextManager(cg, pag);
         else
             return new ContextInsensitiveContextManager( cg );
     }
 
+    
     /** This constructor builds a complete call graph using the given
      * PointsToAnalysis to resolve virtual calls. */
     public CallGraphBuilder( PAG pa ) {
         this.pa = pa;
         cg = new CallGraph();
         Scene.v().setCallGraph( cg );
+        
+        //create a no-context version of entry point list
+        if (ObjectSensitiveConfig.isObjectSensitive())
+            throw new RuntimeException("Does not work with object sensitivity!");
+        
         reachables = Scene.v().getReachableMethods();
-        ContextManager cm = makeContextManager(cg);
+        ContextManager cm = makeContextManager(cg, pa);
         ofcgb = new OnFlyCallGraphBuilder( pa, cm, reachables );
    }
     /** This constructor builds the incomplete hack call graph for the

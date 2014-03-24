@@ -49,10 +49,13 @@ public class SparkOptions
         return soot.PhaseOptions.getInt(options, "kobjsens");
     }
     
-    public boolean obj_sens_context_for_static_methods() {
-        return soot.PhaseOptions.getBoolean(options, "kobjsens-context-for-static-methods");
+    public boolean obj_sens_context_for_static_inits() {
+        return soot.PhaseOptions.getBoolean(options, "kobjsens-context-for-static-inits");
     }
     
+    public boolean obj_sens_types_for_context() {
+        return soot.PhaseOptions.getBoolean(options, "kobjsens-types-for-context");
+    }
     
     
     /** Verbose --

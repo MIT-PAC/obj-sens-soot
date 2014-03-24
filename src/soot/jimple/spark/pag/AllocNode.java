@@ -36,7 +36,7 @@ import soot.options.CGOptions;
 /** Represents an allocation site node (Blue) in the pointer assignment graph.
  * @author Ondrej Lhotak
  */
-public class AllocNode extends Node implements Context, IAllocNode { // (LWG) implements IAllocNode
+public abstract class AllocNode extends Node implements IAllocNode { // (LWG) implements IAllocNode
     /** Returns the new expression of this allocation site. */
     public Object getNewExpr() { return newExpr; }
     /** Returns all field ref nodes having this node as their base. */
@@ -49,12 +49,12 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
     public AllocDotField dot( SparkField field ) 
     { return fields == null ? null : (AllocDotField) fields.get( field ); }
     public String toString() {
-        return "AllocNode "+hashCode()+" "+newExpr+" in method "+method + " type: " + getType() + " " + getType().hashCode();
+        return "AllocNode "+hashCode()+" "+newExpr+" in method "+method;
     }
 
     public AllocNode( PAG pag, Object newExpr, Type t, SootMethod m) {
         super( pag, t );
-        cvns = new HashMap<Context, AllocNode>();
+      
         this.method = m;
         if( t instanceof RefType ) {
             RefType rt = (RefType) t;
@@ -66,9 +66,9 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
             }
         }
         this.newExpr = newExpr;
-        if( newExpr instanceof ContextVarNode ) throw new RuntimeException();
-    
+        if( newExpr instanceof ContextVarNode ) throw new RuntimeException();        
     }
+    
     /** Registers a AllocDotField as having this node as its base. */
     void addField( AllocDotField adf, SparkField field ) {
         if( fields == null ) fields = new HashMap();
@@ -105,54 +105,6 @@ public class AllocNode extends Node implements Context, IAllocNode { // (LWG) im
         } else if (!newExpr.equals(other.newExpr)) return false;
         return true;
     }
-
-    /**
-     * Force the context map to include a map from context -> cNode, denoting
-     * that cNode the context-sensitive version of this allocnode for <context>
-     */
-    public void addContext(Context context, AllocNode cNode) {
-        cvns.put(context, cNode);
-    }
-    
-    /**
-     * Return the context sensitive allocation node associated with this alloc node.
-     * Create the context sensitive allocation node if we have not seen it before.
-     */
-    public AllocNode context( Context context ) 
-    { 
-                
-        //if we have seen this context before, just return the context object for this alloc node
-        if (cvns.containsKey(context)) {
-            return cvns.get(context);
-        }
-        
-        //short cut for k == 1
-        if (ObjectSensitiveConfig.isObjectSensitive() && ObjectSensitiveConfig.v().k() == 1) {
-            cvns.put(context, this);
-            return this;
-        }
-            
-
-        //have not seen this context before, so add it and its obj sens node
-        if (context instanceof AllocNode) {
-            ObjectSensitiveAllocNode objsensnode = ObjectSensitiveAllocNode.getObjSensNode(pag, this, (Context)context);
-
-            cvns.put(context, objsensnode );
-
-        } else {
-            throw new RuntimeException("Invalid context object: " + context);
-        }
-
-        return cvns.get(context);
-    }
-
-    public Map<Context, AllocNode> getContextNodeMap() {
-        return cvns;
-    }
-    
-    /* End of package methods. */
-
-    protected Map<Context, AllocNode> cvns;
 
 }
 

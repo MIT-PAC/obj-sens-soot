@@ -64,7 +64,6 @@ public final class Edge
         this.srcUnit = srcUnit;
         this.tgt = tgt;
         this.kind = kind;
-        check();
     }
 
     public Edge( MethodOrMethodContext src, Stmt srcUnit, MethodOrMethodContext tgt ) {
@@ -72,17 +71,6 @@ public final class Edge
         this.src = src;
         this.srcUnit = srcUnit;
         this.tgt = tgt;
-        check();
-    }
-    
-    private void check() {
-        if (ObjectSensitiveConfig.isObjectSensitive() && ObjectSensitiveConfig.v().k() > 0) {
-            if (src != null && !src().isStatic() && !(src instanceof MethodContext))
-                throw new RuntimeException("Virtual method source without context in call graph: " + src);
-        
-            if (tgt != null && !tgt().isStatic() && !(tgt instanceof MethodContext))
-                throw new RuntimeException("Virtual method target without context in call graph: " + tgt);
-        }
     }
 
     public static Kind ieToKind( InvokeExpr ie ) {

@@ -23,6 +23,7 @@ import soot.jimple.spark.sets.*;
 import soot.*;
 import soot.util.IdentityHashSet;
 import soot.util.queue.*;
+
 import java.util.*;
 
 /** Propagates points-to sets along pointer assignment graph using a worklist.
@@ -78,7 +79,9 @@ public final class PropWorklist extends Propagator {
                 PointsToSetInternal nDotF = (PointsToSetInternal) pair[0];
                 PointsToSetInternal newP2Set = nDotF.getNewSet();
                 VarNode loadTarget = (VarNode) pair[1];
-                if( loadTarget.makeP2Set().addAll( newP2Set, null ) ) {
+                
+                //if( loadTarget.makeP2Set().addAll( newP2Set, null ) ) {
+                if (thisPtrFilterAddAll(loadTarget, newP2Set, loadTarget.makeP2Set())) {
                     varNodeWorkList.add( loadTarget );
                 }
                 nodesToFlush.add( nDotF );
@@ -98,13 +101,36 @@ public final class PropWorklist extends Propagator {
         boolean ret = false;
         Node[] targets = pag.allocLookup( src );
         for (Node element : targets) {
-            if( element.makeP2Set().add( src ) ) {
+          
+            
+            //if( element.makeP2Set().add( src ) ) {
+            if (thisPtrFilterAdd((VarNode)element, src, element.makeP2Set())) {
                 varNodeWorkList.add( (VarNode) element );
                 ret = true;
             }
         }
         return ret;
     }
+    
+    private boolean thisPtrFilterAdd(VarNode pointer, AllocNode other, PointsToSetInternal addTo) {
+        if (ObjectSensitiveConfig.isObjectSensitive() && pointer.isThisPtr()) {
+            if (ObjectSensitiveConfig.v().thisPtrShouldAdd(other, pointer)) 
+                return addTo.add(other);
+            else
+                return false;
+        }
+        
+        
+        return addTo.add(other);
+    }
+    
+    private boolean thisPtrFilterAddAll(VarNode pointer, 
+                                     PointsToSetInternal other, 
+                                     PointsToSetInternal addTo) {
+        PointsToSetInternal newSet = pag.prunePTSetForThisPtr(pointer, other);
+        return addTo.addAll(newSet, null);
+    }
+    
     /** Propagates new points-to information of node src to all its
      * successors. */
     protected final boolean handleVarNode( final VarNode src ) {
@@ -131,7 +157,8 @@ public final class PropWorklist extends Propagator {
                         VarNode edgeSrc = (VarNode) addedSrc.getReplacement();
                         VarNode edgeTgt = (VarNode) addedTgt.getReplacement();
 
-                        if( edgeTgt.makeP2Set().addAll( edgeSrc.getP2Set(), null ) ) {
+                        //if( edgeTgt.makeP2Set().addAll( edgeSrc.getP2Set(), null ) ) {
+                        if (thisPtrFilterAddAll(edgeTgt, edgeSrc.getP2Set(), edgeTgt.makeP2Set())) {
                             varNodeWorkList.add( edgeTgt );
                             if(edgeTgt == src) flush = false;
                         }
@@ -139,7 +166,8 @@ public final class PropWorklist extends Propagator {
                 } else if( addedSrc instanceof AllocNode ) {
                     AllocNode edgeSrc = (AllocNode) addedSrc;
                     VarNode edgeTgt = (VarNode) addedTgt.getReplacement();
-                    if( edgeTgt.makeP2Set().add( edgeSrc ) ) {
+                    //if( edgeTgt.makeP2Set().add( edgeSrc ) ) {
+                    if (thisPtrFilterAdd(edgeTgt, edgeSrc, edgeTgt.makeP2Set())) {
                         varNodeWorkList.add( edgeTgt );
                         if(edgeTgt == src) flush = false;
                     }
@@ -149,7 +177,8 @@ public final class PropWorklist extends Propagator {
 
         Node[] simpleTargets = pag.simpleLookup( src );
         for (Node element : simpleTargets) {
-            if( element.makeP2Set().addAll( newP2Set, null ) ) {
+            //if( element.makeP2Set().addAll( newP2Set, null ) ) {
+             if (thisPtrFilterAddAll((VarNode)element, newP2Set, element.makeP2Set())) {
                 varNodeWorkList.add( (VarNode) element );
                 if(element == src) flush = false;
                 ret = true;
@@ -171,6 +200,7 @@ public final class PropWorklist extends Propagator {
             } ) | ret;
         }
 
+        //field stuff
         final HashSet<Node[]> storesToPropagate = new HashSet<Node[]>();
         final HashSet<Node[]> loadsToPropagate = new HashSet<Node[]>();
         Collection fieldRefs = src.getAllFieldRefs();
@@ -208,8 +238,11 @@ public final class PropWorklist extends Propagator {
                     }
                 } );
             }
-        }
+        } // field stuff??
+        
+        
         if(flush) src.getP2Set().flushNew();
+        
         for (Node[] p : storesToPropagate) {
             VarNode storeSource = (VarNode) p[0];
             AllocDotField nDotF = (AllocDotField) p[1];
@@ -220,8 +253,8 @@ public final class PropWorklist extends Propagator {
         for (Node[] p : loadsToPropagate) {
             AllocDotField nDotF = (AllocDotField) p[0];
             VarNode loadTarget = (VarNode) p[1];
-            if( loadTarget.makeP2Set().
-                    addAll( nDotF.getP2Set(), null ) ) {
+            //if( loadTarget.makeP2Set().addAll( nDotF.getP2Set(), null ) ) {
+            if (thisPtrFilterAddAll(loadTarget,  nDotF.getP2Set(), loadTarget.makeP2Set())) {
                 varNodeWorkList.add( loadTarget );
                 ret = true;
             }

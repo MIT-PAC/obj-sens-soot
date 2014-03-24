@@ -63,6 +63,14 @@ public class DVariableDeclarationStmt extends AbstractUnit implements Stmt {
 			this.davaBody=davaBody;
 		}
 	}
+	
+	public final int getNumber() {
+	    return number;
+	}
+	public final void setNumber(int number) {
+	    this.number = number;
+	}
+	private int number = 0;
 
 	public List getDeclarations() {
 		return declarations;

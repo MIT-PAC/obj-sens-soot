@@ -18,6 +18,7 @@
  */
 
 package soot.jimple.spark.pag;
+import soot.Context;
 import soot.RefType;
 import soot.jimple.StringConstant;
 import soot.jimple.toolkits.pta.IStringConstantNode;
@@ -25,9 +26,11 @@ import soot.jimple.toolkits.pta.IStringConstantNode;
 /** Represents an allocation site node the represents a constant string.
  * @author Ondrej Lhotak
  */
-public class StringConstantNode extends AllocNode implements IStringConstantNode { // (LWG) implements IStringConstantNode
+public class StringConstantNode extends InsensitiveAllocNode 
+    implements IStringConstantNode, ContextElement { // (LWG) implements IStringConstantNode
+    
     public String toString() {
-	return "StringConstantNode "+getNumber()+" "+getString();
+        return "StringConstantNode "+getNumber()+" "+getString();
     }
 
     public String getString() {
