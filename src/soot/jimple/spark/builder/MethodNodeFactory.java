@@ -295,7 +295,8 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
         VarNode stringConstantLocal = pag.makeGlobalVarNode(
             stringConstant,
             RefType.v( "java.lang.String" ) );
-        //pag.addEdge( stringConstant, stringConstantLocal );
+        //TODO: What??
+        pag.addEdge( stringConstant, stringConstantLocal );
         mpag.addInternalEdge( stringConstant, stringConstantLocal );
         setResult( stringConstantLocal );
     }
@@ -316,7 +317,8 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
         VarNode classConstantLocal = pag.makeGlobalVarNode(
             classConstant,
             RefType.v( "java.lang.Class" ) );
-        //pag.addEdge(classConstant, classConstantLocal);
+        //TODO: What??
+        pag.addEdge(classConstant, classConstantLocal);
         mpag.addInternalEdge(classConstant, classConstantLocal);
         setResult(classConstantLocal);
     }
