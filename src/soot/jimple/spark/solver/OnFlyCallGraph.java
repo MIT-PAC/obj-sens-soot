@@ -55,6 +55,7 @@ public class OnFlyCallGraph {
         List<MethodOrMethodContext> withNoContext = new LinkedList<MethodOrMethodContext>();
         for (SootMethod method : Scene.v().getEntryPoints()) {
             withNoContext.add(MethodContext.v(method, EntryContext.v()));
+            //System.out.println("Adding context to entry points: " + method);
         }
 
         ReachableMethods reachableMethods = new ReachableMethods(

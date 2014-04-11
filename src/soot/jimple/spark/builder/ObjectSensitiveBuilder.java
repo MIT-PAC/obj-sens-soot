@@ -60,7 +60,6 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
             handleClass( c );
         }
         
-        //TODO: redundant???
         while(callEdges.hasNext()) {
             Edge e = (Edge) callEdges.next();
             if(!e.getTgt().method().getDeclaringClass().isPhantom()) {
@@ -71,7 +70,8 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
     }
 
     
-    //TODO: no idea what to do here!
+    //Called after entry points have been processed, plus any static calls each entry point makes
+    //so reachables has these methods in it.
     protected void handleClass( SootClass c ) {
         //System.out.println("Called handleClass(), should be called once.");
         boolean incedClasses = false;
@@ -81,18 +81,18 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
             SootMethod m = (SootMethod) methodsIt.next();
             if( !m.isConcrete() && !m.isNative() ) continue;
             totalMethods++;
-            if( reachables.contains( MethodContext.v(m, NoContext.v())) ||
-                    reachables.contains(MethodContext.v(m, EntryContext.v()))) {
+            if(reachables.contains(MethodContext.v(m, EntryContext.v()))) {
+                //System.out.println("handleClass EntryContext: " + m);
                 MethodPAG mpag = MethodPAG.v( pag, m);
                 mpag.build();
-                //TODO: why call this here with null?  Should not make a difference
-                //only for entry points
-                mpag.addToPAG(null);
+                mpag.addToPAG(EntryContext.v());
                 analyzedMethods++;
                 if( !incedClasses ) {
                     incedClasses = true;
                     classes++;
                 }
+            }  else if (reachables.contains( MethodContext.v(m, NoContext.v()))) {
+                throw new RuntimeException("All entrypoints should have ENTRYCONTEXT: " + m);
             }
         }
     }

@@ -29,17 +29,17 @@ public class AllocDotField extends Node {
     /** Returns the field of this node. */
     public SparkField getField() { return field; }
     public String toString() {
-	return "AllocDotField "+getNumber()+" "+base+"."+field;
+        return "AllocDotField "+getNumber()+" "+base+"."+field;
     }
 
     /* End of public methods. */
 
     AllocDotField( PAG pag, AllocNode base, SparkField field ) {
-	super( pag, null );
-	if( field == null ) throw new RuntimeException( "null field" );
-	this.base = base;
-	this.field = field;
-	base.addField( this, field );
+        super( pag, null );
+        if( field == null ) throw new RuntimeException( "null field" );
+        this.base = base;
+        this.field = field;
+        base.addField( this, field );
         pag.getAllocDotFieldNodeNumberer().add( this );
     }
 
