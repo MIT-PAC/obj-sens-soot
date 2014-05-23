@@ -143,6 +143,16 @@ public final class MethodPAG {
         return ret;
     }
 
+    public boolean hasBeenBuilt() {
+        return hasBeenBuilt;
+    }
+    
+    public boolean hasContextAdded(Context context) {
+        if (addedContexts == null) return false;
+        
+        return addedContexts.contains(context);
+    }
+    
     public void build() {
         if( hasBeenBuilt ) return;
         hasBeenBuilt = true;

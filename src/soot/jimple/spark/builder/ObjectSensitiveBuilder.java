@@ -12,6 +12,7 @@ import soot.jimple.spark.internal.SparkNativeHelper;
 import soot.jimple.spark.pag.EntryContext;
 import soot.jimple.spark.pag.MethodPAG;
 import soot.jimple.spark.pag.NoContext;
+import soot.jimple.spark.pag.ObjectSensitiveConfig;
 import soot.jimple.spark.pag.PAG;
 import soot.jimple.spark.solver.OnFlyCallGraph;
 import soot.jimple.toolkits.callgraph.CallGraphBuilder;
@@ -25,9 +26,9 @@ import soot.util.queue.QueueReader;
 public class ObjectSensitiveBuilder extends PAGBuilder {
 
     public ObjectSensitiveBuilder() {
-        
+
     }
-    
+
     /** Creates an empty pointer assignment graph. */
     public PAG setup( SparkOptions opts ) {
         pag = opts.geom_pta() ? new GeomPointsTo( opts ) : new PAG( opts );
@@ -42,7 +43,7 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
         }
         return pag;
     }
-    
+
     /** Fills in the pointer assignment graph returned by setup. */
     public void build() {
         QueueReader callEdges = null;
@@ -54,12 +55,12 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
         } else {
             throw new RuntimeException("Not supported, must use ofcg");
         }
-        
+
         for( Iterator cIt = Scene.v().getClasses().iterator(); cIt.hasNext(); ) {
             final SootClass c = (SootClass) cIt.next();
             handleClass( c );
         }
-        
+
         while(callEdges.hasNext()) {
             Edge e = (Edge) callEdges.next();
             if(!e.getTgt().method().getDeclaringClass().isPhantom()) {
@@ -69,12 +70,11 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
         }
     }
 
-    
+
     //Called after entry points have been processed, plus any static calls each entry point makes
     //so reachables has these methods in it.
     protected void handleClass( SootClass c ) {
         //System.out.println("Called handleClass(), should be called once.");
-        boolean incedClasses = false;
         Iterator methodsIt = c.methodIterator();
         while( methodsIt.hasNext() ) 
         {
@@ -84,26 +84,36 @@ public class ObjectSensitiveBuilder extends PAGBuilder {
             if(reachables.contains(MethodContext.v(m, EntryContext.v()))) {
                 //System.out.println("handleClass EntryContext: " + m);
                 MethodPAG mpag = MethodPAG.v( pag, m);
-                mpag.build();
-                mpag.addToPAG(EntryContext.v());
-                analyzedMethods++;
-                if( !incedClasses ) {
-                    incedClasses = true;
-                    classes++;
+                if (!mpag.hasBeenBuilt()) {
+                    System.out.println("mpag has not been built: " + m + " " + EntryContext.v());
+                    mpag.build();
+                } 
+                
+                if (!mpag.hasContextAdded(EntryContext.v())) {
+                    mpag.addToPAG(EntryContext.v());
+                    System.out.println("context not added to mpag: " + m + " " + EntryContext.v());
                 }
+
             }  else if (reachables.contains( MethodContext.v(m, NoContext.v()))) {
-                throw new RuntimeException("All entrypoints should have ENTRYCONTEXT: " + m);
+                MethodPAG mpag = MethodPAG.v( pag, m);
+                if (!mpag.hasBeenBuilt()) {
+                    System.out.println("mpag has not been built: " + m + " " + NoContext.v());
+                    mpag.build();
+                } 
+                
+                if (!mpag.hasContextAdded(NoContext.v())) {
+                    mpag.addToPAG(NoContext.v());
+                    System.out.println("context not added to mpag: " + m + " " + NoContext.v());
+                }
             }
         }
     }
-  
+
     private PAG pag;
     private CallGraphBuilder cgb;
     private OnFlyCallGraph ofcg;
     private ReachableMethods reachables;
-    int classes = 0;
     int totalMethods = 0;
-    int analyzedMethods = 0;
     int stmts = 0;
 
 }

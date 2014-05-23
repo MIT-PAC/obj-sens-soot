@@ -98,6 +98,9 @@ import soot.util.queue.QueueReader;
  */
 public final class OnFlyCallGraphBuilder
 { 
+    //if true then don't try to add clinit calls for newInstance() calls based on string constants
+    private static boolean UNSOUND_REFLECTION_CLINIT_CALLS = true;
+
     public class DefaultReflectionModel implements ReflectionModel {
 
         protected CGOptions options = new CGOptions( PhaseOptions.v().getPhaseOptions("cg") );
@@ -105,6 +108,7 @@ public final class OnFlyCallGraphBuilder
         protected HashSet<MethodOrMethodContext> warnedAlready = new HashSet<MethodOrMethodContext>();
 
         public void classForName(MethodOrMethodContext source, Stmt s) {
+            /*
             List<Local> stringConstants = (List<Local>) methodToStringConstants.get(source);
             if( stringConstants == null )
                 methodToStringConstants.put(source, stringConstants = new ArrayList<Local>());
@@ -135,10 +139,12 @@ public final class OnFlyCallGraphBuilder
                     }
                     sites.add(site);
                 }
-            }        
+            } 
+            */       
         }
 
         public void classNewInstance(MethodOrMethodContext source, Stmt s) {
+            /*
             if( options.safe_newinstance() ) {
                 for (SootMethod tgt : EntryPoints.v().inits()) {
                     addEdge( source, s, tgt, Kind.NEWINSTANCE );
@@ -157,9 +163,11 @@ public final class OnFlyCallGraphBuilder
                             " Use safe-newinstance option for a conservative result." );
                 }
             } 
+            */
         }
 
         public void contructorNewInstance(MethodOrMethodContext source, Stmt s) {
+            /*
             if( options.safe_newinstance() ) {
                 for (SootMethod tgt : EntryPoints.v().allInits()) {
                     addEdge( source, s, tgt, Kind.NEWINSTANCE );
@@ -179,9 +187,11 @@ public final class OnFlyCallGraphBuilder
                             " Use safe-newinstance option for a conservative result." );
                 }
             } 
+            */
         }
 
         public void methodInvoke(MethodOrMethodContext container, Stmt invokeStmt) {
+            /*
             if( !warnedAlready(container) ) {
                 if( options.verbose() ) {
                     G.v().out.println( "Warning: call to "+
@@ -190,6 +200,7 @@ public final class OnFlyCallGraphBuilder
                 }
                 markWarned(container);
             }
+            */
         }
 
         private void markWarned(MethodOrMethodContext m) {
@@ -410,9 +421,11 @@ public final class OnFlyCallGraphBuilder
 
     private final ChunkedQueue targetsQueue = new ChunkedQueue();
     private final QueueReader targets = targetsQueue.reader();
-       
+
 
     public OnFlyCallGraphBuilder( PAG pag, ContextManager cm, ReachableMethods rm ) {
+        if (UNSOUND_REFLECTION_CLINIT_CALLS)
+            System.out.println("Info: Not accounting for newInstance(String) calls.");
         this.cm = cm;
         this.rm = rm;
         this.pag = pag;
@@ -468,13 +481,13 @@ public final class OnFlyCallGraphBuilder
     //and context, the last context is the context for the target (ObjectSensitiveAllocNode)
     public void addType( VarNode receiver, Type type, AllocNode receiverNode, boolean debug ) {
         FastHierarchy fh = Scene.v().getOrMakeFastHierarchy();
-    
+
         //calculate if we want to add context for this alloc node
         Context tgtContext = NoContext.v();
-              
+
         if (receiverNode instanceof Context)
             tgtContext = (Context)receiverNode;
-         
+
 
         //SparkTransformer.println("OFCB: addType " + receiver + " " + tgtContext);
 
@@ -526,6 +539,9 @@ public final class OnFlyCallGraphBuilder
         return stringConstToSites.get(stringConst) != null;
     }
     public void addStringConstant( Local l, String constant ) {
+        if (UNSOUND_REFLECTION_CLINIT_CALLS)
+            return ;
+
         for( Iterator siteIt = (stringConstToSites.get( l )).iterator(); siteIt.hasNext(); ) {
             final VirtualCallSite site = (VirtualCallSite) siteIt.next();
             if( constant == null ) {
@@ -542,6 +558,7 @@ public final class OnFlyCallGraphBuilder
                         constant = constant.substring(2,constant.length()-1);
                     } else continue;
                 }
+                
                 if( !Scene.v().containsClass( constant ) ) {
                     if( options.verbose() ) {
                         G.v().out.println( "Warning: Class "+constant+" is"+
@@ -556,12 +573,12 @@ public final class OnFlyCallGraphBuilder
                     for (SootMethod clinit : EntryPoints.v().clinitsOf(sootcls)) {
                         System.out.println("Adding static edge for string constant used in reflection: " + site.container() + " -> " +
                                 clinit);
-                        
+
                         Context context = null;
-                        
+
                         if (ObjectSensitiveConfig.isObjectSensitive())
                             context = NoContext.v();
-                        
+
                         cm.addStaticEdge(
                             site.container(),
                             site.stmt(),
@@ -619,7 +636,7 @@ public final class OnFlyCallGraphBuilder
                     //find the context or non-context node for the receiver local
                     if (ObjectSensitiveConfig.isObjectSensitive() && m.context() == null)
                         throw new RuntimeException("With object sensitive context should never be null!");
-                    
+
                     if (m.context() != null)
                         recNode = pag.makeContextVarNode(receiver, receiver.getType(),m.context(), m.method());
                     else 
@@ -760,7 +777,7 @@ public final class OnFlyCallGraphBuilder
                             " it as such; graph will be incomplete!" );
                 }
             } else {
-                
+
                 SootClass sootcls = Scene.v().getSootClass( cls );
                 if (!sootcls.isPhantomClass()) {
                     if( !sootcls.isApplicationClass() ) {

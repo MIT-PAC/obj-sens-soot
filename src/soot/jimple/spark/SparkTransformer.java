@@ -111,7 +111,7 @@ public class SparkTransformer extends SceneTransformer
             ObjectSensitiveConfig.initialize(opts.kobjsens(), 
                 opts.obj_sens_no_context_list(),
                 opts.obj_sens_important_allocators(),
-                opts.obj_sens_precise_strings(),
+                opts.obj_sens_limit_heap_context(),
                 opts.obj_sens_context_for_static_inits(),
                 opts.obj_sens_types_for_context());
 

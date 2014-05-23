@@ -24,15 +24,17 @@ public class ObjectSensitiveConfig {
     private Set<SootClass> stringClasses;
 
     private Set<SootClass> importantAllocators;
+    
+    private Set<SootClass> limitHeapContext;
 
     private static ObjectSensitiveConfig v;
     
     private boolean typesForContextGTOne;
-
+    
     /** depth of the object sensitivity on heap and method */
     private int k = 0;
 
-    private ObjectSensitiveConfig(int k, String csl, String importantAs, boolean preciseStrings,
+    private ObjectSensitiveConfig(int k, String csl, String importantAs, String limitHeapContext,
                                   boolean contextForStaticInits, boolean typesForContextGTOne) {
         this.k = k;
 
@@ -43,9 +45,10 @@ public class ObjectSensitiveConfig {
         stringClasses.add(Scene.v().getSootClass("java.lang.String"));
         stringClasses.add(Scene.v().getSootClass("java.lang.StringBuilder"));
         stringClasses.add(Scene.v().getSootClass("java.lang.StringBuffer"));
-
+        
         installNoContextList(csl);
         installImportantAllocators(importantAs);
+        installLimitHeapContext(limitHeapContext);
 
     }
 
@@ -58,8 +61,7 @@ public class ObjectSensitiveConfig {
     }
 
     private void installImportantAllocators(String isa) {
-        Hierarchy h = Scene.v().getActiveHierarchy();
-
+       
         importantAllocators = new HashSet<SootClass>();
 
         if (isa == null || isa.isEmpty())
@@ -72,6 +74,24 @@ public class ObjectSensitiveConfig {
             SootClass clz = tryToGetClass(str);
             if (clz != null && !clz.isInterface())
                 importantAllocators.add(clz);
+        }
+    }
+    
+
+    private void installLimitHeapContext(String lhc) {
+        
+        limitHeapContext = new HashSet<SootClass>();
+
+        if (lhc == null || lhc.isEmpty())
+            return;
+
+        String[] classes = lhc.split(",");
+
+        for (String str : classes) {
+            str = str.trim();
+            SootClass clz = tryToGetClass(str);
+            if (clz != null && !clz.isInterface())
+                limitHeapContext.add(clz);
         }
     }
 
@@ -95,8 +115,13 @@ public class ObjectSensitiveConfig {
         if (base instanceof ClassConstantNode)
             return true;
         
+        if (base.getType() instanceof RefType) {
+            SootClass clz = ((RefType)base.getType()).getSootClass();
+            if (limitHeapContext.contains(clz))
+                return true;
+        }
+                
         return false;
-        //return stringClasses.contains(clz);
     }
 
     /**
@@ -134,10 +159,10 @@ public class ObjectSensitiveConfig {
     }
 
     public static void initialize(int k, String noContextList, String importantAllocators,  
-                                  boolean preciseStrings, boolean contextForStaticInits,
+                                  String limitHeapContext, boolean contextForStaticInits,
                                   boolean typesForContextGTOne) {
         v = null;
-        v = new ObjectSensitiveConfig(k, noContextList, importantAllocators, preciseStrings, 
+        v = new ObjectSensitiveConfig(k, noContextList, importantAllocators, limitHeapContext, 
             contextForStaticInits, typesForContextGTOne);
     }
 

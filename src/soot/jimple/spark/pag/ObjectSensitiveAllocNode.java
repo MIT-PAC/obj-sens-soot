@@ -33,11 +33,6 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
     /** Array for context of allocation (new exprs) */
     private ContextElement[] contextAllocs;
 
-    private static int numObjs = 0;
-
-    private static Map<SootClass, Integer> numNodes;
-
-    private static int printQuantum = 1000;
 
     /**
      * Reset the universe of object sensitive allocation nodes.  Set the depth to the first argument.
@@ -46,8 +41,6 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
      */
     public static void reset() {
         universe = new HashMap<ObjectSensitiveAllocNode,ObjectSensitiveAllocNode>(10000);
-        numNodes = new HashMap<SootClass,Integer>(20000);
-        numObjs = 0;
     }
 
     public ObjectSensitiveAllocNode getRepFromUniverse() {
