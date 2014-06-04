@@ -555,8 +555,8 @@ public class SparkOptions
         return soot.PhaseOptions.getString( options, "kobjsens-important-allocators");
     }
     
-    public boolean obj_sens_precise_strings() {
-        return soot.PhaseOptions.getBoolean( options, "kobjsens-precise-strings");
+    public String obj_sens_limit_heap_context() {
+        return soot.PhaseOptions.getString( options, "kobjsens-limit-heap-context");
     }
     
     /** Verification file --

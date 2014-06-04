@@ -529,6 +529,11 @@ implements ClassMember, Numberable, MethodOrMethodContext {
         SootClass cl = getDeclaringClass();
         return cl.isJavaLibraryClass();
     }
+    
+    public boolean isAndroidLibraryMethod() {
+        SootClass cl = getDeclaringClass();
+        return cl.isAndroidLibraryClass();
+    }
 
     /** Returns the parameters part of the signature in the format in which
      * it appears in bytecode. */

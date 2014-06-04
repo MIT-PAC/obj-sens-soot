@@ -974,6 +974,27 @@ public class SootClass extends AbstractHost implements Numberable
         isPhantom = false;
     }
 
+    public boolean isAndroidLibraryClass() {
+        //for api level 19 and below
+        if ( name.startsWith("android.") ||
+                name.startsWith("org.apache.http.") ||
+                name.startsWith("junit.") ||
+                name.startsWith("java.") ||                
+                name.startsWith("sun.")  ||
+                name.startsWith("javax.") ||
+                name.startsWith("com.sun.") || 
+                name.startsWith("org.omg.") ||
+                name.startsWith("org.xml.") ||
+                name.startsWith("org.xmlpull.v1.") ||
+                name.startsWith("org.w3c.dom.") ||
+                name.startsWith("dalvik.") ||                
+                name.startsWith("org.json.") 
+                ) 
+               return true;
+           
+           return false;
+    }
+    
     /**
      * Sometimes we need to know which class is a JDK class.
      * There is no simple way to distinguish a user class and a JDK class, here we use the package prefix as the heuristic.

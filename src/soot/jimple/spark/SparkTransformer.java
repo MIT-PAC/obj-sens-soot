@@ -126,6 +126,10 @@ public class SparkTransformer extends SceneTransformer
         if( opts.pre_jimplify() ) b.preJimplify();
         if( opts.force_gc() ) doGC();
         Date startBuild = new Date();
+        
+        SparkEvaluator.reset();
+        SparkEvaluator.v().begin();
+        
         final PAG pag = b.setup( opts );
         b.build();
         Date endBuild = new Date();
@@ -223,6 +227,8 @@ public class SparkTransformer extends SceneTransformer
         if( opts.add_tags() ) {
             addTags( pag );
         }
+        
+        SparkEvaluator.v().end();
 
         if ( opts.geom_pta() ) {
         	if ( opts.simplify_offline() || opts.simplify_sccs() ) {

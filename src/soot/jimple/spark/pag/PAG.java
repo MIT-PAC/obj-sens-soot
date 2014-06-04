@@ -1199,6 +1199,23 @@ public class PAG implements PointsToAnalysis {
 
         return nodes;
     }
+    
+    public Set<Object> getGlobalPointers() {
+        return valToGlobalVarNode.keySet();
+    }
+    
+    public Set<Local> getLocalPointers() {
+        Set<Local> numberedLocals = new HashSet<Local>();
+        
+        Iterator localsIt = localToNodeMap.keyIterator();
+        while (localsIt.hasNext()) {
+            Object local = localsIt.next();
+            if (local instanceof Local)
+                numberedLocals.add((Local)local);
+        }
+        
+        return numberedLocals;
+    }
 
     private boolean runGeomPTA = false;
     protected Map<Pair, Set<Edge>> assign2edges = new HashMap<Pair, Set<Edge>>();
