@@ -385,14 +385,15 @@ public class SparkEvaluator {
                             if (app) appVirtualCalls++;
                             Local l = (Local) ((VirtualInvokeExpr)ie).getBase();
 
-                            //check if targets > 1
-                            int count = 0;
+                            //have to check target soot method, cannot just count edges
+                            Set<SootMethod> targets = new HashSet<SootMethod>();
+                            
                             for ( Iterator<Edge> it = callGraph.edgesOutOf(st); it.hasNext(); ) {
-                                it.next();
-                                ++count;
+                                Edge edge = it.next();
+                                targets.add(edge.tgt());
                             }
 
-                            if (count > 1) {
+                            if (targets.size() > 1) {
                                 totalPolyCalls++;
                                 if (app) appPolyCalls++;
                             }
