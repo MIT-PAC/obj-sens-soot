@@ -845,8 +845,9 @@ public class PAG implements PointsToAnalysis {
                 thiz = thiz.getReplacement();
 
                 addEdge( parm, thiz );
-                pval = addInterproceduralAssignment(parm, thiz, e);
-                callAssigns.put(ie, pval);
+                // LWG: temporary hack to reduce memory-inefficiency 
+                //pval = addInterproceduralAssignment(parm, thiz, e);
+                //callAssigns.put(ie, pval);
                 callToMethod.put(ie, srcmpag.getMethod());
 
                 if( e.srcUnit() instanceof AssignStmt ) {
@@ -861,8 +862,9 @@ public class PAG implements PointsToAnalysis {
                     lhs = lhs.getReplacement();
 
                     addEdge( ret, lhs );
-                    pval = addInterproceduralAssignment(ret, lhs, e);
-                    callAssigns.put(ie, pval);
+                    // LWG: temporary hack to reduce memory-inefficiency
+                    //pval = addInterproceduralAssignment(ret, lhs, e);
+                    //callAssigns.put(ie, pval);
                     callToMethod.put(ie, srcmpag.getMethod());
                 }
             } else if( e.kind() == Kind.FINALIZE ) {
@@ -875,7 +877,8 @@ public class PAG implements PointsToAnalysis {
                 tgtThis = tgtThis.getReplacement();
 
                 addEdge( srcThis, tgtThis );
-                pval = addInterproceduralAssignment(srcThis, tgtThis, e);
+                // LWG: temporary hack to reduce memory-inefficiency
+                //pval = addInterproceduralAssignment(srcThis, tgtThis, e);
             } else if( e.kind() == Kind.NEWINSTANCE ) {
                 Stmt s = (Stmt) e.srcUnit();
                 InstanceInvokeExpr iie = (InstanceInvokeExpr) s.getInvokeExpr();
@@ -898,8 +901,9 @@ public class PAG implements PointsToAnalysis {
                     addEdge( newObject, asLHS);
                 }
 
-                pval = addInterproceduralAssignment(newObject, initThis, e);
-                callAssigns.put(s.getInvokeExpr(), pval);
+                // LWG: temporary hack to reduce memory-inefficiency
+                //pval = addInterproceduralAssignment(newObject, initThis, e);
+                //callAssigns.put(s.getInvokeExpr(), pval);
                 callToMethod.put(s.getInvokeExpr(), srcmpag.getMethod());
             } else if( e.kind() == Kind.REFL_INVOKE ) {
                 // Flow (1) from first parameter of invoke(..) invocation
@@ -922,8 +926,9 @@ public class PAG implements PointsToAnalysis {
                     thiz = thiz.getReplacement();
 
                     addEdge( parm0, thiz );
-                    pval = addInterproceduralAssignment(parm0, thiz, e);
-                    callAssigns.put(ie, pval);
+                    // LWG: temporary hack to reduce memory-inefficiency
+                    //pval = addInterproceduralAssignment(parm0, thiz, e);
+                    //callAssigns.put(ie, pval);
                     callToMethod.put(ie, srcmpag.getMethod());
                 }
 
@@ -946,8 +951,10 @@ public class PAG implements PointsToAnalysis {
                         tgtParmI = tgtParmI.getReplacement();
 
                         addEdge( parm1contents, tgtParmI );
-                        pval = addInterproceduralAssignment(parm1contents, tgtParmI, e);
-                        callAssigns.put(ie, pval);
+                        // LWG: temporary hack to reduce memory-inefficiency
+                        //pval = addInterproceduralAssignment(parm1contents, tgtParmI, e);
+                        //callAssigns.put(ie, pval);
+                        additionalVirtualCalls.add(ie);
                     }
                 }
 
@@ -966,8 +973,10 @@ public class PAG implements PointsToAnalysis {
                     lhs = lhs.getReplacement();
 
                     addEdge( ret, lhs );
-                    pval = addInterproceduralAssignment(ret, lhs, e);
-                    callAssigns.put(ie, pval);
+                    // LWG: temporary hack to reduce memory-inefficiency
+                    //pval = addInterproceduralAssignment(ret, lhs, e);
+                    //callAssigns.put(ie, pval);
+                    additionalVirtualCalls.add(ie);
                 }
             } else if( e.kind() == Kind.REFL_CLASS_NEWINSTANCE || e.kind() == Kind.REFL_CONSTR_NEWINSTANCE) {
                 // (1) create a fresh node for the new object
@@ -998,7 +1007,8 @@ public class PAG implements PointsToAnalysis {
                 initThis = tgtmpag.parameterize( initThis, e.tgtCtxt() );
                 initThis = initThis.getReplacement();
                 addEdge( newObject, initThis );
-                addInterproceduralAssignment(newObject, initThis, e);
+                // LWG: temporary hack to reduce memory-inefficiency
+                //addInterproceduralAssignment(newObject, initThis, e);
 
                 //(3)
                 if(e.kind() == Kind.REFL_CONSTR_NEWINSTANCE) {
@@ -1020,8 +1030,10 @@ public class PAG implements PointsToAnalysis {
                             tgtParmI = tgtParmI.getReplacement();
 
                             addEdge( parm1contents, tgtParmI );
-                            pval = addInterproceduralAssignment(parm1contents, tgtParmI, e);
-                            callAssigns.put(iie, pval);
+                            // LWG: temporary hack to reduce memory-inefficiency
+                            //pval = addInterproceduralAssignment(parm1contents, tgtParmI, e);
+                            //callAssigns.put(iie, pval);
+                            additionalVirtualCalls.add(iie);
                         }
                     }
                 }
@@ -1035,8 +1047,9 @@ public class PAG implements PointsToAnalysis {
                     addEdge( newObject, asLHS);
                 }
 
-                pval = addInterproceduralAssignment(newObject, initThis, e);
-                callAssigns.put(s.getInvokeExpr(), pval);
+                // LWG: temporary hack to reduce memory-inefficiency
+                //pval = addInterproceduralAssignment(newObject, initThis, e);
+                //callAssigns.put(s.getInvokeExpr(), pval);
                 callToMethod.put(s.getInvokeExpr(), srcmpag.getMethod());
             } else {
                 throw new RuntimeException( "Unhandled edge "+e );
@@ -1058,7 +1071,8 @@ public class PAG implements PointsToAnalysis {
         MethodNodeFactory srcnf = srcmpag.nodeFactory();
         MethodNodeFactory tgtnf = tgtmpag.nodeFactory();
         InvokeExpr ie = s.getInvokeExpr();
-        boolean virtualCall = callAssigns.containsKey(ie);
+        //boolean virtualCall = callAssigns.containsKey(ie);
+        boolean virtualCall = additionalVirtualCalls.contains(ie) || callToMethod.containsKey(ie);
         int numArgs = ie.getArgCount();
         for( int i = 0; i < numArgs; i++ ) {
             Value arg = ie.getArg( i );
@@ -1074,8 +1088,9 @@ public class PAG implements PointsToAnalysis {
             parm = parm.getReplacement();
 
             addEdge( argNode, parm );
-            Pair pval = addInterproceduralAssignment(argNode, parm, e);
-            callAssigns.put(ie, pval);
+            // LWG: temporary hack to reduce memory-inefficiency
+            //Pair pval = addInterproceduralAssignment(argNode, parm, e);
+            //callAssigns.put(ie, pval);
             callToMethod.put(ie, srcmpag.getMethod());
 
         }
@@ -1090,8 +1105,9 @@ public class PAG implements PointsToAnalysis {
             thisRef = tgtmpag.parameterize( thisRef, tgtContext );
             thisRef = thisRef.getReplacement();
             addEdge( baseNode, thisRef );
-            Pair pval = addInterproceduralAssignment(baseNode, thisRef, e);
-            callAssigns.put(ie, pval);
+            // LWG: temporary hack to reduce memory-inefficiency
+            //Pair pval = addInterproceduralAssignment(baseNode, thisRef, e);
+            //callAssigns.put(ie, pval);
             callToMethod.put(ie, srcmpag.getMethod());
             if (virtualCall && !virtualCallsToReceivers.containsKey(ie)) {
                 virtualCallsToReceivers.put(ie, baseNode);
@@ -1110,8 +1126,9 @@ public class PAG implements PointsToAnalysis {
                 retNode = retNode.getReplacement();
 
                 addEdge( retNode, destNode );
-                Pair pval = addInterproceduralAssignment( retNode, destNode, e );
-                callAssigns.put(ie, pval);
+                // LWG: temporary hack to reduce memory-inefficiency
+                //Pair pval = addInterproceduralAssignment( retNode, destNode, e );
+                //callAssigns.put(ie, pval);
                 callToMethod.put(ie, srcmpag.getMethod());
             }
         }
@@ -1233,7 +1250,10 @@ public class PAG implements PointsToAnalysis {
     public GlobalNodeFactory nodeFactory() { return nodeFactory; }
     public NativeMethodDriver nativeMethodDriver;
 
-    public HashMultiMap /* InvokeExpr -> Set[Pair] */ callAssigns = new HashMultiMap();
+    // LWG: temporary hack to reduce memory-inefficiency (use new field additionalVirtualCalls instead of callAssigns)
+    //public HashMultiMap /* InvokeExpr -> Set[Pair] */ callAssigns = new HashMultiMap();
+    public HashMultiMap /* InvokeExpr -> Set[Pair] */ callAssigns;
+    private Set<InvokeExpr> additionalVirtualCalls = new HashSet<InvokeExpr>();
     public Map<InvokeExpr, SootMethod> callToMethod = new HashMap<InvokeExpr, SootMethod>(); 
     public Map<InvokeExpr, Node> virtualCallsToReceivers = new HashMap<InvokeExpr, Node>();
 
