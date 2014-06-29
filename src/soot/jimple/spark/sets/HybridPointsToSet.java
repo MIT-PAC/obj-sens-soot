@@ -136,6 +136,9 @@ public final class HybridPointsToSet extends PointsToSetInternal {
      * changed. */
     public final boolean addAll( final PointsToSetInternal other,
             final PointsToSetInternal exclude ) {
+        // LWG
+        if (other.isEmpty())
+            return false;
         if( other != null && !(other instanceof HybridPointsToSet) )
             return superAddAll( other, exclude );
         if( exclude != null && !(exclude instanceof HybridPointsToSet) )
@@ -214,6 +217,8 @@ public final class HybridPointsToSet extends PointsToSetInternal {
     protected final boolean fastAdd( Node n ) {
         if( bits == null ) {
             if( n1 == null ) { empty = false; n1 = n; return true; } if( n1 == n ) return false;
+            // LWG: no need to set empty to false
+            /*
             if( n2 == null ) { empty = false; n2 = n; return true; } if( n2 == n ) return false;
             if( n3 == null ) { empty = false; n3 = n; return true; } if( n3 == n ) return false;
             if( n4 == null ) { empty = false; n4 = n; return true; } if( n4 == n ) return false;
@@ -229,6 +234,22 @@ public final class HybridPointsToSet extends PointsToSetInternal {
             if( n14 == null ) { empty = false; n14 = n; return true; } if( n14 == n ) return false;
             if( n15 == null ) { empty = false; n15 = n; return true; } if( n15 == n ) return false;
             if( n16 == null ) { empty = false; n16 = n; return true; } if( n16 == n ) return false;
+            */
+            if( n2 == null ) { n2 = n; return true; } if( n2 == n ) return false;
+            if( n3 == null ) { n3 = n; return true; } if( n3 == n ) return false;
+            if( n4 == null ) { n4 = n; return true; } if( n4 == n ) return false;
+            if( n5 == null ) { n5 = n; return true; } if( n5 == n ) return false;
+            if( n6 == null ) { n6 = n; return true; } if( n6 == n ) return false;
+            if( n7 == null ) { n7 = n; return true; } if( n7 == n ) return false;
+            if( n8 == null ) { n8 = n; return true; } if( n8 == n ) return false;
+            if( n9 == null ) { n9 = n; return true; } if( n9 == n ) return false;
+            if( n10 == null ) { n10 = n; return true; } if( n10 == n ) return false;
+            if( n11 == null ) { n11 = n; return true; } if( n11 == n ) return false;
+            if( n12 == null ) { n12 = n; return true; } if( n12 == n ) return false;
+            if( n13 == null ) { n13 = n; return true; } if( n13 == n ) return false;
+            if( n14 == null ) { n14 = n; return true; } if( n14 == n ) return false;
+            if( n15 == null ) { n15 = n; return true; } if( n15 == n ) return false;
+            if( n16 == null ) { n16 = n; return true; } if( n16 == n ) return false;
             convertToBits();
         }
         boolean ret = bits.set( n.getNumber() );

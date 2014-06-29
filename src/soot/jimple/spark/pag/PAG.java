@@ -1191,6 +1191,7 @@ public class PAG implements PointsToAnalysis {
         return ((Set<Node>) valueList).add( value );
     }
 
+    /* LWG: removed due to inefficiency
     public PointsToSetInternal prunePTSetForThisPtr(final VarNode node, PointsToSetInternal pts) {
         if (!node.isThisPtr() || !ObjectSensitiveConfig.isObjectSensitive())
             return pts;
@@ -1208,6 +1209,7 @@ public class PAG implements PointsToAnalysis {
          else 
              return pts;
     }
+    */
 
     public Set<AllocNode> getAllocNodes() {
         Set<AllocNode> nodes = new HashSet<AllocNode>();

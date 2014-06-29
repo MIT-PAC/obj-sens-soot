@@ -95,6 +95,8 @@ public abstract class AllocNode extends Node implements IAllocNode { // (LWG) im
         return result;
     }
 
+    // LWG: not needed
+    /*
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -105,6 +107,7 @@ public abstract class AllocNode extends Node implements IAllocNode { // (LWG) im
         } else if (!newExpr.equals(other.newExpr)) return false;
         return true;
     }
+    */
 
 }
 
