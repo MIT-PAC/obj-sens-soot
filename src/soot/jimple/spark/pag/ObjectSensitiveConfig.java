@@ -21,8 +21,6 @@ public class ObjectSensitiveConfig {
     /** list of classes for which we do not add context */
     private Set<SootClass> ignoreList;
 
-    private Set<SootClass> stringClasses;
-
     private Set<SootClass> importantAllocators;
     
     private Set<SootClass> limitHeapContext;
@@ -31,25 +29,35 @@ public class ObjectSensitiveConfig {
     
     private boolean typesForContextGTOne;
     
+    private Set<SootClass> stringClasses;
+    
+    private static Set<Object> newExprsForNoContext;
+    
     /** depth of the object sensitivity on heap and method */
     private int k = 0;
+    
+    private int minK = 0;
+    
+    private boolean naiveDecay = false;
 
-    private ObjectSensitiveConfig(int k, String csl, String importantAs, String limitHeapContext,
-                                  boolean contextForStaticInits, boolean typesForContextGTOne) {
+    private ObjectSensitiveConfig(int k, int mink, String csl, String importantAs, String limitHeapContext,
+                                  boolean contextForStaticInits, boolean typesForContextGTOne,
+                                  boolean naiveDecay) {
         this.k = k;
+        this.minK = mink;
 
+        this.naiveDecay = naiveDecay;
         this.contextForStaticInits = contextForStaticInits;
         this.typesForContextGTOne = typesForContextGTOne;
-
-        stringClasses = new HashSet<SootClass>();
-        stringClasses.add(Scene.v().getSootClass("java.lang.String"));
-        stringClasses.add(Scene.v().getSootClass("java.lang.StringBuilder"));
-        stringClasses.add(Scene.v().getSootClass("java.lang.StringBuffer"));
         
         installNoContextList(csl);
         installImportantAllocators(importantAs);
         installLimitHeapContext(limitHeapContext);
-
+        
+        stringClasses = new HashSet<SootClass>();
+        stringClasses.add(Scene.v().getSootClass("java.lang.String"));
+        stringClasses.add(Scene.v().getSootClass("java.lang.StringBuilder"));
+        stringClasses.add(Scene.v().getSootClass("java.lang.StringBuffer"));
     }
 
     public static boolean isObjectSensitive() {
@@ -58,6 +66,18 @@ public class ObjectSensitiveConfig {
 
     public static void noObjectSens() {
         v = null;
+    }
+    
+    public static void setNewExprsNoContext(Set<Object> set) {
+        newExprsForNoContext = set;
+    }
+    
+    public static boolean isNewExprNoContext(Object newExpr) {
+        return newExprsForNoContext != null && newExprsForNoContext.contains(newExpr);
+    }
+    
+    public int minK() {
+        return Math.min(minK, k);
     }
 
     private void installImportantAllocators(String isa) {
@@ -110,7 +130,9 @@ public class ObjectSensitiveConfig {
      * @param clz
      * @return
      */
-    public boolean limitHeapContext(AllocNode base) {
+    public boolean limitHeapContext(ObjectSensitiveAllocNode node, AllocNode base) {
+        return !addHeapContext(node);
+        /*
         //limit class constant context
         if (base instanceof ClassConstantNode)
             return true;
@@ -122,6 +144,7 @@ public class ObjectSensitiveConfig {
         }
                 
         return false;
+        */
     }
 
     /**
@@ -158,12 +181,12 @@ public class ObjectSensitiveConfig {
         return k;
     }
 
-    public static void initialize(int k, String noContextList, String importantAllocators,  
+    public static void initialize(int k, int mink, String noContextList, String importantAllocators,  
                                   String limitHeapContext, boolean contextForStaticInits,
-                                  boolean typesForContextGTOne) {
+                                  boolean typesForContextGTOne, boolean naiveDecay) {
         v = null;
-        v = new ObjectSensitiveConfig(k, noContextList, importantAllocators, limitHeapContext, 
-            contextForStaticInits, typesForContextGTOne);
+        v = new ObjectSensitiveConfig(k, mink, noContextList, importantAllocators, limitHeapContext, 
+            contextForStaticInits, typesForContextGTOne, naiveDecay);
     }
 
     public boolean contextForStaticInits() {
@@ -179,6 +202,8 @@ public class ObjectSensitiveConfig {
     }
 
     public boolean addMethodContext(MethodOrMethodContext src, ObjectSensitiveAllocNode probe) {
+        return true;
+        /*
         //check if the calling method is important, if so, make sure we add context
         if (src.method().getDeclaringClass() != null) {
             SootClass srcClass = src.method().getDeclaringClass();
@@ -189,12 +214,16 @@ public class ObjectSensitiveConfig {
 
         //otherwise use the heap decision
         return addHeapContext(probe);
+        */
     }
 
-    public boolean addHeapContext(ObjectSensitiveAllocNode probe) {
+    private boolean addHeapContext(ObjectSensitiveAllocNode probe) {
+        /*
+        if (isNewExprNoContext(probe.getNewExpr()))
+            return false;
+
         //first check if the type that is allocated should never has context because
         //it is on the ignore List
-
         Type allocatedType = probe.getType();
 
         SootClass allocated = null;
@@ -209,15 +238,60 @@ public class ObjectSensitiveConfig {
             //first check if on the no context list, that trumps all
             if (ignoreList.contains(allocated)) 
                 return false;
+            
+            //if a string then we always want to add context, too imprecise without it
+           
+            //if (stringClasses.contains(allocated))
+            //    return true;
+             
         }
-
+         */
 
         //now check if we have defined important allocators, we check to see if the starting context is an important
         //allocator
         if (importantAllocators.isEmpty())
             return true;
+        
+        //naive decision based on if important or not...
+        if (naiveDecay) {
+            Type allocatedType = probe.getType();
 
+            SootClass allocated = null;
 
+            if (allocatedType instanceof RefType) {
+                allocated = ((RefType)allocatedType).getSootClass();
+            } else if (allocatedType instanceof ArrayType && ((ArrayType)allocatedType).getArrayElementType() instanceof RefType) {
+                allocated = ((RefType)((ArrayType)allocatedType).getArrayElementType()).getSootClass();
+            }
+
+            if (allocated != null) {
+                if (importantAllocators.contains(allocated))
+                    return true;
+                else
+                    return false;
+            }
+        }
+
+        //smarter decision hopefully...
+        for (int i = 0; i < probe.numContextElements(); i++) {
+            ContextElement ce = probe.getContextElement(i);
+            if (ce instanceof InsensitiveAllocNode) {
+                SootMethod allocatorMethod = ((InsensitiveAllocNode)ce).getMethod();
+                if (allocatorMethod != null) {
+                    SootClass allocatingClass = allocatorMethod.getDeclaringClass();
+                    if (allocatingClass != null && importantAllocators.contains(allocatingClass)) {
+                        // in an important class
+                        return true;
+                    }
+                }
+            }   
+        }
+
+    
+        return false;
+        
+            /*
+        
         ContextElement startingC = probe.getStartingContextElement();
 
         if (startingC instanceof InsensitiveAllocNode) {
@@ -237,6 +311,7 @@ public class ObjectSensitiveConfig {
         } else {
             return false;
         }
+        */
 
     }
     

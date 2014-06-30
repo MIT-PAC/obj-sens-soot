@@ -50,8 +50,10 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
     public static ObjectSensitiveAllocNode getObjSensNode(PAG pag, InsensitiveAllocNode base, Context context) {
         ObjectSensitiveAllocNode probe = new ObjectSensitiveAllocNode(pag, base, context);
 
+        /*
         if (!ObjectSensitiveConfig.v().addHeapContext(probe))
             probe =  new ObjectSensitiveAllocNode(pag, base, NoContext.v());
+        */  
 
         if (!universe.containsKey(probe)) {
             //System.out.println("Creating obj sens node: " + probe + "\n");
@@ -81,6 +83,9 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
         return universe.get(probe);        
     }
 
+    public ContextElement getContextElement(int i) {
+        return contextAllocs[i];
+    }
 
     public static int numberOfObjSensNodes() {
 
@@ -114,16 +119,18 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
 
         contextAllocs = new ContextElement[ObjectSensitiveConfig.v().k()];
         contextAllocs[0] = base;
+        
+        int contextLength = ObjectSensitiveConfig.v().k();
 
         //check if we should limit heap context for this type
         if (base.getType() instanceof RefType && 
-                ObjectSensitiveConfig.v().limitHeapContext(base))
-            return;
+                ObjectSensitiveConfig.v().limitHeapContext(this, base))
+            contextLength = ObjectSensitiveConfig.v().minK();
 
         if (context instanceof ObjectSensitiveAllocNode) {
             ObjectSensitiveAllocNode osan = (ObjectSensitiveAllocNode)context;
 
-            for (int i = 1; i < osan.contextAllocs.length; i++) {
+            for (int i = 1; i < contextLength; i++) {
                 if (ObjectSensitiveConfig.v().typesForContextGTOne() && 
                         osan.contextAllocs[i-1] instanceof InsensitiveAllocNode) {
                     contextAllocs[i] = TypeContextElement.v(((InsensitiveAllocNode)osan.contextAllocs[i-1]).getType());
