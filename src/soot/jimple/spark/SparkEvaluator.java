@@ -149,6 +149,11 @@ public class SparkEvaluator {
 
         //Print Maximum available memory
         addLine("Max Memory Before: " + runtime.maxMemory() / GB + " GB");
+        
+        if (ObjectSensitiveConfig.isObjectSensitive()) {
+            addLine("K object depth: " + ObjectSensitiveConfig.v().k());
+            addLine("MinK object depth (for decay): " + ObjectSensitiveConfig.v().minK());
+        }
 
         //get current date time with Date()
         startTime = new Date();
@@ -251,7 +256,15 @@ public class SparkEvaluator {
                     }});
 
                 totalLocalPointsTo += allocSites.size();
-                if (app) appLocalPointsTo += allocSites.size();
+                if (app) {
+                    appLocalPointsTo += allocSites.size();
+                    /*
+                    if (allocSites.size() > 100) {
+                        System.out.println(varNode.getType() + " " + 
+                                varNode.getMethod() + " " + local + " " +allocSites.size());
+                    }
+                    */
+                }
 
             } catch (Exception e) {
                 //just continue on exception
