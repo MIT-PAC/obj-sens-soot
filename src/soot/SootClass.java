@@ -977,7 +977,6 @@ public class SootClass extends AbstractHost implements Numberable
     public boolean isAndroidLibraryClass() {
         //for api level 19 and below
         if ( name.startsWith("android.") ||
-                name.startsWith("org.apache.http.") ||
                 name.startsWith("junit.") ||
                 name.startsWith("java.") ||                
                 name.startsWith("sun.")  ||
@@ -988,7 +987,17 @@ public class SootClass extends AbstractHost implements Numberable
                 name.startsWith("org.xmlpull.v1.") ||
                 name.startsWith("org.w3c.dom.") ||
                 name.startsWith("dalvik.") ||                
-                name.startsWith("org.json.") 
+                name.startsWith("org.json.")  ||
+                name.startsWith("gov.nist.") ||
+                name.startsWith("libcore.") ||
+                name.startsWith("org.apache.") ||
+                name.startsWith("org.bouncycastle.") ||
+                name.startsWith("org.ccil.") ||
+                name.startsWith("org.json.") ||
+                name.startsWith("org.kxml2.") ||
+                name.startsWith("org.w3c.") ||
+                name.startsWith("org.xml.") ||
+                name.startsWith("org.xmlpull.")                
                 ) 
                return true;
            
