@@ -314,7 +314,9 @@ public class ObjectSensitiveConfig {
         */
 
     }
-    
+
+    // LWG: re-factored as below
+    /* 
     public boolean thisPtrShouldAdd(AllocNode allocNode, Node assignTo) {
         
         if (!(assignTo instanceof ContextVarNode)) 
@@ -345,5 +347,26 @@ public class ObjectSensitiveConfig {
             
 
     }
+    */
+    
+    // LWG
+    public boolean thisPtrShouldAdd(AllocNode allocNode, Context thisRefContext) {
+        
+        if (allocNode instanceof ObjectSensitiveAllocNode) {
+            ObjectSensitiveAllocNode osan = (ObjectSensitiveAllocNode)allocNode;        
+            //if the this pointer has no context, then only add obj sens alloc nodes with no context beyond new expr
+            if (thisRefContext instanceof NoContext) {
+                return osan.noContext();
+            } else if (thisRefContext instanceof ObjectSensitiveAllocNode) {
+                return thisRefContext.equals((Context)allocNode);
+            } else {
+                throw new RuntimeException("This filter has strange type of context on this ref: " + thisRefContext.getClass()); 
+            }
+        } else {
+            //not an obj sens node, so if there is context in the this ref, then alloc node should not be added
+            return thisRefContext instanceof NoContext;
+        }
+            
 
+    }
 }

@@ -112,23 +112,44 @@ public final class PropWorklist extends Propagator {
         return ret;
     }
     
-    private boolean thisPtrFilterAdd(VarNode pointer, AllocNode other, PointsToSetInternal addTo) {
-        if (ObjectSensitiveConfig.isObjectSensitive() && pointer.isThisPtr()) {
+     private boolean thisPtrFilterAdd(VarNode pointer, AllocNode other, PointsToSetInternal addTo) {
+         if (ObjectSensitiveConfig.isObjectSensitive() && pointer.isThisPtr() && pointer instanceof ContextVarNode) {
+             // LWG: use re-factored version of thisPtrShouldAdd()
+             /*
             if (ObjectSensitiveConfig.v().thisPtrShouldAdd(other, pointer)) 
                 return addTo.add(other);
             else
                 return false;
-        }
-        
-        
-        return addTo.add(other);
-    }
+              */
+             Context thisRefContext = ((ContextVarNode) pointer).context();
+             if (ObjectSensitiveConfig.v().thisPtrShouldAdd(other, thisRefContext)) 
+                 return addTo.add(other);
+             else
+                 return false;
+         }
+
+
+         return addTo.add(other);
+     }
     
-    private boolean thisPtrFilterAddAll(VarNode pointer, 
+    private boolean thisPtrFilterAddAll(final VarNode pointer, 
                                      PointsToSetInternal other, 
-                                     PointsToSetInternal addTo) {
-        PointsToSetInternal newSet = pag.prunePTSetForThisPtr(pointer, other);
-        return addTo.addAll(newSet, null);
+                                     final PointsToSetInternal addTo) {
+        // LWG: removed call to prunePTSetForThisPtr to improve performance
+        // PointsToSetInternal newSet = pag.prunePTSetForThisPtr(pointer, other);
+        // return addTo.addAll(newSet, null);
+        // LWG: moved part of the test out of the loop for efficiency
+        if (ObjectSensitiveConfig.isObjectSensitive() && pointer.isThisPtr() && pointer instanceof ContextVarNode) {
+            final Context thisPtrCtxt = ((ContextVarNode) pointer).context();
+            return other.forall( new P2SetVisitor() {
+                public final void visit( Node n ) {
+                    if (ObjectSensitiveConfig.v().thisPtrShouldAdd((AllocNode)n, thisPtrCtxt))
+                        if (addTo.add(n))
+                            returnValue = true;
+                }} );
+        }
+
+        return addTo.addAll(other, null);
     }
     
     /** Propagates new points-to information of node src to all its

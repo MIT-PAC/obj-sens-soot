@@ -194,7 +194,8 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!super.equals(obj)) return false;
+        // LWG: removed for efficiency
+        //if (!super.equals(obj)) return false;
         if (getClass() != obj.getClass()) return false;
         ObjectSensitiveAllocNode other = (ObjectSensitiveAllocNode) obj;
         if (!Arrays.equals(contextAllocs, other.contextAllocs)) return false;

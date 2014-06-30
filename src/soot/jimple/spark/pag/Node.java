@@ -99,6 +99,8 @@ public class Node implements ReferenceVariable, Numberable {
         Node rep = getReplacement();
         if( rep == this ) {
             p2set = pag.getSetFactory().newSet( type, pag );
+            // LWG: early return to improve efficiency
+            return p2set;
         }
         return rep.makeP2Set();
     }
