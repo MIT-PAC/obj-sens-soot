@@ -120,12 +120,18 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
         contextAllocs = new ContextElement[ObjectSensitiveConfig.v().k()];
         contextAllocs[0] = base;
         
-        int contextLength = ObjectSensitiveConfig.v().k();
-
-        //check if we should limit heap context for this type
-        if (base.getType() instanceof RefType && 
-                ObjectSensitiveConfig.v().limitHeapContext(this, base))
-            contextLength = ObjectSensitiveConfig.v().minK();
+        //should we limit heap context to 1 for this node
+        if (ObjectSensitiveConfig.v().limitHeapContext(this)) {
+            return;
+        } 
+            
+        int contextLength = ObjectSensitiveConfig.v().contextDepth(this);
+        
+        if (!(base.getType() instanceof RefType))
+            contextLength = ObjectSensitiveConfig.v().k();
+        
+        if (contextLength == 0)
+            throw new RuntimeException("Problem: Context depth should never be zero in obj sens node: " + this);
 
         if (context instanceof ObjectSensitiveAllocNode) {
             ObjectSensitiveAllocNode osan = (ObjectSensitiveAllocNode)context;

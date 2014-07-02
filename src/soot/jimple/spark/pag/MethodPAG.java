@@ -195,7 +195,10 @@ public final class MethodPAG {
     }
 
     protected AllocNode parameterize(InsensitiveAllocNode node, Context context) {
-        return pag().makeObjSensAllocNode(node, context);
+        if (ObjectSensitiveConfig.v().addHeapContext(node))
+            return pag().makeObjSensAllocNode(node, context);
+        else
+            return node;
     }
 
     public Node parameterize( Node n, Context varNodeParameter ) {

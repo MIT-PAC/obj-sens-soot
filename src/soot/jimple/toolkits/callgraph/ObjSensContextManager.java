@@ -60,11 +60,6 @@ public class ObjSensContextManager implements ContextManager
             else
                 typeContext = NoContext.v();
             
-        } else if (typeContext instanceof ObjectSensitiveAllocNode) {
-            ObjectSensitiveAllocNode osan = (ObjectSensitiveAllocNode)typeContext;
-            
-            if (!ObjectSensitiveConfig.v().addMethodContext(src, osan)) 
-                typeContext = NoContext.v();
         } 
         
         cg.addEdge( new Edge( src, srcUnit, MethodContext.v(target, typeContext), kind ) );
@@ -73,15 +68,7 @@ public class ObjSensContextManager implements ContextManager
 
     public void addVirtualEdge( MethodOrMethodContext src, Unit srcUnit, SootMethod target, Kind kind, Context typeContext ) {
         if (ObjectSensitiveConfig.isObjectSensitive() && typeContext == null)
-            throw new RuntimeException("With object sensitive context should never be null!");
-        
-        if (typeContext instanceof ObjectSensitiveAllocNode) {
-            ObjectSensitiveAllocNode osan = (ObjectSensitiveAllocNode)typeContext;
-            
-            if (!ObjectSensitiveConfig.v().addMethodContext(src, osan)) 
-                typeContext = NoContext.v();
-        } 
-        
+            throw new RuntimeException("With object sensitive context should never be null!");      
         
         cg.addEdge( new Edge( src, srcUnit, MethodContext.v( target, typeContext ), kind ) );
       
