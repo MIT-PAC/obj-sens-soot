@@ -227,7 +227,7 @@ public class ObjectSensitiveConfig {
 
     }
 
-    public int contextDepth(ObjectSensitiveAllocNode probe, Context context) {
+    public int contextDepth(AllocNode probe, Context context) {
         if (!addHeapContext(probe))
             return 0;
 
@@ -254,6 +254,11 @@ public class ObjectSensitiveConfig {
                 for (int i = 0; i < contextNode.numContextElements(); i++) {
                     ContextElement ce = contextNode.getContextElement(i);
                     if (ce instanceof InsensitiveAllocNode) {
+                        SootClass currentAllocated = getSootClass(((InsensitiveAllocNode)ce).getType());
+                        if (importantAllocators.contains(currentAllocated))
+                            return k;
+                        
+                        /*
                         SootMethod allocatorMethod = ((InsensitiveAllocNode)ce).getMethod();
                         if (allocatorMethod != null) {
                             SootClass allocatingClass = allocatorMethod.getDeclaringClass();
@@ -262,6 +267,7 @@ public class ObjectSensitiveConfig {
                                 return k;
                             }
                         }
+                        */
                     }   
                 }
             }

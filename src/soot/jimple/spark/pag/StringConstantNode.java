@@ -39,7 +39,8 @@ public class StringConstantNode extends InsensitiveAllocNode
 
     /* End of public methods. */
 
-    public StringConstantNode( PAG pag, StringConstant sc ) {
+    // LWG: changed from public access to package access
+    StringConstantNode( PAG pag, StringConstant sc ) {
         super( pag, sc, RefType.v( "java.lang.String" ), null );
         //System.out.println("Making string constant node: " + this.toString());
         pag.getAllocNodeNumberer().add( this );

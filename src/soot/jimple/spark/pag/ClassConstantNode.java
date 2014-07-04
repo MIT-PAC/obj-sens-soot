@@ -39,7 +39,8 @@ public class ClassConstantNode extends InsensitiveAllocNode
 
     /* End of public methods. */
 
-    public ClassConstantNode( PAG pag, ClassConstant cc ) {
+    // LWG: changed from public access to package access
+    ClassConstantNode( PAG pag, ClassConstant cc ) {
         super( pag, cc, RefType.v( "java.lang.Class" ), null );
         pag.getAllocNodeNumberer().add( this );
     }
