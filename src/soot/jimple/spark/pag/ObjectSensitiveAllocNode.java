@@ -125,7 +125,7 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
             return;
         } 
             
-        int contextLength = ObjectSensitiveConfig.v().contextDepth(this);
+        int contextLength = ObjectSensitiveConfig.v().contextDepth(this, context);
         
         if (!(base.getType() instanceof RefType))
             contextLength = ObjectSensitiveConfig.v().k();

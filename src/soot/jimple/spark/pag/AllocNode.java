@@ -98,6 +98,7 @@ public abstract class AllocNode extends Node implements IAllocNode { // (LWG) im
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
+        if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
         AllocNode other = (AllocNode) obj;
         if (newExpr == null) {

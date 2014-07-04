@@ -84,8 +84,8 @@ public class ObjectSensitiveConfig {
         return Math.min(minK, k);
     }
 
-    
-    
+
+
     private void installImportantAllocators(String isa) {
 
         importantAllocators = new HashSet<SootClass>();
@@ -184,7 +184,7 @@ public class ObjectSensitiveConfig {
     public static ObjectSensitiveConfig v() {
         return v;
     }
-    
+
     /**
      * Limit heap context to 1 for these classes.
      * 
@@ -195,13 +195,13 @@ public class ObjectSensitiveConfig {
         //limit class constant context
         if (base instanceof ClassConstantNode)
             return true;
-        
+
         if (base.getType() instanceof RefType) {
             SootClass clz = ((RefType)base.getType()).getSootClass();
             if (limitHeapContext.contains(clz))
                 return true;
         }
-                
+
         return false;
     }
 
@@ -215,15 +215,7 @@ public class ObjectSensitiveConfig {
 
         //check if the type that is allocated should never has context because
         //it is on the ignore List
-        Type allocatedType = probe.getType();
-
-        SootClass allocated = null;
-
-        if (allocatedType instanceof RefType) {
-            allocated = ((RefType)allocatedType).getSootClass();
-        } else if (allocatedType instanceof ArrayType && ((ArrayType)allocatedType).getArrayElementType() instanceof RefType) {
-            allocated = ((RefType)((ArrayType)allocatedType).getArrayElementType()).getSootClass();
-        }
+        SootClass allocated = getSootClass(probe.getType());
 
         if (allocated != null) {
             //first check if on the no context list, that trumps all
@@ -232,10 +224,10 @@ public class ObjectSensitiveConfig {
         }
 
         return true;
-      
+
     }
 
-    public int contextDepth(ObjectSensitiveAllocNode probe) {
+    public int contextDepth(ObjectSensitiveAllocNode probe, Context context) {
         if (!addHeapContext(probe))
             return 0;
 
@@ -244,52 +236,49 @@ public class ObjectSensitiveConfig {
         if (importantAllocators.isEmpty())
             return k;
 
-        //check if the type that is allocated should never has context because
-        //it is on the ignore List
-        Type allocatedType = probe.getType();
+        SootClass allocated = getSootClass(probe.getType());
 
+        if (allocated != null && importantAllocators.contains(allocated)) {
+            return k;
+        }   
+
+        //if we have made it here, then the allocated type is not important
+
+        if (naiveDecay) {
+            return minK;
+        } else {
+            //smarter decision hopefully...
+            if (context instanceof ObjectSensitiveAllocNode) {
+                ObjectSensitiveAllocNode contextNode = (ObjectSensitiveAllocNode)context;
+
+                for (int i = 0; i < contextNode.numContextElements(); i++) {
+                    ContextElement ce = contextNode.getContextElement(i);
+                    if (ce instanceof InsensitiveAllocNode) {
+                        SootMethod allocatorMethod = ((InsensitiveAllocNode)ce).getMethod();
+                        if (allocatorMethod != null) {
+                            SootClass allocatingClass = allocatorMethod.getDeclaringClass();
+                            if (allocatingClass != null && importantAllocators.contains(allocatingClass)) {
+                                // in an important class
+                                return k;
+                            }
+                        }
+                    }   
+                }
+            }
+            return minK;
+        }
+    }
+
+    private SootClass getSootClass(Type type) {
         SootClass allocated = null;
 
-        if (allocatedType instanceof RefType) {
-            allocated = ((RefType)allocatedType).getSootClass();
-        } else if (allocatedType instanceof ArrayType && ((ArrayType)allocatedType).getArrayElementType() instanceof RefType) {
-            allocated = ((RefType)((ArrayType)allocatedType).getArrayElementType()).getSootClass();
+        if (type instanceof RefType) {
+            allocated = ((RefType)type).getSootClass();
+        } else if (type instanceof ArrayType && ((ArrayType)type).getArrayElementType() instanceof RefType) {
+            allocated = ((RefType)((ArrayType)type).getArrayElementType()).getSootClass();
         }
 
-        //naive decision based on if important or not...
-        if (naiveDecay) {
-
-            if (allocatedType instanceof RefType) {
-                allocated = ((RefType)allocatedType).getSootClass();
-            } else if (allocatedType instanceof ArrayType && ((ArrayType)allocatedType).getArrayElementType() instanceof RefType) {
-                allocated = ((RefType)((ArrayType)allocatedType).getArrayElementType()).getSootClass();
-            }
-
-            if (allocated != null) {
-                if (importantAllocators.contains(allocated))
-                    return k;
-                else
-                    return minK;
-            }
-        }
-
-
-        //smarter decision hopefully...
-        for (int i = 0; i < probe.numContextElements(); i++) {
-            ContextElement ce = probe.getContextElement(i);
-            if (ce instanceof InsensitiveAllocNode) {
-                SootMethod allocatorMethod = ((InsensitiveAllocNode)ce).getMethod();
-                if (allocatorMethod != null) {
-                    SootClass allocatingClass = allocatorMethod.getDeclaringClass();
-                    if (allocatingClass != null && importantAllocators.contains(allocatingClass)) {
-                        // in an important class
-                        return k;
-                    }
-                }
-            }   
-        }
-
-        return minK;
+        return allocated;
     }
 
     // LWG
