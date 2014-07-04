@@ -9,7 +9,8 @@ import soot.Type;
 
 public class InsensitiveAllocNode extends AllocNode implements ContextElement {
 
-    public InsensitiveAllocNode(PAG pag, Object newExpr, Type t, SootMethod m) {
+    // LWG: changed from public access to package access
+    InsensitiveAllocNode(PAG pag, Object newExpr, Type t, SootMethod m) {
         super(pag, newExpr, t, m);
         cvns = new HashMap<Context, ObjectSensitiveAllocNode>();
     }

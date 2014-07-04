@@ -235,7 +235,7 @@ public class ObjectSensitiveConfig {
       
     }
 
-    public int contextDepth(ObjectSensitiveAllocNode probe) {
+    public int contextDepth(InsensitiveAllocNode probe) {
         if (!addHeapContext(probe))
             return 0;
 
@@ -275,18 +275,13 @@ public class ObjectSensitiveConfig {
 
 
         //smarter decision hopefully...
-        for (int i = 0; i < probe.numContextElements(); i++) {
-            ContextElement ce = probe.getContextElement(i);
-            if (ce instanceof InsensitiveAllocNode) {
-                SootMethod allocatorMethod = ((InsensitiveAllocNode)ce).getMethod();
-                if (allocatorMethod != null) {
-                    SootClass allocatingClass = allocatorMethod.getDeclaringClass();
-                    if (allocatingClass != null && importantAllocators.contains(allocatingClass)) {
-                        // in an important class
-                        return k;
-                    }
-                }
-            }   
+        SootMethod allocatorMethod = probe.getMethod();
+        if (allocatorMethod != null) {
+            SootClass allocatingClass = allocatorMethod.getDeclaringClass();
+            if (allocatingClass != null && importantAllocators.contains(allocatingClass)) {
+                // in an important class
+                return k;
+            }
         }
 
         return minK;

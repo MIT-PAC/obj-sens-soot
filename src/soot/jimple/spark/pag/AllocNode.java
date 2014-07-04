@@ -52,7 +52,8 @@ public abstract class AllocNode extends Node implements IAllocNode { // (LWG) im
         return "AllocNode "+hashCode()+" "+newExpr+" in method "+method;
     }
 
-    public AllocNode( PAG pag, Object newExpr, Type t, SootMethod m) {
+    // LWG: changed from public to package access
+    AllocNode( PAG pag, Object newExpr, Type t, SootMethod m) {
         super( pag, t );
       
         this.method = m;
@@ -89,6 +90,9 @@ public abstract class AllocNode extends Node implements IAllocNode { // (LWG) im
 
     public SootMethod getMethod() { return method; }
 
+    // LWG: not needed since alloc node creation ensures that for all equal new exprs there is an unique alloc node.
+    // See PAG.valToAllocNode, PAG.makeAllocNode(), PAG.makeClassConstantNode(), and PAG.makeStringConstantNode().
+    /*
     @Override
     public int hashCode() {
         int result = ((newExpr == null) ? 0 : newExpr.hashCode());
@@ -105,5 +109,6 @@ public abstract class AllocNode extends Node implements IAllocNode { // (LWG) im
         } else if (!newExpr.equals(other.newExpr)) return false;
         return true;
     }
+    */
 }
 

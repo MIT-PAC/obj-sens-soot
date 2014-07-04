@@ -28,7 +28,7 @@ import soot.options.CGOptions;
  *
  */
 public class ObjectSensitiveAllocNode extends AllocNode implements Context {
-    public static Map<ObjectSensitiveAllocNode,ObjectSensitiveAllocNode> universe;
+    public static Map<ContextElements, ObjectSensitiveAllocNode> universeMap;
 
     /** Array for context of allocation (new exprs) */
     private ContextElement[] contextAllocs;
@@ -40,26 +40,29 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
      * which is a comma separated list of fully-qualified class names.
      */
     public static void reset() {
-        universe = new HashMap<ObjectSensitiveAllocNode,ObjectSensitiveAllocNode>(10000);
+        universeMap = new HashMap<ContextElements,ObjectSensitiveAllocNode>(10000);
     }
 
     public ObjectSensitiveAllocNode getRepFromUniverse() {
-        return universe.get(this);
+        return universeMap.get(this);
     }
 
     public static ObjectSensitiveAllocNode getObjSensNode(PAG pag, InsensitiveAllocNode base, Context context) {
-        ObjectSensitiveAllocNode probe = new ObjectSensitiveAllocNode(pag, base, context);
+        ContextElements contextElements = new ContextElements(base, context);
 
         /*
         if (!ObjectSensitiveConfig.v().addHeapContext(probe))
             probe =  new ObjectSensitiveAllocNode(pag, base, NoContext.v());
-        */  
+        */
+        
+        ObjectSensitiveAllocNode objSenAllocNode = universeMap.get(contextElements);
 
-        if (!universe.containsKey(probe)) {
+        if (objSenAllocNode == null) {
             //System.out.println("Creating obj sens node: " + probe + "\n");
-            universe.put(probe, probe);
-            pag.getAllocNodeNumberer().add( probe );
-            pag.newAllocNodes.add(probe);
+            objSenAllocNode = new ObjectSensitiveAllocNode(pag, base, contextElements.array);
+            universeMap.put(contextElements, objSenAllocNode);
+            pag.getAllocNodeNumberer().add( objSenAllocNode );
+            pag.newAllocNodes.add(objSenAllocNode);
 
             /* print some stats
             if (base.getMethod() != null) {
@@ -80,7 +83,7 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
             */
         } 
 
-        return universe.get(probe);        
+        return objSenAllocNode;        
     }
 
     public ContextElement getContextElement(int i) {
@@ -90,8 +93,8 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
     public static int numberOfObjSensNodes() {
 
 
-        if (universe != null)
-            return universe.size();
+        if (universeMap != null)
+            return universeMap.size();
         else 
             return 0;
 
@@ -114,48 +117,11 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
 
     /* End of public methods. */
 
-    private ObjectSensitiveAllocNode( PAG pag, InsensitiveAllocNode base, Context context ) {
+    private ObjectSensitiveAllocNode( PAG pag, InsensitiveAllocNode base, ContextElement[] contextAllocs ) {
         super( pag, base.newExpr, base.type, base.getMethod());
-
-        contextAllocs = new ContextElement[ObjectSensitiveConfig.v().k()];
-        contextAllocs[0] = base;
-        
-        //should we limit heap context to 1 for this node
-        if (ObjectSensitiveConfig.v().limitHeapContext(this)) {
-            return;
-        } 
-            
-        int contextLength = ObjectSensitiveConfig.v().contextDepth(this);
-        
-        if (!(base.getType() instanceof RefType))
-            contextLength = ObjectSensitiveConfig.v().k();
-        
-        if (contextLength == 0)
-            throw new RuntimeException("Problem: Context depth should never be zero in obj sens node: " + this);
-
-        if (context instanceof ObjectSensitiveAllocNode) {
-            ObjectSensitiveAllocNode osan = (ObjectSensitiveAllocNode)context;
-
-            for (int i = 1; i < contextLength; i++) {
-                if (ObjectSensitiveConfig.v().typesForContextGTOne() && 
-                        osan.contextAllocs[i-1] instanceof InsensitiveAllocNode) {
-                    contextAllocs[i] = TypeContextElement.v(((InsensitiveAllocNode)osan.contextAllocs[i-1]).getType());
-                } else 
-                    contextAllocs[i] = osan.contextAllocs[i - 1];
-            }
-        } else if (context instanceof ContextElement) {
-            if (contextAllocs.length > 1) {
-                if (ObjectSensitiveConfig.v().typesForContextGTOne() && 
-                        context instanceof InsensitiveAllocNode)
-                    contextAllocs[1] = TypeContextElement.v(((InsensitiveAllocNode)context).getType());
-                else 
-                    contextAllocs[1] = (ContextElement)context;
-            }
-        } else {
-            throw new RuntimeException("Unsupported context on alloc node: " + context);
-        }
+        this.contextAllocs = contextAllocs;
     }
-
+    
     /**
      * Return the oldest context for this next if it has a depth of k for object sensitive context
      */
@@ -189,6 +155,9 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
         return false;
     }
 
+    // LWG: not needed since obj sen alloc node creation ensures that for all equal context elements there is an 
+    // unique obj sen alloc node.  See universeMap and getObjSensNode() in this class.
+    /*
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -206,7 +175,64 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
         if (!Arrays.equals(contextAllocs, other.contextAllocs)) return false;
         return true;
     }
+    */
 
+    static class ContextElements {
+        ContextElement[] array;
+        
+        ContextElements(InsensitiveAllocNode base, Context context) {
+            array = new ContextElement[ObjectSensitiveConfig.v().k()];
+            array[0] = base;
+            
+            //should we limit heap context to 1 for this node
+            if (!ObjectSensitiveConfig.v().limitHeapContext(base)) {
+                
+                int contextLength = ObjectSensitiveConfig.v().contextDepth(base);
 
+                if (!(base.getType() instanceof RefType))
+                    contextLength = ObjectSensitiveConfig.v().k();
+
+                if (contextLength == 0)
+                    throw new RuntimeException("Problem: Context depth should never be zero for obj sens node with base " + base);
+
+                if (context instanceof ObjectSensitiveAllocNode) {
+                    ObjectSensitiveAllocNode osan = (ObjectSensitiveAllocNode)context;
+
+                    for (int i = 1; i < contextLength; i++) {
+                        if (ObjectSensitiveConfig.v().typesForContextGTOne() && 
+                                osan.contextAllocs[i-1] instanceof InsensitiveAllocNode) {
+                            array[i] = TypeContextElement.v(((InsensitiveAllocNode)osan.contextAllocs[i-1]).getType());
+                        } else 
+                            array[i] = osan.contextAllocs[i - 1];
+                    }
+                } else if (context instanceof ContextElement) {
+                    if (array.length > 1) {
+                        if (ObjectSensitiveConfig.v().typesForContextGTOne() && 
+                                context instanceof InsensitiveAllocNode)
+                            array[1] = TypeContextElement.v(((InsensitiveAllocNode)context).getType());
+                        else 
+                            array[1] = (ContextElement)context;
+                    }
+                } else {
+                    throw new RuntimeException("Unsupported context on alloc node: " + context);
+                }
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(array);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (getClass() != obj.getClass()) return false;
+            ContextElements other = (ContextElements) obj;
+            if (!Arrays.equals(array, other.array)) return false;
+            return true;
+        }
+
+    }
 
 }
