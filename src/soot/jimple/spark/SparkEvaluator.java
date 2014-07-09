@@ -151,10 +151,11 @@ public class SparkEvaluator {
         addLine("Max Memory Before: " + runtime.maxMemory() / GB + " GB");
         
         if (ObjectSensitiveConfig.isObjectSensitive()) {
-            addLine("K object depth: " + ObjectSensitiveConfig.v().k());
-            addLine("MinK object depth (for decay): " + ObjectSensitiveConfig.v().minK());
+            addLine("K object depth: " + ObjectSensitiveConfig.v().k() + 
+                (ObjectSensitiveConfig.v().extraArrayContext() ? " extra-array-context" : "") + 
+                (ObjectSensitiveConfig.v().typesForContextGTOne() ? " types-for-context-gt1" : ""));
         }
-
+        
         //get current date time with Date()
         startTime = new Date();
     }

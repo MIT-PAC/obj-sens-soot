@@ -10,6 +10,7 @@ import soot.MethodOrMethodContext;
 import soot.RefType;
 import soot.Scene;
 import soot.SootClass;
+import soot.SootField;
 import soot.SootMethod;
 import soot.Type;
 import soot.jimple.spark.sets.PointsToSetInternal;
@@ -36,34 +37,62 @@ public class ObjectSensitiveConfig {
     /** depth of the object sensitivity on heap and method */
     private int k = 0;
 
-    private int minK = 0;
+    private HashSet<SootClass> hasArrayField;
+    
+    private boolean extraArrayContext = false;
 
-    private boolean naiveDecay = false;
-
-    private ObjectSensitiveConfig(int k, int mink, String csl, String importantAs, String limitHeapContext,
+    private ObjectSensitiveConfig(int k, String noContext, String importantAs, String limitHeapContext,
                                   boolean contextForStaticInits, boolean typesForContextGTOne,
-                                  boolean naiveDecay) {
-        if (minK > k)
-            throw new RuntimeException("mink cannot be greater than k for object sensitive pta");
-
+                                  boolean extraArrayContext) {
         this.k = k;
-        this.minK = mink;
-
-
-        this.naiveDecay = naiveDecay;
+      
         this.contextForStaticInits = contextForStaticInits;
         this.typesForContextGTOne = typesForContextGTOne;
+        this.extraArrayContext = extraArrayContext;
 
-        installNoContextList(csl);
+        installNoContextList(noContext);
         installImportantAllocators(importantAs);
         installLimitHeapContext(limitHeapContext);
+        
+        buildHasArraySet();
 
         stringClasses = new HashSet<SootClass>();
         stringClasses.add(Scene.v().getSootClass("java.lang.String"));
         stringClasses.add(Scene.v().getSootClass("java.lang.StringBuilder"));
         stringClasses.add(Scene.v().getSootClass("java.lang.StringBuffer"));
     }
+    
+    public boolean hasArrayField(Type type) {
+        if (type instanceof RefType) {
+            return hasArrayField.contains(((RefType)type).getSootClass());
+        }
+        
+        return false;
+    }
 
+    private void buildHasArraySet() {
+        hasArrayField = new HashSet<SootClass>();
+        
+        for (SootClass clz : Scene.v().getClasses()) {
+            if (clz.isInterface())
+                continue;
+            boolean foundArray = false;
+            
+            for (SootClass ancestor : Scene.v().getActiveHierarchy().getSuperclassesOfIncluding(clz)) {
+                for (SootField field : ancestor.getFields()) {
+                    if (field.getType() instanceof ArrayType) {
+                        hasArrayField.add(clz);
+                        foundArray = true;
+                        break;
+                    }
+                }
+                if (foundArray)
+                    break;
+            }
+        }
+    }
+   
+    
     public static boolean isObjectSensitive() {
         return (v != null && v.k > 0); 
     }
@@ -80,12 +109,7 @@ public class ObjectSensitiveConfig {
         return newExprsForNoContext != null && newExprsForNoContext.contains(newExpr);
     }
 
-    public int minK() {
-        return Math.min(minK, k);
-    }
-
-
-
+    
     private void installImportantAllocators(String isa) {
 
         importantAllocators = new HashSet<SootClass>();
@@ -153,6 +177,10 @@ public class ObjectSensitiveConfig {
         }
     }
 
+    public boolean extraArrayContext() {
+        return extraArrayContext;
+    }
+    
     public boolean isImportantAlloc(SootMethod m) {
         return isImportantAlloc(m.getDeclaringClass());
     }
@@ -165,12 +193,12 @@ public class ObjectSensitiveConfig {
         return k;
     }
 
-    public static void initialize(int k, int mink, String noContextList, String importantAllocators,  
+    public static void initialize(int k, String noContextList, String importantAllocators,  
                                   String limitHeapContext, boolean contextForStaticInits,
-                                  boolean typesForContextGTOne, boolean naiveDecay) {
+                                  boolean typesForContextGTOne, boolean extraArrayContext) {
         v = null;
-        v = new ObjectSensitiveConfig(k, mink, noContextList, importantAllocators, limitHeapContext, 
-            contextForStaticInits, typesForContextGTOne, naiveDecay);
+        v = new ObjectSensitiveConfig(k, noContextList, importantAllocators, limitHeapContext, 
+            contextForStaticInits, typesForContextGTOne, extraArrayContext);
     }
 
     public boolean contextForStaticInits() {
@@ -227,6 +255,7 @@ public class ObjectSensitiveConfig {
 
     }
 
+    /*
     public int contextDepth(AllocNode probe, Context context) {
         if (!addHeapContext(probe))
             return 0;
@@ -258,22 +287,17 @@ public class ObjectSensitiveConfig {
                         if (importantAllocators.contains(currentAllocated))
                             return k;
                         
-                        /*
-                        SootMethod allocatorMethod = ((InsensitiveAllocNode)ce).getMethod();
-                        if (allocatorMethod != null) {
-                            SootClass allocatingClass = allocatorMethod.getDeclaringClass();
-                            if (allocatingClass != null && importantAllocators.contains(allocatingClass)) {
-                                // in an important class
-                                return k;
-                            }
+                        
+                       
                         }
-                        */
+                        
                     }   
                 }
-            }
+            } 
             return minK;
         }
     }
+    */
 
     private SootClass getSootClass(Type type) {
         SootClass allocated = null;

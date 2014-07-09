@@ -49,10 +49,6 @@ public class SparkOptions
         return soot.PhaseOptions.getInt(options, "kobjsens");
     }
     
-    public int obj_sens_min_k() {
-        return soot.PhaseOptions.getInt(options, "kobjsens-min-k");
-    }
-    
     public boolean obj_sens_context_for_static_inits() {
         return soot.PhaseOptions.getBoolean(options, "kobjsens-context-for-static-inits");
     }
@@ -61,8 +57,8 @@ public class SparkOptions
         return soot.PhaseOptions.getBoolean(options, "kobjsens-types-for-context");
     }
     
-    public boolean obj_sens_naive_decay() {
-        return soot.PhaseOptions.getBoolean(options, "kobjsens-naive-decay");
+    public boolean obj_sens_extra_array_context() {
+        return soot.PhaseOptions.getBoolean(options, "kobjsens-extra-array-context");
     }
     
     /** Verbose --
