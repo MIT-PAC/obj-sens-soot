@@ -33,10 +33,11 @@
            		<pathelement location="${jasmin.jar}"/>
            		<pathelement location="${heros.jar}"/>
            		<pathelement location="${axmlprinter2.jar}"/>
-           		<pathelement location="${baksmali.jar}"/>
-           		<pathelement location="${baksmali2.jar}"/>
+           		<pathelement location="${dexlib2.jar}"/>
+           		<pathelement location="${dexlib-utils.jar}"/>
            		<pathelement location="${slf4j-api.jar}"/>
            		<pathelement location="${slf4j-simple.jar}"/>
+           		<pathelement location="${asm.jar}"/>
         	</classpath>
             <src path="src"/>
             <src path="generated/singletons"/>
@@ -113,16 +114,17 @@
         <javadoc
             classpath="classes:${polyglot.jar}:${jasmin.jar}:${heros.jar}"
             sourcepath="src:generated/singletons:generated/sablecc:generated/options"
-            destdir="doc"
+			destdir="javadoc"
             maxmemory="400m"
             link="${javaapi.url}"
             windowtitle="Soot API"
-            verbose="true"
             use="true"
+            useexternalfile="true"
         >
             <fileset dir="src" includes="**/*.java"/>
         </javadoc>
-    </target>
+		<jar basedir="javadoc" destfile="${release.loc}/sootjavadoc-${soot.version}.jar" />
+	</target>
 
     <target name="clean">
         <delete quiet="true">
@@ -195,25 +197,44 @@
         <javac
             srcdir="tests"
             destdir="testclasses"
-            classpath="classes:${polyglot.jar}:${jasmin.jar}:${junit.jar}"
+            classpath="classes:${polyglot.jar}:${jasmin.jar}:${junit.jar}:${hamcrest.jar}"
             debug="true"
             />
     </target>
 
     <target name="runtests" depends="buildtests,settings">
-        <junit printsummary="yes">
+	<mkdir dir="reports" />
+        <junit printsummary="yes" fork="true">
             <classpath>
                 <pathelement location="testclasses"/>
                 <pathelement location="classes"/>
                 <pathelement location="${polyglot.jar}"/>
                 <pathelement location="${jasmin.jar}"/>
+                <pathelement location="${junit.jar}"/>
+                <pathelement location="${hamcrest.jar}"/>
+           	<pathelement location="${dexlib2.jar}"/>
+                <pathelement location="${dexlib-utils.jar}"/>
+                <pathelement location="${heros.jar}"/>
+           		<pathelement location="${asm.jar}"/>
             </classpath>
-
-            <formatter type="plain"/>
-            <batchtest>
-                <fileset dir="testclasses" includes="**/*.class"/>
+			
+			<jvmarg value="-ea" />
+            
+            <formatter type="xml" usefile="true" />
+            <batchtest todir="reports">
+                <fileset dir="testclasses" includes="**/Test*.class"/>
+                <fileset dir="testclasses" includes="**/*Test.class"/>
             </batchtest>
         </junit>
+    </target>
+
+    <target name="reporttests" depends="runtests">
+        <junitreport tofile="TESTS-TestSuites.xml" todir="reports">
+            <fileset dir="reports">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report format="frames" todir="reports" />
+        </junitreport>
     </target>
 
     <target name="release" depends="barebones,javadoc,settings">
@@ -288,7 +309,7 @@
         </jar>
         
     </target>
-	
+		
 	<target name="fulljar" depends="classesjar">
     	<mkdir dir="META-INF"/>
 
@@ -296,16 +317,18 @@
            <attribute name="Main-Class" value="soot.Main"/>
            <attribute name="Implementation-Version" value="${soot.version}"/> 
         </manifest>
-
+		
         <jar destfile="${release.loc}/soot-${soot.version}.jar" manifest="META-INF/MANIFEST.MF">
+        	
             <zipfileset src="${release.loc}/sootclasses-${soot.version}.jar"/>
             <zipfileset src="${jasmin.jar}"/>
             <zipfileset src="${heros.jar}"/>
             <zipfileset src="${polyglot.jar}"/>
             <zipfileset src="${javacup.jar}"/>
-            <zipfileset src="${xmlprinter.jar}"/>      
-            <zipfileset src="${baksmali.jar}"/>      
-            <zipfileset src="${baksmali2.jar}"/>      
+            <zipfileset src="${xmlprinter.jar}"/>
+            <zipfileset src="${dexlib2.jar}"/>
+            <zipfileset src="${dexlib-utils.jar}"/>
+            <zipfileset src="${asm.jar}"/>
         </jar>
 		<delete dir="META-INF"/>
     </target>

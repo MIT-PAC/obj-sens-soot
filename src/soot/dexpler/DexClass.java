@@ -39,6 +39,7 @@ import soot.SootResolver;
 import soot.Type;
 import soot.javaToJimple.IInitialResolver.Dependencies;
 import soot.options.Options;
+import soot.tagkit.SourceFileTag;
 
 /**
  * DexClass is a container for all relevant information of that class
@@ -70,15 +71,22 @@ public class DexClass {
 
 
     public static Dependencies makeSootClass(SootClass sc, ClassDef defItem, DexFile dexFile) {
-
         String superClass = defItem.getSuperclass();
         Dependencies deps = new Dependencies();
 
+        // source file
+        String sourceFile = defItem.getSourceFile();
+        if (sourceFile != null) {
+            sc.addTag(new SourceFileTag(sourceFile));
+        }
+
         // super class for hierarchy level
-        String superClassName = Util.dottedClassName(superClass);
-        SootClass sootSuperClass = SootResolver.v().makeClassRef(superClassName);
-        sc.setSuperclass(sootSuperClass);
-        deps.typesToHierarchy.add(sootSuperClass.getType());
+        if (superClass != null) {
+	        String superClassName = Util.dottedClassName(superClass);
+	        SootClass sootSuperClass = SootResolver.v().makeClassRef(superClassName);
+	        sc.setSuperclass(sootSuperClass);
+	        deps.typesToHierarchy.add(sootSuperClass.getType());
+        }
 
         // access flags
         int accessFlags = defItem.getAccessFlags();
@@ -90,6 +98,7 @@ public class DexClass {
                 String interfaceClassName = Util.dottedClassName(interfaceName);
                 if (sc.implementsInterface(interfaceClassName))
                     continue;
+                
                 SootClass interfaceClass = SootResolver.v().makeClassRef(interfaceClassName);
                 sc.addInterface(interfaceClass);
                 deps.typesToHierarchy.add(interfaceClass.getType());

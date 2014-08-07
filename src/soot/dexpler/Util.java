@@ -41,20 +41,10 @@ import soot.LongType;
 import soot.RefType;
 import soot.Scene;
 import soot.ShortType;
-import soot.SootField;
 import soot.Type;
 import soot.Unit;
-import soot.Value;
 import soot.VoidType;
-import soot.jimple.AssignStmt;
-import soot.jimple.Constant;
-import soot.jimple.DoubleConstant;
-import soot.jimple.FieldRef;
-import soot.jimple.FloatConstant;
-import soot.jimple.IntConstant;
 import soot.jimple.Jimple;
-import soot.jimple.LongConstant;
-import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 
 public class Util {
@@ -240,71 +230,37 @@ public class Util {
       b.getUnits().insertBefore(newUnits, u);
     }
 
-    public static void addConstantTags(Body b) {
-      for (Unit u: b.getUnits()) {
-        Stmt s = (Stmt)u;
-        if (s instanceof AssignStmt && s.containsFieldRef()) {
-          AssignStmt ass = (AssignStmt)s;
-          Value r = ass.getRightOp();
-          Value l = ass.getLeftOp();
-          if (!(l instanceof FieldRef))
-            continue;
-          if (!(r instanceof Constant))
-            continue;
-          FieldRef fr = ass.getFieldRef();
-          SootField sf = fr.getField();
-          if (sf.isFinal())
-            addConstantTag(sf, (Constant)r);
-        }
-      }
-    }
-    
-    private static void addConstantTag(SootField sf, Constant c) {
-      if (c instanceof IntConstant){
-        sf.addTag(new soot.tagkit.IntegerConstantValueTag(((IntConstant) c).value));
-      } else if (c instanceof LongConstant){
-        sf.addTag(new soot.tagkit.LongConstantValueTag(((LongConstant) c).value));
-      } else if (c instanceof DoubleConstant){
-        sf.addTag(new soot.tagkit.DoubleConstantValueTag(((DoubleConstant)c).value));
-      } else if (c instanceof FloatConstant){
-        sf.addTag(new soot.tagkit.FloatConstantValueTag(((FloatConstant)c).value));
-      } else if (c instanceof StringConstant){
-        sf.addTag(new soot.tagkit.StringConstantValueTag(((StringConstant) c).value));
-      } else {                                                                                                                                                                                 
-        //throw new RuntimeException("Expecting static final field to have a constant value! For field: "+field+" of type: "+field.fieldInstance().constantValue().getClass());
-      }   
-
-    }
-    
     public static List<String> splitParameters(String parameters) {
         List<String> pList = new ArrayList<String>();
         
         int idx = 0;
-        int arraySize = 0;
+        boolean object = false;
         
         String curr = "";
         while( idx < parameters.length()) {
           char c = parameters.charAt(idx);
           curr += c;
           switch( c ) {
+              // array
             case '[':
-                char c2 = parameters.charAt(++idx);
-                if (c2 == 'L') {
-                    while(c2 != ';') {
-                        curr += c2;
-                        c2 = parameters.charAt(++idx);
-                    }
-                } else {
-                    curr += c2;
-                }
+                break;
+              // end of object
+            case ';':
+                object = false;
                 pList.add(curr);
                 curr = "";
                 break;
-            case ';':
-                pList.add(curr);
-                curr = "";            
+              // start of object
+            case 'L':
+                object = true;
+                break;
            default:
-               pList.add(curr);
+               if (object) {
+                // caracter part of object
+               } else { // primitive
+                   pList.add(curr);
+                   curr = "";
+               }
                break;
             
           }

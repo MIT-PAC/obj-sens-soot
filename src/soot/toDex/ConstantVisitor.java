@@ -1,8 +1,8 @@
 package soot.toDex;
 
-import org.jf.dexlib.StringIdItem;
-import org.jf.dexlib.TypeIdItem;
-import org.jf.dexlib.Code.Opcode;
+import org.jf.dexlib2.Opcode;
+import org.jf.dexlib2.writer.builder.BuilderReference;
+import org.jf.dexlib2.writer.builder.DexBuilder;
 
 import soot.jimple.ClassConstant;
 import soot.jimple.ConstantSwitch;
@@ -11,6 +11,7 @@ import soot.jimple.FloatConstant;
 import soot.jimple.IntConstant;
 import soot.jimple.LongConstant;
 import soot.jimple.NullConstant;
+import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.toDex.instructions.Insn;
 import soot.toDex.instructions.Insn11n;
@@ -31,17 +32,25 @@ import soot.util.Switchable;
  */
 public class ConstantVisitor implements ConstantSwitch {
 	
+	private final DexBuilder dexFile;
 	private StmtVisitor stmtV;
 	
 	private Register destinationReg;
 	
-	public ConstantVisitor(StmtVisitor stmtV) {
+    private Stmt origStmt;
+
+	public ConstantVisitor(DexBuilder dexFile, StmtVisitor stmtV) {
 		this.stmtV = stmtV;
+		this.dexFile = dexFile;
 	}
 	
 	public void setDestination(Register destinationReg) {
 		this.destinationReg = destinationReg;
 	}
+
+    public void setOrigStmt(Stmt stmt) {
+        this.origStmt = stmt;
+    }
 
 	public void defaultCase(Object o) {
 		// const* opcodes not used since there seems to be no point in doing so:
@@ -50,21 +59,21 @@ public class ConstantVisitor implements ConstantSwitch {
 	}
 	
 	public void caseStringConstant(StringConstant s) {
-		StringIdItem referencedString = StringIdItem.internStringIdItem(stmtV.getBelongingFile(), s.value);
-		stmtV.addInsn(new Insn21c(Opcode.CONST_STRING, destinationReg, referencedString));
+		BuilderReference ref = dexFile.internStringReference(s.value);
+        stmtV.addInsn(new Insn21c(Opcode.CONST_STRING, destinationReg, ref), origStmt);
 	}
 	
 	public void caseClassConstant(ClassConstant c) {
 		// "array class" types are unmodified
 		boolean classIsArray = c.value.startsWith("[");
 		String className = classIsArray ? c.value : SootToDexUtils.getDexClassName(c.value);
-		TypeIdItem referencedClass = TypeIdItem.internTypeIdItem(stmtV.getBelongingFile(), className);
-		stmtV.addInsn(new Insn21c(Opcode.CONST_CLASS, destinationReg, referencedClass));
+		BuilderReference referencedClass = dexFile.internTypeReference(className);
+        stmtV.addInsn(new Insn21c(Opcode.CONST_CLASS, destinationReg, referencedClass), origStmt);
 	}
 	
 	public void caseLongConstant(LongConstant l) {
 		long constant = l.value;
-		stmtV.addInsn(buildConstWideInsn(constant));
+        stmtV.addInsn(buildConstWideInsn(constant), origStmt);
 	}
 	
 	private Insn buildConstWideInsn(long literal) {
@@ -79,31 +88,30 @@ public class ConstantVisitor implements ConstantSwitch {
 	
 	public void caseDoubleConstant(DoubleConstant d) {
 		long longBits = Double.doubleToLongBits(d.value);
-		stmtV.addInsn(buildConstWideInsn(longBits));
+        stmtV.addInsn(buildConstWideInsn(longBits), origStmt);
 	}
 	
 	public void caseFloatConstant(FloatConstant f) {
 		int intBits = Float.floatToIntBits(f.value);
-		stmtV.addInsn(buildConstInsn(intBits));
+        stmtV.addInsn(buildConstInsn(intBits), origStmt);
 	}
 	
 	private Insn buildConstInsn(int literal) {
-		if (SootToDexUtils.fitsSigned4(literal)) {
+		if (SootToDexUtils.fitsSigned4(literal))
 			return new Insn11n(Opcode.CONST_4, destinationReg, (byte) literal);
-		}
-		if (SootToDexUtils.fitsSigned16(literal)) {
+		else if (SootToDexUtils.fitsSigned16(literal))
 			return new Insn21s(Opcode.CONST_16, destinationReg, (short) literal);
-		}
-		return new Insn31i(Opcode.CONST, destinationReg, literal);
+		else
+			return new Insn31i(Opcode.CONST, destinationReg, literal);
 	}
 
 	public void caseIntConstant(IntConstant i) {
-		stmtV.addInsn(buildConstInsn(i.value));
+        stmtV.addInsn(buildConstInsn(i.value), origStmt);
 	}
 	
 	public void caseNullConstant(NullConstant v) {
 		// dex bytecode spec says: "In terms of bitwise representation, (Object) null == (int) 0."
-		stmtV.addInsn(buildConstInsn(0));
+        stmtV.addInsn(buildConstInsn(0), origStmt);
 	}
 
 }
