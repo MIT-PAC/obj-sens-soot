@@ -51,6 +51,7 @@ import soot.Local;
 import soot.LongType;
 import soot.Modifier;
 import soot.NullType;
+import soot.PatchingChain;
 import soot.PrimType;
 import soot.RefType;
 import soot.SootClass;
@@ -75,6 +76,7 @@ import soot.jimple.CastExpr;
 import soot.jimple.ConditionExpr;
 import soot.jimple.Constant;
 import soot.jimple.EqExpr;
+import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.IntConstant;
 import soot.jimple.Jimple;
@@ -90,6 +92,8 @@ import soot.jimple.toolkits.scalar.LocalNameStandardizer;
 import soot.jimple.toolkits.scalar.NopEliminator;
 import soot.jimple.toolkits.scalar.UnreachableCodeEliminator;
 import soot.jimple.toolkits.typing.TypeAssigner;
+import soot.tagkit.LineNumberTag;
+import soot.tagkit.Tag;
 import soot.toolkits.exceptions.TrapTightener;
 import soot.toolkits.scalar.LocalPacker;
 import soot.toolkits.scalar.LocalSplitter;
@@ -513,6 +517,9 @@ public class DexBody  {
 
         Debug.printDbg("body before any transformation : \n", jBody);
         
+        // LWG: propagate line number to successors of instructions with line numbers
+        propagateLineNumberTags();
+
         // Remove dead code and the corresponding locals before assigning types
 		UnreachableCodeEliminator.v().transform(jBody);
 		DeadAssignmentEliminator.v().transform(jBody);
@@ -719,6 +726,44 @@ public class DexBody  {
         }
 
         return jBody;
+    }
+
+    // LWG: propagate line number to successors of instructions with line numbers
+    private void propagateLineNumberTags() {
+        PatchingChain<Unit> units = jBody.getUnits();
+        HashMap<Unit, Tag> unitToTags = new HashMap<Unit, Tag>();
+        LinkedList<Unit> startUnits = new LinkedList<Unit>();
+        for (Unit unit: units) {
+            LineNumberTag lineNumberTag = (LineNumberTag) unit.getTag("LineNumberTag");
+            if (lineNumberTag != null) {
+                unitToTags.put(unit, lineNumberTag);
+                startUnits.add(unit);
+            }
+        }
+        /* if the predecessor of a statement is a caughtexceptionref,
+         * give it the tag of its successor */
+        for (Unit unit: startUnits) {
+            Unit pred = unit;
+            Tag tag = unitToTags.get(unit);
+            while(true) {
+                pred = units.getPredOf(pred);
+                if( pred == null ) break;
+                if(!(pred instanceof IdentityStmt)) break;
+                unitToTags.put(pred, tag);
+                pred.addTag(tag);
+            }
+        }
+
+        /* attach line number tag to successor statements. */
+        for (Unit unit: startUnits) {
+            Tag tag = unitToTags.get(unit);
+
+            unit = units.getSuccOf(unit);
+            while (unit != null && !unitToTags.containsKey(unit)) {
+                unit.addTag(tag);
+                unit = units.getSuccOf(unit);
+            }
+        }
     }
 
     private LocalSplitter localSplitter = null;

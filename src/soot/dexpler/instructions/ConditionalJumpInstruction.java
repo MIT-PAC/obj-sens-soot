@@ -52,6 +52,8 @@ public abstract class ConditionalJumpInstruction extends JumpInstruction impleme
             IfStmt s = ifStatement(body);
             body.add(s);
             setUnit(s);
+            // LWG: add line number tags
+            addTags(s);
         } else {
           // set marker unit to swap real gotostmt with otherwise
           body.addDeferredJimplification(this);
@@ -73,6 +75,8 @@ public abstract class ConditionalJumpInstruction extends JumpInstruction impleme
         IfStmt s = ifStatement(body);
         body.getBody().getUnits().swapWith(markerUnit, s); //insertAfter(s, markerUnit);
         setUnit(s);
+        // LWG: add line number tags
+        addTags(s);
     }
 
     /**
