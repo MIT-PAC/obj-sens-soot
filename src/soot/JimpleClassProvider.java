@@ -34,5 +34,16 @@ public class JimpleClassProvider implements ClassProvider
         if( file == null ) return null;
         return new JimpleClassSource(className, file.inputStream());
     }
+
+    // LWG: support source locator that respects class path ordering
+    @Override
+    public ClassSource find(String className, String path) {
+        //String fileName = className.replace('.', '/') + ".jimple";
+        String fileName = className + ".jimple";
+        SourceLocator.FoundFile file = 
+            SourceLocator.v().lookupInPath(fileName, path);
+        if( file == null ) return null;
+        return new JimpleClassSource(className, file.inputStream());
+    }
 }
 

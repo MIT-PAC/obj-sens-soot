@@ -34,5 +34,16 @@ public class CoffiClassProvider implements ClassProvider
         return new CoffiClassSource(className, file.inputStream(), file.inputFile().getAbsolutePath(),
         		file.zipFile == null ? null : file.zipFile.getName());
     }
+
+    // LWG: support source locator that respects class path ordering
+    @Override
+    public ClassSource find(String className, String path) {
+        String fileName = className.replace('.', '/') + ".class";
+        SourceLocator.FoundFile file = 
+            SourceLocator.v().lookupInPath(fileName, path);
+        if( file == null ) return null;
+        return new CoffiClassSource(className, file.inputStream(), file.inputFile().getAbsolutePath(),
+                file.zipFile == null ? null : file.zipFile.getName());
+    }
 }
 

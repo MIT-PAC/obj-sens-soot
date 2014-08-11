@@ -82,4 +82,47 @@ public class JavaClassProvider implements ClassProvider
     	}
 
     }
+
+    // LWG: support source locator that respects class path ordering
+    @Override
+    public ClassSource find(String className, String path) {
+
+        if(Options.v().polyglot() &&
+           soot.javaToJimple.InitialResolver.v().hasASTForSootName(className)){
+            soot.javaToJimple.InitialResolver.v().setASTForSootName(className);
+            return new JavaClassSource(className);
+        } else { //jastAdd; or polyglot AST not yet produced
+            /* 04.04.2006 mbatch    if there is a $ in the name,
+             *                      we need to check if it's a real file, 
+             *                      not just inner class                                
+             */
+            boolean checkAgain = className.indexOf('$') >= 0;
+            
+            String javaClassName = SourceLocator.v().getSourceForClass(className);
+            String fileName = javaClassName.replace('.', '/') + ".java";
+            SourceLocator.FoundFile file = 
+                SourceLocator.v().lookupInClassPath(fileName);
+    
+            /* 04.04.2006 mbatch    if inner class not found,
+             *                      check if it's a real file                           
+             */
+            if( file == null) {
+            
+              if (checkAgain) {
+                fileName = className.replace('.', '/') + ".java";
+                file = SourceLocator.v().lookupInPath(fileName, path);
+              }
+            }
+            /* 04.04.2006 mbatch    end */
+    
+            if (file == null)
+                return null;         
+            
+            if( file.file == null ) {
+                throw new JarException(className);
+            }
+            return new JavaClassSource(className, file.file);
+        }
+
+    }
 }

@@ -27,5 +27,10 @@ public interface ClassProvider
     /** Look for the specified class. Return a ClassSource for it if found,
      * or null if it was not found. */
     public abstract ClassSource find( String className );
+
+    // LWG: support source locator that respects class path ordering
+    /** Look for the specified class in the specified path. Return a ClassSource for it if found,
+     * or null if it was not found. */
+    public abstract ClassSource find( String className, String path );
 }
 

@@ -48,6 +48,8 @@ public class SourceLocator
 
     protected Set<ClassLoader> additionalClassLoaders = new HashSet<ClassLoader>();
 	protected Set<String> classesToLoad;
+	// LWG: TODO: change this into a soot option
+    private boolean respectClassPathOrdering = true;
     
     /** Given a class name, uses the soot-class-path to return a ClassSource for the given class. */
 	public ClassSource getClassSource(String className) 
@@ -67,12 +69,26 @@ public class SourceLocator
             setupClassProviders();
         }
         JarException ex = null;
-        for (ClassProvider cp : classProviders) {
-            try {
-	        	ClassSource ret = cp.find(className);
-	            if( ret != null ) return ret;
-            } catch(JarException e) {
-            	ex = e;
+        // LWG: support source locator that respects class path ordering
+        if (respectClassPathOrdering) {
+            for (String path: classPath) {
+                for (ClassProvider cp : classProviders) {
+                    try {
+                        ClassSource ret = cp.find(className, path);
+                        if( ret != null ) return ret;
+                    } catch(JarException e) {
+                        ex = e;
+                    }
+                } 
+            }
+        } else {
+            for (ClassProvider cp : classProviders) {
+                try {
+                    ClassSource ret = cp.find(className);
+                    if( ret != null ) return ret;
+                } catch(JarException e) {
+                    ex = e;
+                }
             }
         }
         if(ex!=null) throw ex;
@@ -87,6 +103,9 @@ public class SourceLocator
 						return new CoffiClassSource(className, stream, fileName, null);
 					}
 
+                    public ClassSource find(String className, String path) {
+                        return find(className);
+                    }
             	}.find(className);
 	            if( ret != null ) return ret;
             } catch(JarException e) {
@@ -475,18 +494,25 @@ public class SourceLocator
 
 
     /** Searches for a file with the given name in the exploded classPath. */
-    public FoundFile lookupInClassPath( String fileName ) {
+    public FoundFile lookupInClassPath( String fileName) {
         for (String dir : classPath) {
-            FoundFile ret;
-            if(isArchive(dir)) {
-                ret = lookupInArchive(dir, fileName);
-            } else {
-                ret = lookupInDir(dir, fileName);
-            }
+            // LWG: refactored to call lookupInPath()
+            FoundFile ret = lookupInPath(fileName, dir);
             if( ret != null ) return ret;
         }
         return null;
     }
+
+    // LWG: refactored to take an extra argument 'path'
+    /** Searches for a file with the given name in the exploded classPath. */
+    public FoundFile lookupInPath( String fileName, String path) {
+        if (isArchive(path)) {
+            return lookupInArchive(path, fileName);
+        } else {
+            return lookupInDir(path, fileName);
+        }
+    }
+ 
     private FoundFile lookupInDir(String dir, String fileName) {
         File f = new File( dir+File.separatorChar+fileName );
         if( f.canRead() ) {
@@ -558,6 +584,23 @@ public class SourceLocator
      */
     public void setDexClassIndex(Map<String, File> index) {
     	dexClassIndex = index;
+    }
+
+    // LWG: support source locator that respects class path ordering
+    /**
+     * Map that from path to index that maps classes to the files they are defined in.
+     * This is necessary because a dex file can hold multiple classes.
+     */
+    private Map<String, Map<String, File>> dexClassIndexMap;
+
+    // LWG: support source locator that respects class path ordering
+    public Map<String, Map<String, File>> dexClassIndexMap() {
+        return dexClassIndexMap;
+    }
+
+    // LWG: support source locator that respects class path ordering
+    public void setDexClassIndexMap(Map<String, Map<String, File>> indexMap) {
+        dexClassIndexMap = indexMap;
     }
 }
 

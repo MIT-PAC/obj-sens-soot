@@ -65,6 +65,28 @@ public class DexClassProvider implements ClassProvider {
 	}
 
 
+    // LWG: support source locator that respects class path ordering
+    @Override
+    public ClassSource find(String className, String path) {
+        Map<String, Map<String, File>> indexMap = SourceLocator.v().dexClassIndexMap();
+        if (indexMap == null) {
+            indexMap = new HashMap<String, Map<String, File>>();
+            SourceLocator.v().setDexClassIndexMap(indexMap);
+        }
+        Map<String, File> index = indexMap.get(path);
+        if (index == null) {
+            index = new HashMap<String, File>();
+            buildDexIndex(index, path);
+            indexMap.put(path, index);
+        }
+
+        File file = indexMap.get(path).get(className);
+        if (file == null)
+            return null;
+
+        return new DexClassSource(className, file);
+    }
+    
 	/**
 	 * Build index of ClassName-to-File mappings.
 	 *
@@ -87,6 +109,29 @@ public class DexClassProvider implements ClassProvider {
             if (path.endsWith(".dex") || path.endsWith(".apk"))
                 readDexFile(index, dir);
         }
+    }
+
+    // LWG: support source locator that respects class path ordering
+    /**
+     * Build index of ClassName-to-File mappings.
+     *
+     * @param index
+     *            map to insert mappings into
+     * @param path
+     *            path to index
+     */
+    private void buildDexIndex(Map<String, File> index, String path) {
+        File dir = new File(path);
+        File[] dexs = dir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String filename) {
+                return filename.endsWith(".dex");
+            }
+        });
+        if (dexs != null)
+            for (File dex : dexs)
+                readDexFile(index, dex);
+        if (path.endsWith(".dex") || path.endsWith(".apk"))
+            readDexFile(index, dir);
     }
 
     /**
