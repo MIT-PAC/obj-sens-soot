@@ -67,10 +67,12 @@ public class JimpleBodyPack extends BodyPack
         
         if(Options.v().time()) Timers.v().assignTimer.end();
 
-        if(options.use_original_names())
-        {   
-            PackManager.v().getTransform( "jb.ulp" ).apply( b );
-        }
+        // LWG: do not recombine named locals which were split by the Local Splitter so droidsafe analysis does not lose precision
+        // TODO: add a soot option for disabling this transform
+//        if(options.use_original_names())
+//        {   
+//            PackManager.v().getTransform( "jb.ulp" ).apply( b );
+//        }
         PackManager.v().getTransform( "jb.lns" ).apply( b );
         PackManager.v().getTransform( "jb.cp" ).apply( b );
         PackManager.v().getTransform( "jb.dae" ).apply( b );
