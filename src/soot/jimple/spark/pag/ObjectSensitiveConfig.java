@@ -22,8 +22,7 @@ public class ObjectSensitiveConfig {
     /** list of classes for which we do not add context */
     private Set<SootClass> ignoreList;
 
-    private Set<SootClass> importantAllocators;
-
+  
     private Set<SootClass> limitHeapContext;
 
     private static ObjectSensitiveConfig v;
@@ -41,7 +40,7 @@ public class ObjectSensitiveConfig {
     
     private boolean extraArrayContext = false;
 
-    private ObjectSensitiveConfig(int k, String noContext, String importantAs, String limitHeapContext,
+    private ObjectSensitiveConfig(int k, String noContext, String limitHeapContext,
                                   boolean contextForStaticInits, boolean typesForContextGTOne,
                                   boolean extraArrayContext) {
         this.k = k;
@@ -50,8 +49,7 @@ public class ObjectSensitiveConfig {
         this.typesForContextGTOne = typesForContextGTOne;
         this.extraArrayContext = extraArrayContext;
 
-        installNoContextList(noContext);
-        installImportantAllocators(importantAs);
+        installNoContextList(noContext);       
         installLimitHeapContext(limitHeapContext);
         
         buildHasArraySet();
@@ -109,24 +107,6 @@ public class ObjectSensitiveConfig {
         return newExprsForNoContext != null && newExprsForNoContext.contains(newExpr);
     }
 
-    
-    private void installImportantAllocators(String isa) {
-
-        importantAllocators = new HashSet<SootClass>();
-
-        if (isa == null || isa.isEmpty())
-            return;
-
-        String[] classes = isa.split(",");
-
-        for (String str : classes) {
-            str = str.trim();
-            SootClass clz = tryToGetClass(str);
-            if (clz != null && !clz.isInterface())
-                importantAllocators.add(clz);
-        }
-    }
-
 
     private void installLimitHeapContext(String lhc) {
 
@@ -179,25 +159,17 @@ public class ObjectSensitiveConfig {
 
     public boolean extraArrayContext() {
         return extraArrayContext;
-    }
-    
-    public boolean isImportantAlloc(SootMethod m) {
-        return isImportantAlloc(m.getDeclaringClass());
-    }
-
-    public boolean isImportantAlloc(SootClass c) {
-        return importantAllocators.isEmpty() || importantAllocators.contains(c);
-    }
+    }    
 
     public int k() {
         return k;
     }
 
-    public static void initialize(int k, String noContextList, String importantAllocators,  
+    public static void initialize(int k, String noContextList, 
                                   String limitHeapContext, boolean contextForStaticInits,
                                   boolean typesForContextGTOne, boolean extraArrayContext) {
         v = null;
-        v = new ObjectSensitiveConfig(k, noContextList, importantAllocators, limitHeapContext, 
+        v = new ObjectSensitiveConfig(k, noContextList, limitHeapContext, 
             contextForStaticInits, typesForContextGTOne, extraArrayContext);
     }
 

@@ -171,20 +171,7 @@ public final class MethodPAG {
     protected Node parameterize( LocalVarNode vn, Context context ) {
         SootMethod m = vn.getMethod();
         if( m != method && m != null ) throw new RuntimeException( "VarNode "+vn+" with method "+m+" parameterized in method "+method );
-        //System.out.println( "parameterizing "+vn+" with "+varNodeParameter );
-        /*
-        if (ObjectSensitiveConfig.isObjectSensitive() && vn.isThisPtr()) {
-            //do something special for this pointer...
-            if (context instanceof AllocNode ) {
-                return (AllocNode)context;
-            }
-            else if (context instanceof NoContext) 
-                return null;
-            else 
-                throw new RuntimeException("Strange context for this reference when parameterizing: " + context.getClass());
-        } else 
-            
-            */
+      
         return pag().makeContextVarNode( vn, context ); 
     }
 

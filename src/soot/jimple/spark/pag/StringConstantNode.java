@@ -20,6 +20,7 @@
 package soot.jimple.spark.pag;
 import soot.Context;
 import soot.RefType;
+import soot.SootMethod;
 import soot.jimple.StringConstant;
 import soot.jimple.toolkits.pta.IStringConstantNode;
 
@@ -34,14 +35,12 @@ public class StringConstantNode extends InsensitiveAllocNode
     }
 
     public String getString() {
-        return ((StringConstant) newExpr).value;
+        return ((StringConstantByMethod) newExpr).getStringConstant().value;
     }
 
-    /* End of public methods. */
-
     // LWG: changed from public access to package access
-    StringConstantNode( PAG pag, StringConstant sc ) {
-        super( pag, sc, RefType.v( "java.lang.String" ), null );
+    StringConstantNode( PAG pag, StringConstantByMethod sc) {
+        super( pag, sc, RefType.v( "java.lang.String" ), sc.getMethod());
         //System.out.println("Making string constant node: " + this.toString());
         pag.getAllocNodeNumberer().add( this );
     }

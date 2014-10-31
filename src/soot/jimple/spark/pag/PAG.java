@@ -492,18 +492,39 @@ public class PAG implements PointsToAnalysis {
         return ret;
     }
 
-    public AllocNode makeStringConstantNode( StringConstant s ) {
+    public AllocNode makeStringConstantNode( StringConstant s, SootMethod method ) {
         if( opts.types_for_sites() || opts.vta() )
             return makeAllocNode( RefType.v( "java.lang.String" ),
                 RefType.v( "java.lang.String" ), null );
+        
+        //we are using a wrapper class on jimple string constant that includes
+        //the method that declared the string constant, this allows
+        //us to use a local var node in the pag to point to the string constant
+        //and thus parameterize the local var node for more precision
 
+        //rely on equals of StringConstantByMethod to create a probe on 
+        //the map
+        StringConstantByMethod probe = new StringConstantByMethod(s, method);
+        
+        if (valToAllocNode.containsKey(probe)) {
+            return valToAllocNode.get(probe);
+        } else {
+            StringConstantNode ret = new StringConstantNode(this, probe);
+            valToAllocNode.put(probe, ret);
+            addNodeTag(ret, null);
+            return ret;
+        }
+        
+        /*
         StringConstantNode ret = (StringConstantNode) valToAllocNode.get( s );
+      
         if( ret == null ) {
-            valToAllocNode.put( s, ret = new StringConstantNode( this, s ) );
+            valToAllocNode.put( s, ret = new StringConstantNode( this, s) );
             newAllocNodes.add( ret );
             addNodeTag( ret, null );
         }
         return ret;
+        */
     }
     public AllocNode makeClassConstantNode( ClassConstant cc ) {
         if( opts.types_for_sites() || opts.vta() )
@@ -1082,6 +1103,18 @@ public class PAG implements PointsToAnalysis {
             Node argNode = srcnf.getNode( arg );
             argNode = srcmpag.parameterize( argNode, srcContext );
             argNode = argNode.getReplacement();
+            
+            //need to do something special here for string constants
+            //since string constants can appear as arguments to methods
+            //we need to parameterize them here (create context sensitive versions of them)
+            //also we need to create the edge from the cs string constant to the cs local 
+            //created for them in the above getNode()
+            if (arg instanceof StringConstant) {
+                Node scn = makeStringConstantNode((StringConstant)arg, srcmpag.getMethod());
+                scn = srcmpag.parameterize(scn, srcContext);
+                scn = scn.getReplacement();
+                addEdge(scn, argNode);
+            }                      
 
             Node parm = tgtnf.caseParm( i );
             parm = tgtmpag.parameterize( parm, tgtContext );
@@ -1101,6 +1134,18 @@ public class PAG implements PointsToAnalysis {
             baseNode = srcmpag.parameterize( baseNode, srcContext );
             baseNode = baseNode.getReplacement();
 
+            //need to do something special here for string constants
+            //since string constants can appear as receivers to methods
+            //we need to parameterize them here (create context sensitive versions of them)
+            //also we need to create the edge from the cs string constant to the cs local 
+            //created for them in the above getNode()
+            if (iie.getBase() instanceof StringConstant) {
+                Node scn = makeStringConstantNode((StringConstant)iie.getBase(), srcmpag.getMethod());
+                scn = srcmpag.parameterize(scn, srcContext);
+                scn = scn.getReplacement();
+                addEdge(scn, baseNode);
+            }            
+            
             Node thisRef = tgtnf.caseThis();
             thisRef = tgtmpag.parameterize( thisRef, tgtContext );
             thisRef = thisRef.getReplacement();

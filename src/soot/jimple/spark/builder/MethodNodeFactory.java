@@ -285,18 +285,34 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
         if( (pag.getOpts().string_constants()
                 || Scene.v().containsClass(sc.value) 
                 || ( sc.value.length() > 0 && sc.value.charAt(0) == '[' ))) {
-            stringConstant = pag.makeStringConstantNode( sc );
+            stringConstant = pag.makeStringConstantNode( sc, method );
         } else {
             stringConstant = pag.makeAllocNode(
                 PointsToAnalysis.STRING_NODE,
                 RefType.v( "java.lang.String" ), null );
         }
-     
+        
+        /*  old code
         VarNode stringConstantLocal = pag.makeGlobalVarNode(
             stringConstant,
             RefType.v( "java.lang.String" ) );
-        //TODO: What??
+        //TODO: What??       
         pag.addEdge( stringConstant, stringConstantLocal );
+        mpag.addInternalEdge( stringConstant, stringConstantLocal );
+        setResult( stringConstantLocal );
+        */
+        
+        
+        //we are using a wrapper class on jimple string constant that includes
+        //the method that declared the string constant, this allows
+        //us to use a local var node in the pag to point to the string constant
+        //and thus parameterize the local var node for more precision
+
+        
+        //changed this to use a local variable node that can be parameterized
+        VarNode stringConstantLocal = pag.makeLocalVarNode(
+            stringConstant,
+            RefType.v( "java.lang.String" ), method );         
         mpag.addInternalEdge( stringConstant, stringConstantLocal );
         setResult( stringConstantLocal );
     }
