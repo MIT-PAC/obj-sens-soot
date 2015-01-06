@@ -46,15 +46,17 @@ public class CGOptions
     
      * Handle Class.forName() calls conservatively.
     
-     * When a program calls Class.forName(), the named class is 
-     * resolved, and its static initializer executed. In many cases, it 
-     * cannot be determined statically which class will be loaded, and 
-     * which static initializer executed. When this option is set to 
-     * true, Soot will conservatively assume that any static 
-     * initializer could be executed. This may make the call graph very 
-     * large. When this option is set to false, any calls to 
-     * Class.forName() for which the class cannot be determined 
-     * statically are assumed to call no static initializers. 
+     * When a program calls Class.forName(), the named class 
+     * is resolved, and its static initializer executed. In 
+     * many cases, it cannot be determined statically which 
+     * class will be loaded, and which static initializer executed. 
+     * When this option is set to true, Soot will 
+     * conservatively assume that any static initializer 
+     * could be executed. This may make the call graph very large. 
+     * When this option is set to false, any calls to 
+     * Class.forName() for which the class cannot be 
+     * determined statically are assumed to call no static 
+     * initializers. 
      */
     public boolean safe_forname() {
         return soot.PhaseOptions.getBoolean( options, "safe-forname" );
@@ -64,13 +66,14 @@ public class CGOptions
     
      * Handle Class.newInstance() calls conservatively.
     
-     * When a program calls Class.newInstance(), a new object is 
-     * created and its constructor executed. Soot does not determine 
-     * statically which type of object will be created, and which 
-     * constructor executed. When this option is set to true, Soot will 
-     * conservatively assume that any constructor could be executed. 
-     * This may make the call graph very large. When this option is set 
-     * to false, any calls to Class.newInstance() are assumed not to 
+     * When a program calls Class.newInstance(), a new object 
+     * is created and its constructor executed. Soot does not 
+     * determine statically which type of object will be 
+     * created, and which constructor executed. When this 
+     * option is set to true, Soot will conservatively assume that any 
+     * constructor could be executed. This may make the call 
+     * graph very large. When this option is set to false, 
+     * any calls to Class.newInstance() are assumed not to 
      * call the constructor of the created object. 
      */
     public boolean safe_newinstance() {
@@ -128,15 +131,16 @@ public class CGOptions
     
      * Removes redundant static initializer calls.
     
-     * The call graph contains an edge from each statement that could 
-     * trigger execution of a static initializer to that static 
-     * initializer. However, each static initializer is triggered only 
-     * once. When this option is enabled, after the call graph is 
-     * built, an intra-procedural analysis is performed to detect 
-     * static initializer edges leading to methods that must have 
-     * already been executed. Since these static initializers cannot be 
-     * executed again, the corresponding call graph edges are removed 
-     * from the call graph. 
+     * The call graph contains an edge from each statement 
+     * that could trigger execution of a static initializer to that 
+     * static initializer. However, each static initializer is 
+     * triggered only once. When this option is enabled, 
+     * after the call graph is built, an intra-procedural 
+     * analysis is performed to detect static initializer edges leading 
+     * to methods that must have already been executed. Since 
+     * these static initializers cannot be executed again, 
+     * the corresponding call graph edges are removed from the call 
+     * graph. 
      */
     public boolean trim_clinit() {
         return soot.PhaseOptions.getBoolean( options, "trim-clinit" );
@@ -159,10 +163,11 @@ public class CGOptions
     
      * Uses a reflection log to resolve reflective calls..
     
-     * Load a reflection log from the given file and use this log to 
-     * resolve reflective call sites. Note that when a log is given, 
-     * the following other options have no effect: safe-forname, 
-     * safe-newinstance. 
+     * Load a reflection log from the given file and use this 
+     * log to resolve reflective call sites. Note that when a 
+     * log is given, the following other options have no effect: 
+     * safe-forname, safe-newinstance. 
+     * 
      */
     public String reflection_log() {
         return soot.PhaseOptions.getString( options, "reflection-log" );
@@ -173,16 +178,17 @@ public class CGOptions
      * Describes how to guard the program from unsound assumptions..
     
      * Using a reflection log is only sound for method executions that 
-     * were logged. Executing the program differently may be unsound. 
-     * Soot can insert guards at program points for which the 
-     * reflection log contains no information. When these points are 
-     * reached (because the program is executed differently) then the 
-     * follwing will happen, depending on the value of this flag. 
-     * ignore: no guard is inserted, the program executes normally but 
-     * under unsound assumptions. print: the program prints a stack 
-     * trace when reaching a porgram location that was not traced but 
-     * continues to run. throw (default): the program throws an Error 
-     * instead. 
+     * were logged. Executing the program differently may be 
+     * unsound. Soot can insert guards at program points for which the 
+     * reflection log contains no information. When these 
+     * points are reached (because the program is executed differently) 
+     * then the follwing will happen, depending on the value 
+     * of this flag. ignore: no guard is inserted, the program executes 
+     * normally but under unsound assumptions. print: the 
+     * program prints a stack trace when reaching a porgram location 
+     * that was not traced but continues to run. throw (default): 
+     * the program throws an Error instead. 
+     * 
      * 
      */
     public String guards() {

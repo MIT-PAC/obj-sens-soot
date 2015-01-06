@@ -46,9 +46,10 @@ public class JBOptions
     
      * .
     
-     * Retain the original names for local variables when the source 
-     * includes those names. Otherwise, Soot gives variables generic 
-     * names based on their types. 
+     * Retain the original names for local variables when 
+     * the source includes those names. Otherwise, Soot 
+     * gives variables generic names based on their types. 
+     * 
      */
     public boolean use_original_names() {
         return soot.PhaseOptions.getBoolean( options, "use-original-names" );
@@ -58,8 +59,9 @@ public class JBOptions
     
      * .
     
-     * Preserves annotations of retention type SOURCE. (for everything 
-     * but package and local variable annotations) 
+     * Preserves annotations of retention type SOURCE. 
+     * (for everything but package and local variable 
+     * annotations) 
      */
     public boolean preserve_source_annotations() {
         return soot.PhaseOptions.getBoolean( options, "preserve-source-annotations" );

@@ -46,9 +46,10 @@ public class JJOptions
     
      * .
     
-     * Retain the original names for local variables when the source 
-     * includes those names. Otherwise, Soot gives variables generic 
-     * names based on their types. 
+     * Retain the original names for local variables when 
+     * the source includes those names. Otherwise, Soot 
+     * gives variables generic names based on their types. 
+     * 
      */
     public boolean use_original_names() {
         return soot.PhaseOptions.getBoolean( options, "use-original-names" );

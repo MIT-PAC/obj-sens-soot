@@ -1485,7 +1485,7 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "jb" ) )
             return "Phase "+phaseName+":\n"+
-                "\nJimple Body Creation creates a JimpleBody for each input \nmethod, using either coffi, to read .class files, or the jimple \nparser, to read .jimple files. "
+                "\nJimple Body Creation creates a JimpleBody for each \ninput method, using either coffi, to read .class \nfiles, or the jimple parser, to read .jimple files. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "use-original-names (false)", "" )
@@ -1493,26 +1493,26 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "jb.ls" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Local Splitter identifies DU-UD webs for local variables \nand introduces new variables so that each disjoint web is \nassociated with a single local. "
+                "\nThe Local Splitter identifies DU-UD webs for local \nvariables and introduces new variables so that each \ndisjoint web is associated with a single local. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jb.a" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Jimple Local Aggregator removes some unnecessary copies by \ncombining local variables. Essentially, it finds definitions \nwhich have only a single use and, if it is safe to do so, \nremoves the original definition after replacing the use with the \ndefinition's right-hand side. At this stage in JimpleBody \nconstruction, local aggregation serves largely to remove the \ncopies to and from stack variables which simulate load and store \ninstructions in the original bytecode."
+                "\nThe Jimple Local Aggregator removes some \nunnecessary copies by combining local variables. \nEssentially, it finds definitions which have only \na single use and, if it is safe to do so, removes \nthe original definition after replacing the use with the \ndefinition's right-hand side. At this stage in \nJimpleBody construction, local aggregation serves \nlargely to remove the copies to and from stack \nvariables which simulate load and store instructions in the \noriginal bytecode."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-stack-locals (true)", "" );
     
         if( phaseName.equals( "jb.ule" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Unused Local Eliminator removes any unused locals from the \nmethod. "
+                "\nThe Unused Local Eliminator removes any unused \nlocals from the method. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jb.tr" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Type Assigner gives local variables types which will \naccommodate the values stored in them over the course of the \nmethod. "
+                "\nThe Type Assigner gives local variables types which \nwill accommodate the values stored in them over the \ncourse of the method. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "ignore-wrong-staticness (false)", "Ignores errors due to wrong staticness" )
@@ -1521,21 +1521,21 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "jb.ulp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Unsplit-originals Local Packer executes only when the \n`use-original-names' option is chosen for the `jb' phase. The \nLocal Packer attempts to minimize the number of local variables \nrequired in a method by reusing the same variable for disjoint \nDU-UD webs. Conceptually, it is the inverse of the Local \nSplitter. "
+                "\nThe Unsplit-originals Local Packer executes only \nwhen the `use-original-names' option is chosen for \nthe `jb' phase. The Local Packer attempts to \nminimize the number of local variables required in a \nmethod by reusing the same variable for disjoint \nDU-UD webs. Conceptually, it is the inverse of the \nLocal Splitter. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "unsplit-original-locals (true)", "" );
     
         if( phaseName.equals( "jb.lns" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Local Name Standardizer assigns generic names to local \nvariables. "
+                "\nThe Local Name Standardizer assigns generic names \nto local variables. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-stack-locals (false)", "" );
     
         if( phaseName.equals( "jb.cp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThis phase performs cascaded copy propagation. If the \npropagator encounters situations of the form: A: a = ...; \n... B: x = a; ... C: ... = ... x; where a and x are \neach defined only once (at A and B, respectively), then it can \npropagate immediately without checking between B and C for \nredefinitions of a. In this case the propagator is global. \nOtherwise, if a has multiple definitions then the propagator \nchecks for redefinitions and propagates copies only within \nextended basic blocks. "
+                "\nThis phase performs cascaded copy propagation. \nIf the propagator encounters situations of \nthe form: A: a = ...; \n... B: x = a; ... C: \n... = ... x; where a and x are each \ndefined only once (at A and B, respectively), then \nit can propagate immediately without checking \nbetween B and C for redefinitions of a. In \nthis case the propagator is global. \nOtherwise, if a has multiple definitions then the \npropagator checks for redefinitions and propagates copies \nonly within extended basic blocks. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-regular-locals (false)", "" )
@@ -1543,92 +1543,92 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "jb.dae" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Dead Assignment Eliminator eliminates assignment statements \nto locals whose values are not subsequently used, unless \nevaluating the right-hand side of the assignment may cause \nside-effects. "
+                "\nThe Dead Assignment Eliminator eliminates \nassignment statements to locals whose values are not \nsubsequently used, unless evaluating the right-hand \nside of the assignment may cause side-effects. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-stack-locals (true)", "" );
     
         if( phaseName.equals( "jb.cp-ule" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThis phase removes any locals that are unused after copy \npropagation. "
+                "\nThis phase removes any locals that are unused after \ncopy propagation. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jb.lp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Local Packer attempts to minimize the number of local \nvariables required in a method by reusing the same variable for \ndisjoint DU-UD webs. Conceptually, it is the inverse of the \nLocal Splitter. "
+                "\nThe Local Packer attempts to minimize the number of \nlocal variables required in a method by reusing the \nsame variable for disjoint DU-UD webs. Conceptually, \nit is the inverse of the Local Splitter. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "unsplit-original-locals (false)", "" );
     
         if( phaseName.equals( "jb.ne" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Nop Eliminator removes nop statements from the method. "
+                "\nThe Nop Eliminator removes nop statements from the \nmethod. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jb.uce" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Unreachable Code Eliminator removes unreachable code and \ntraps whose catch blocks are empty. "
+                "\nThe Unreachable Code Eliminator removes unreachable \ncode and traps whose catch blocks are empty. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "remove-unreachable-traps (false)", "" );
     
         if( phaseName.equals( "jb.tt" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Trap Tightener changes the area protected by each exception \nhandler, so that it begins with the first instruction in the old \nprotected area which is actually capable of throwing an \nexception caught by the handler, and ends just after the last \ninstruction in the old protected area which can throw an \nexception caught by the handler. This reduces the chance of \nproducing unverifiable code as a byproduct of pruning \nexceptional control flow within CFGs. "
+                "\nThe Trap Tightener changes the area protected by \neach exception handler, so that it begins with the \nfirst instruction in the old protected area which is \nactually capable of throwing an exception caught by the \nhandler, and ends just after the last instruction in the old \nprotected area which can throw an exception caught by \nthe handler. This reduces the chance of producing \nunverifiable code as a byproduct of pruning \nexceptional control flow within CFGs. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "jj" ) )
             return "Phase "+phaseName+":\n"+
-                "\nJimple Body Creation creates a JimpleBody for each input \nmethod, using polyglot, to read .java files. "
+                "\nJimple Body Creation creates a JimpleBody for each \ninput method, using polyglot, to read .java files. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "use-original-names (true)", "" );
     
         if( phaseName.equals( "jj.ls" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Local Splitter identifies DU-UD webs for local variables \nand introduces new variables so that each disjoint web is \nassociated with a single local. "
+                "\nThe Local Splitter identifies DU-UD webs for local \nvariables and introduces new variables so that each \ndisjoint web is associated with a single local. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "jj.a" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Jimple Local Aggregator removes some unnecessary copies by \ncombining local variables. Essentially, it finds definitions \nwhich have only a single use and, if it is safe to do so, \nremoves the original definition after replacing the use with the \ndefinition's right-hand side. At this stage in JimpleBody \nconstruction, local aggregation serves largely to remove the \ncopies to and from stack variables which simulate load and store \ninstructions in the original bytecode."
+                "\nThe Jimple Local Aggregator removes some \nunnecessary copies by combining local variables. \nEssentially, it finds definitions which have only \na single use and, if it is safe to do so, removes \nthe original definition after replacing the use with the \ndefinition's right-hand side. At this stage in \nJimpleBody construction, local aggregation serves \nlargely to remove the copies to and from stack \nvariables which simulate load and store instructions in the \noriginal bytecode."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-stack-locals (true)", "" );
     
         if( phaseName.equals( "jj.ule" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Unused Local Eliminator removes any unused locals from the \nmethod. "
+                "\nThe Unused Local Eliminator removes any unused \nlocals from the method. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jj.tr" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Type Assigner gives local variables types which will \naccommodate the values stored in them over the course of the \nmethod. "
+                "\nThe Type Assigner gives local variables types which \nwill accommodate the values stored in them over the \ncourse of the method. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "jj.ulp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Unsplit-originals Local Packer executes only when the \n`use-original-names' option is chosen for the `jb' phase. The \nLocal Packer attempts to minimize the number of local variables \nrequired in a method by reusing the same variable for disjoint \nDU-UD webs. Conceptually, it is the inverse of the Local \nSplitter. "
+                "\nThe Unsplit-originals Local Packer executes only \nwhen the `use-original-names' option is chosen for \nthe `jb' phase. The Local Packer attempts to \nminimize the number of local variables required in a \nmethod by reusing the same variable for disjoint \nDU-UD webs. Conceptually, it is the inverse of the \nLocal Splitter. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "unsplit-original-locals (false)", "" );
     
         if( phaseName.equals( "jj.lns" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Local Name Standardizer assigns generic names to local \nvariables. "
+                "\nThe Local Name Standardizer assigns generic names \nto local variables. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-stack-locals (false)", "" );
     
         if( phaseName.equals( "jj.cp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThis phase performs cascaded copy propagation. If the \npropagator encounters situations of the form: A: a = ...; \n... B: x = a; ... C: ... = ... x; where a and x are \neach defined only once (at A and B, respectively), then it can \npropagate immediately without checking between B and C for \nredefinitions of a. In this case the propagator is global. \nOtherwise, if a has multiple definitions then the propagator \nchecks for redefinitions and propagates copies only within \nextended basic blocks. "
+                "\nThis phase performs cascaded copy propagation. \nIf the propagator encounters situations of \nthe form: A: a = ...; \n... B: x = a; ... C: \n... = ... x; where a and x are each \ndefined only once (at A and B, respectively), then \nit can propagate immediately without checking \nbetween B and C for redefinitions of a. In \nthis case the propagator is global. \nOtherwise, if a has multiple definitions then the \npropagator checks for redefinitions and propagates copies \nonly within extended basic blocks. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-regular-locals (false)", "" )
@@ -1636,51 +1636,51 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "jj.dae" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Dead Assignment Eliminator eliminates assignment statements \nto locals whose values are not subsequently used, unless \nevaluating the right-hand side of the assignment may cause \nside-effects. "
+                "\nThe Dead Assignment Eliminator eliminates \nassignment statements to locals whose values are not \nsubsequently used, unless evaluating the right-hand \nside of the assignment may cause side-effects. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-stack-locals (true)", "" );
     
         if( phaseName.equals( "jj.cp-ule" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThis phase removes any locals that are unused after copy \npropagation. "
+                "\nThis phase removes any locals that are unused after \ncopy propagation. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jj.lp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Local Packer attempts to minimize the number of local \nvariables required in a method by reusing the same variable for \ndisjoint DU-UD webs. Conceptually, it is the inverse of the \nLocal Splitter. "
+                "\nThe Local Packer attempts to minimize the number of \nlocal variables required in a method by reusing the \nsame variable for disjoint DU-UD webs. Conceptually, \nit is the inverse of the Local Splitter. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "unsplit-original-locals (false)", "" );
     
         if( phaseName.equals( "jj.ne" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Nop Eliminator removes nop statements from the method. "
+                "\nThe Nop Eliminator removes nop statements from the \nmethod. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jj.uce" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Unreachable Code Eliminator removes unreachable code and \ntraps whose catch blocks are empty. "
+                "\nThe Unreachable Code Eliminator removes unreachable \ncode and traps whose catch blocks are empty. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "wjpp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThis pack allows you to insert pre-processors that are run \nbefore call-graph construction. Only enabled in whole-program \nmode. In an unmodified copy of Soot, this pack is empty."
+                "\nThis pack allows you to insert pre-processors that \nare run before call-graph construction. Only enabled \nin whole-program mode. In an unmodified copy of Soot, \nthis pack is empty."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "wspp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThis pack allows you to insert pre-processors that are run \nbefore call-graph construction. Only enabled in whole-program \nShimple mode. In an unmodified copy of Soot, this pack is empty."
+                "\nThis pack allows you to insert pre-processors that \nare run before call-graph construction. Only enabled \nin whole-program Shimple mode. In an unmodified copy \nof Soot, this pack is empty."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "cg" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Call Graph Constructor computes a call graph for whole \nprogram analysis. When this pack finishes, a call graph is \navailable in the Scene. The different phases in this pack are \ndifferent ways to construct the call graph. Exactly one phase in \nthis pack must be enabled; Soot will raise an error otherwise. "
+                "\nThe Call Graph Constructor computes a call graph for \nwhole program analysis. When this pack finishes, a \ncall graph is available in the Scene. The different \nphases in this pack are different ways to construct \nthe call graph. Exactly one phase in this pack must be \nenabled; Soot will raise an error otherwise. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "safe-forname (false)", "Handle Class.forName() calls conservatively" )
@@ -1808,7 +1808,13 @@ public class Options extends OptionsBase {
                 +padOpt( "geom-trans (false)", "Transform to context-insensitive result" )
                 +padOpt( "geom-frac-base (40)", "Fractional parameter for precision/performance trade-off" )
                 +padOpt( "geom-blocking (true)", "Enable blocking strategy for recursive calls" )
-                +padOpt( "geom-runs (1)", "Iterations of analysis" );
+                +padOpt( "geom-runs (1)", "Iterations of analysis" )
+                +padOpt( "kobjsens (0)", "Run object sensitivity with k." )
+                +padOpt( "kobjsens-context-for-static-inits (false)", "Keep a special context for static initializer methods." )
+                +padOpt( "kobjsens-types-for-context (false)", "Use types instead of allocation sites for context for context depth > 1." )
+                +padOpt( "kobjsens-extra-array-context (false)", "For array allocations add one extra depth for context string." )
+                +padOpt( "kobjsens-no-context-list ()", "Do not keep method context for types in this list." )
+                +padOpt( "kobjsens-limit-heap-context ()", "Limit heap context for objects of types passed." );
     
         if( phaseName.equals( "cg.paddle" ) )
             return "Phase "+phaseName+":\n"+
@@ -1950,31 +1956,31 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "wstp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nSoot can perform whole-program analyses. In whole-shimple \nmode, Soot applies the contents of the Whole-Shimple \nTransformation Pack to the scene as a whole after constructing a \ncall graph for the program. In an unmodified copy of Soot the \nWhole-Shimple Transformation Pack is empty."
+                "\nSoot can perform whole-program analyses. In \nwhole-shimple mode, Soot applies the contents of the \nWhole-Shimple Transformation Pack to the scene as a \nwhole after constructing a call graph for the program. \nIn an unmodified copy of Soot the Whole-Shimple Transformation \nPack is empty."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "wsop" ) )
             return "Phase "+phaseName+":\n"+
-                "\nIf Soot is running in whole shimple mode and the Whole-Shimple \nOptimization Pack is enabled, the pack's transformations are \napplied to the scene as a whole after construction of the call \ngraph and application of any enabled Whole-Shimple \nTransformations. In an unmodified copy of Soot the Whole-Shimple \nOptimization Pack is empty."
+                "\nIf Soot is running in whole shimple mode and the \nWhole-Shimple Optimization Pack is enabled, the \npack's transformations are applied to the scene as a \nwhole after construction of the call graph and \napplication of any enabled Whole-Shimple \nTransformations. In an unmodified copy of Soot the \nWhole-Shimple Optimization Pack is empty."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "wjtp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nSoot can perform whole-program analyses. In whole-program \nmode, Soot applies the contents of the Whole-Jimple \nTransformation Pack to the scene as a whole after constructing a \ncall graph for the program."
+                "\nSoot can perform whole-program analyses. In \nwhole-program mode, Soot applies the contents of the \nWhole-Jimple Transformation Pack to the scene as a \nwhole after constructing a call graph for the program."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "wjtp.mhp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nMay Happen in Parallel (MHP) Analyses determine what program \nstatements may be run by different threads concurrently. This \nphase does not perform any transformation. "
+                "\nMay Happen in Parallel (MHP) Analyses determine \nwhat program statements may be run by different \nthreads concurrently. This phase does not perform any \ntransformation. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "wjtp.tn" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Lock Allocator finds critical sections (synchronized \nregions) in Java programs and assigns locks for execution on \nboth optimistic and pessimistic JVMs. It can also be used to \nanalyze the existing locks. "
+                "\nThe Lock Allocator finds critical sections \n(synchronized regions) in Java programs and assigns \nlocks for execution on both optimistic and \npessimistic JVMs. It can also be used to analyze the existing \nlocks. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "locking-scheme", "Selects the granularity of the generated lock allocation" )
@@ -1996,13 +2002,13 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "wjop" ) )
             return "Phase "+phaseName+":\n"+
-                "\nIf Soot is running in whole program mode and the Whole-Jimple \nOptimization Pack is enabled, the pack's transformations are \napplied to the scene as a whole after construction of the call \ngraph and application of any enabled Whole-Jimple \nTransformations."
+                "\nIf Soot is running in whole program mode and the \nWhole-Jimple Optimization Pack is enabled, the \npack's transformations are applied to the scene as a \nwhole after construction of the call graph and \napplication of any enabled Whole-Jimple \nTransformations."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "wjop.smb" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Static Method Binder statically binds monomorphic call \nsites. That is, it searches the call graph for virtual method \ninvocations that can be determined statically to call only a \nsingle implementation of the called method. Then it replaces \nsuch virtual invocations with invocations of a static copy of \nthe single called implementation. "
+                "\nThe Static Method Binder statically binds \nmonomorphic call sites. That is, it searches the \ncall graph for virtual method invocations that can \nbe determined statically to call only a single \nimplementation of the called method. Then it replaces such \nvirtual invocations with invocations of a static \ncopy of the single called implementation. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "insert-null-checks (true)", "" )
@@ -2017,7 +2023,7 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "wjop.si" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Static Inliner visits all call sites in the call graph in a \nbottom-up fashion, replacing monomorphic calls with inlined \ncopies of the invoked methods. "
+                "\nThe Static Inliner visits all call sites in the \ncall graph in a bottom-up fashion, replacing \nmonomorphic calls with inlined copies of the invoked \nmethods. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "rerun-jb (true)", "" )
@@ -2036,13 +2042,13 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "wjap" ) )
             return "Phase "+phaseName+":\n"+
-                "\nSome analyses do not transform Jimple body directly, but \nannotate statements or values with tags. Whole-Jimple annotation \npack provides a place for annotation-oriented analyses in whole \nprogram mode."
+                "\nSome analyses do not transform Jimple body \ndirectly, but annotate statements or values with \ntags. Whole-Jimple annotation pack provides a place \nfor annotation-oriented analyses in whole program mode."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "wjap.ra" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Rectangular Array Finder traverses Jimple statements based \non the static call graph, and finds array variables which always \nhold rectangular two-dimensional array objects. In Java, a \nmulti-dimensional array is an array of arrays, which means the \nshape of the array can be ragged. Nevertheless, many \napplications use rectangular arrays. Knowing that an array is \nrectangular can be very helpful in proving safe array bounds \nchecks. The Rectangular Array Finder does not change the program \nbeing analyzed. Its results are used by the Array Bound Checker."
+                "\nThe Rectangular Array Finder traverses Jimple \nstatements based on the static call graph, and \nfinds array variables which always hold rectangular \ntwo-dimensional array objects. In Java, a \nmulti-dimensional array is an array of arrays, which \nmeans the shape of the array can be ragged. Nevertheless, many \napplications use rectangular arrays. Knowing that \nan array is rectangular can be very helpful in \nproving safe array bounds checks. The \nRectangular Array Finder does not change the \nprogram being analyzed. Its results are used by the Array Bound \nChecker."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
@@ -2073,7 +2079,7 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "wjap.purity" ) )
             return "Phase "+phaseName+":\n"+
-                "\nPurity anaysis implemented by Antoine Mine and based on the \npaper A Combined Pointer and Purity Analysis for Java Programs \nby Alexandru Salcianu and Martin Rinard. "
+                "\nPurity anaysis implemented by Antoine Mine and \nbased on the paper A Combined Pointer and Purity \nAnalysis for Java Programs by Alexandru Salcianu \nand Martin Rinard. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "dump-summaries (true)", "" )
@@ -2085,11 +2091,11 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "shimple" ) )
             return "Phase "+phaseName+":\n"+
-                "\nShimple Control sets parameters which apply throughout the \ncreation and manipulation of Shimple bodies. Shimple is Soot's \nSSA representation."
+                "\nShimple Control sets parameters which apply \nthroughout the creation and manipulation of Shimple \nbodies. Shimple is Soot's SSA representation."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "node-elim-opt (true)", "Node elimination optimizations" )
-                +padOpt( "standard-local-names (false)", "Uses naming scheme of the Local Name             Standardizer." )
+                +padOpt( "standard-local-names (false)", "Uses naming scheme of the Local Name           Standardizer." )
                 +padOpt( "extended (false)", "Compute extended SSA (SSI) form." )
                 +padOpt( "debug (false)", "Enables debugging output, if any." );
     
@@ -2114,33 +2120,33 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "jtp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nSoot applies the contents of the Jimple Transformation Pack to \neach method under analysis. This pack contains no \ntransformations in an unmodified version of Soot. "
+                "\nSoot applies the contents of the Jimple \nTransformation Pack to each method under analysis. \nThis pack contains no transformations in an unmodified \nversion of Soot. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jop" ) )
             return "Phase "+phaseName+":\n"+
-                "\nWhen Soot's Optimize option is on, Soot applies the Jimple \nOptimization Pack to every JimpleBody in application classes. \nThis section lists the default transformations in the Jimple \nOptimization Pack. "
+                "\nWhen Soot's Optimize option is on, Soot applies the \nJimple Optimization Pack to every JimpleBody in \napplication classes. This section lists the default \ntransformations in the Jimple Optimization Pack. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "Eliminates common subexpressions" );
     
         if( phaseName.equals( "jop.cse" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Common Subexpression Eliminator runs an available \nexpressions analysis on the method body, then eliminates common \nsubexpressions. This implementation is especially slow, as it \nruns on individual statements rather than on basic blocks. A \nbetter implementation (which would find most common \nsubexpressions, but not all) would use basic blocks instead. \nThis implementation is also slow because the flow universe is \nexplicitly created; it need not be. A better implementation \nwould implicitly compute the kill sets at every node. Because \nof its current slowness, this transformation is not enabled by \ndefault. "
+                "\nThe Common Subexpression Eliminator runs an \navailable expressions analysis on the method body, \nthen eliminates common subexpressions. \nThis implementation is especially slow, as it \nruns on individual statements rather than on basic \nblocks. A better implementation (which would find \nmost common subexpressions, but not all) would use \nbasic blocks instead. This \nimplementation is also slow because the flow universe is \nexplicitly created; it need not be. A better \nimplementation would implicitly compute the kill \nsets at every node. Because of its \ncurrent slowness, this transformation is not \nenabled by default. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "naive-side-effect (false)", "Use naive side effect analysis even if interprocedural information is available" );
     
         if( phaseName.equals( "jop.bcm" ) )
             return "Phase "+phaseName+":\n"+
-                "\nBusy Code Motion is a straightforward implementation of Partial \nRedundancy Elimination. This implementation is not very \naggressive. Lazy Code Motion is an improved version which \nshould be used instead of Busy Code Motion. "
+                "\nBusy Code Motion is a straightforward \nimplementation of Partial Redundancy Elimination. \nThis implementation is not very aggressive. Lazy \nCode Motion is an improved version which should be \nused instead of Busy Code Motion. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "naive-side-effect (false)", "Use a naive side effect analysis even if interprocedural information is available" );
     
         if( phaseName.equals( "jop.lcm" ) )
             return "Phase "+phaseName+":\n"+
-                "\nLazy Code Motion is an enhanced version of Busy Code Motion, a \nPartial Redundancy Eliminator. Before doing Partial Redundancy \nElimination, this optimization performs loop inversion (turning \nwhile loops into do while loops inside an if statement). This \nallows the Partial Redundancy Eliminator to optimize loop \ninvariants of while loops. "
+                "\nLazy Code Motion is an enhanced version of Busy \nCode Motion, a Partial Redundancy Eliminator. Before \ndoing Partial Redundancy Elimination, this \noptimization performs loop inversion (turning while loops \ninto do while loops inside an if statement). \nThis allows the Partial Redundancy Eliminator to \noptimize loop invariants of while loops. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "safety", "" )
@@ -2163,19 +2169,19 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "jop.cpf" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Jimple Constant Propagator and Folder evaluates any \nexpressions consisting entirely of compile-time constants, for \nexample 2 * 3, and replaces the expression with the constant \nresult, in this case 6. "
+                "\nThe Jimple Constant Propagator and Folder evaluates \nany expressions consisting entirely of compile-time \nconstants, for example 2 * 3, and replaces the \nexpression with the constant result, in this case 6. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jop.cbf" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Conditional Branch Folder statically evaluates the \nconditional expression of Jimple if statements. If the \ncondition is identically true or false, the Folder replaces the \nconditional branch statement with an unconditional goto \nstatement. "
+                "\nThe Conditional Branch Folder statically evaluates \nthe conditional expression of Jimple if statements. \nIf the condition is identically true or \nfalse, the Folder replaces the conditional branch \nstatement with an unconditional goto statement. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jop.dae" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Dead Assignment Eliminator eliminates assignment statements \nto locals whose values are not subsequently used, unless \nevaluating the right-hand side of the assignment may cause \nside-effects. "
+                "\nThe Dead Assignment Eliminator eliminates \nassignment statements to locals whose values are not \nsubsequently used, unless evaluating the right-hand \nside of the assignment may cause side-effects. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-tag (false)", "" )
@@ -2183,51 +2189,51 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "jop.nce" ) )
             return "Phase "+phaseName+":\n"+
-                "\nReplaces statements 'if(x!=null) goto y' with 'goto y' if x is \nknown to be non-null or with 'nop' if it is known to be null, \netc. Generates dead code and is hence followed by unreachable \ncode elimination. Disabled by default because it can be \nexpensive on methods with many locals. "
+                "\nReplaces statements 'if(x!=null) goto y' with 'goto \ny' if x is known to be non-null or with 'nop' if it \nis known to be null, etc. Generates dead code and is \nhence followed by unreachable code elimination. \nDisabled by default because it can be expensive on \nmethods with many locals. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "jop.uce1" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Unreachable Code Eliminator removes unreachable code and \ntraps whose catch blocks are empty. "
+                "\nThe Unreachable Code Eliminator removes unreachable \ncode and traps whose catch blocks are empty. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "remove-unreachable-traps (false)", "" );
     
         if( phaseName.equals( "jop.ubf1" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Unconditional Branch Folder removes unnecessary `goto' \nstatements from a JimpleBody. If a goto statement's target is \nthe next instruction, then the statement is removed. If a \ngoto's target is another goto, with target y, then the first \nstatement's target is changed to y. If some if statement's \ntarget is a goto statement, then the if's target can be replaced \nwith the goto's target. (These situations can result from other \noptimizations, and branch folding may itself generate more \nunreachable code.)"
+                "\nThe Unconditional Branch Folder removes \nunnecessary `goto' statements from a JimpleBody. \nIf a goto statement's target is the next instruction, \nthen the statement is removed. If a goto's target \nis another goto, with target y, then the first \nstatement's target is changed to y. If \nsome if statement's target is a goto statement, \nthen the if's target can be replaced with the goto's \ntarget. (These situations can result from other \noptimizations, and branch folding may itself \ngenerate more unreachable code.)"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jop.uce2" ) )
             return "Phase "+phaseName+":\n"+
-                "\nAnother iteration of the Unreachable Code Eliminator. "
+                "\nAnother iteration of the Unreachable Code \nEliminator. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "remove-unreachable-traps (false)", "" );
     
         if( phaseName.equals( "jop.ubf2" ) )
             return "Phase "+phaseName+":\n"+
-                "\nAnother iteration of the Unconditional Branch Folder. "
+                "\nAnother iteration of the Unconditional Branch \nFolder. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jop.ule" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Unused Local Eliminator phase removes any unused locals \nfrom the method. "
+                "\nThe Unused Local Eliminator phase removes any \nunused locals from the method. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jap" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Jimple Annotation Pack contains phases which add \nannotations to Jimple bodies individually (as opposed to the \nWhole-Jimple Annotation Pack, which adds annotations based on \nthe analysis of the whole program). "
+                "\nThe Jimple Annotation Pack contains phases which add \nannotations to Jimple bodies individually (as opposed \nto the Whole-Jimple Annotation Pack, which adds \nannotations based on the analysis of the whole \nprogram). "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "jap.npc" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Null Pointer Checker finds instruction which have the \npotential to throw NullPointerExceptions and adds annotations \nindicating whether or not the pointer being dereferenced can be \ndetermined statically not to be null. "
+                "\nThe Null Pointer Checker finds instruction which \nhave the potential to throw NullPointerExceptions \nand adds annotations indicating whether or not the \npointer being dereferenced can be determined \nstatically not to be null. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "only-array-ref (false)", "Annotate only array references" )
@@ -2235,13 +2241,13 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "jap.npcolorer" ) )
             return "Phase "+phaseName+":\n"+
-                "\nProduce colour tags that the Soot plug-in for Eclipse can use \nto highlight null and non-null references. "
+                "\nProduce colour tags that the Soot plug-in for \nEclipse can use to highlight null and non-null \nreferences. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "jap.abc" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Array Bound Checker performs a static analysis to determine \nwhich array bounds checks may safely be eliminated and then \nannotates statements with the results of the analysis. If Soot \nis in whole-program mode, the Array Bound Checker can use the \nresults provided by the Rectangular Array Finder."
+                "\nThe Array Bound Checker performs a static \nanalysis to determine which array bounds checks \nmay safely be eliminated and then annotates \nstatements with the results of the analysis. If \nSoot is in whole-program mode, the Array Bound Checker can \nuse the results provided by the Rectangular Array Finder."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "with-all (false)", "" )
@@ -2255,34 +2261,34 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "jap.profiling" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Profiling Generator inserts the method invocations required \nto initialize and to report the results of any profiling \nperformed by the Null Pointer Checker and Array Bound Checker. \nUsers of the Profiling Generator must provide a MultiCounter \nclass implementing the methods invoked. For details, see the \nProfilingGenerator source code. "
+                "\nThe Profiling Generator inserts the method \ninvocations required to initialize and to report \nthe results of any profiling performed by the Null \nPointer Checker and Array Bound Checker. Users of \nthe Profiling Generator must provide a \nMultiCounter class implementing the methods invoked. For \ndetails, see the ProfilingGenerator source code. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "notmainentry (false)", "Instrument runBenchmark() instead of main()" );
     
         if( phaseName.equals( "jap.sea" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Side Effect Tagger uses the active invoke graph to produce \nside-effect attributes, as described in the Spark thesis, \nchapter 6."
+                "\nThe Side Effect Tagger uses the \nactive invoke graph to produce side-effect attributes, as \ndescribed in the Spark thesis, chapter 6."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "naive (false)", "" );
     
         if( phaseName.equals( "jap.fieldrw" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Field Read/Write Tagger uses the active invoke graph to \nproduce tags indicating which fields may be read or written by \neach statement, including invoke statements."
+                "\nThe Field Read/Write Tagger uses the active \ninvoke graph to produce tags indicating which \nfields may be read or written by each statement, \nincluding invoke statements."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" )
                 +padOpt( "threshold (100)", "" );
     
         if( phaseName.equals( "jap.cgtagger" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Call Graph Tagger produces LinkTags based on the call \ngraph. The Eclipse plugin uses these tags to produce linked \npopup lists which indicate the source and target methods of the \nstatement. Selecting a link from the list moves the cursor to \nthe indicated method. "
+                "\nThe Call Graph Tagger produces LinkTags based on \nthe call graph. The Eclipse plugin uses these tags \nto produce linked popup lists which indicate the \nsource and target methods of the statement. \nSelecting a link from the list moves the cursor to \nthe indicated method. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "jap.parity" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Parity Tagger produces StringTags and ColorTags indicating \nthe parity of a variable (even, odd, top, or bottom). The \neclipse plugin can use tooltips and variable colouring to \ndisplay the information in these tags. For example, even \nvariables (such as x in x = 2) are coloured yellow. "
+                "\nThe Parity Tagger produces StringTags and ColorTags \nindicating the parity of a variable (even, odd, top, \nor bottom). The eclipse plugin can use tooltips and \nvariable colouring to display the information in \nthese tags. For example, even variables (such as x \nin x = 2) are coloured yellow. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
@@ -2341,51 +2347,51 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "gb" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Grimp Body Creation phase creates a GrimpBody for each \nsource method. It is run only if the output format is grimp or \ngrimple, or if class files are being output and the Via Grimp \noption has been specified. "
+                "\nThe Grimp Body Creation phase creates a GrimpBody for \neach source method. It is run only if the output \nformat is grimp or grimple, or if class files are \nbeing output and the Via Grimp option has been \nspecified. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "gb.a1" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Grimp Pre-folding Aggregator combines some local variables, \nfinding definitions with only a single use and removing the \ndefinition after replacing the use with the definition's \nright-hand side, if it is safe to do so. While the mechanism is \nthe same as that employed by the Jimple Local Aggregator, there \nis more scope for aggregation because of Grimp's more \ncomplicated expressions. "
+                "\nThe Grimp Pre-folding Aggregator combines some \nlocal variables, finding definitions with only a \nsingle use and removing the definition after \nreplacing the use with the definition's right-hand \nside, if it is safe to do so. While the mechanism is \nthe same as that employed by the Jimple Local Aggregator, there \nis more scope for aggregation because of Grimp's more \ncomplicated expressions. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-stack-locals (true)", "" );
     
         if( phaseName.equals( "gb.cf" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Grimp Constructor Folder combines new statements with the \nspecialinvoke statement that calls the new object's constructor. \nFor example, it turns r2 = new java.util.ArrayList; r2.init(); \ninto r2 = new java.util.ArrayList(); "
+                "\nThe Grimp Constructor Folder combines new \nstatements with the specialinvoke statement that \ncalls the new object's constructor. For example, it \nturns r2 = new java.util.ArrayList; \nr2.init(); into \nr2 = new java.util.ArrayList(); "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "gb.a2" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Grimp Post-folding Aggregator combines local variables \nafter constructors have been folded. Constructor folding \ntypically introduces new opportunities for aggregation, since \nwhen a sequence of instructions like r2 = new \njava.util.ArrayList; r2.init(); r3 = r2 is replaced by r2 = new \njava.util.ArrayList(); r3 = r2 the invocation of init no longer \nrepresents a potential side-effect separating the two \ndefinitions, so they can be combined into r3 = new \njava.util.ArrayList(); (assuming there are no subsequent uses of \nr2). "
+                "\nThe Grimp Post-folding Aggregator combines local \nvariables after constructors have been folded. \nConstructor folding typically introduces new \nopportunities for aggregation, since when a sequence \nof instructions like r2 = new \njava.util.ArrayList; r2.init(); r3 = \nr2 is replaced by \nr2 = new java.util.ArrayList(); r3 = r2 \nthe invocation of init no longer represents a potential \nside-effect separating the two definitions, so \nthey can be combined into r3 \n= new java.util.ArrayList(); (assuming there \nare no subsequent uses of r2). "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "only-stack-locals (true)", "" );
     
         if( phaseName.equals( "gb.ule" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThis phase removes any locals that are unused after constructor \nfolding and aggregation. "
+                "\nThis phase removes any locals that are unused after \nconstructor folding and aggregation. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "gop" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Grimp Optimization pack performs optimizations on \nGrimpBodys (currently there are no optimizations performed \nspecifically on GrimpBodys, and the pack is empty). It is run \nonly if the output format is grimp or grimple, or if class files \nare being output and the Via Grimp option has been specified. "
+                "\nThe Grimp Optimization pack performs optimizations on \nGrimpBodys (currently there are no optimizations \nperformed specifically on GrimpBodys, and the pack is \nempty). It is run only if the output format is grimp or \ngrimple, or if class files are being output and the Via \nGrimp option has been specified. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "bb" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Baf Body Creation phase creates a BafBody from each source \nmethod. It is run if the output format is baf or b, or if class \nfiles are being output and the Via Grimp option has not been \nspecified. "
+                "\nThe Baf Body Creation phase creates a \nBafBody from each source method. It is run if the \noutput format is baf or b, or if class files are being \noutput and the Via Grimp option has not been \nspecified. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "bb.lso" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Load Store Optimizer replaces some combinations of loads to \nand stores from local variables with stack instructions. A \nsimple example would be the replacement of store.r $r2; load.r \n$r2; with dup1.r in cases where the value of r2 is not used \nsubsequently. "
+                "\nThe Load Store Optimizer replaces some combinations \nof loads to and stores from local variables with stack \ninstructions. A simple example would be the replacement of \nstore.r $r2; load.r $r2; \nwith dup1.r \nin cases where the value of r2 is not used \nsubsequently. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "debug (false)", "" )
@@ -2397,87 +2403,87 @@ public class Options extends OptionsBase {
     
         if( phaseName.equals( "bb.pho" ) )
             return "Phase "+phaseName+":\n"+
-                "\nApplies peephole optimizations to the Baf intermediate \nrepresentation. Individual optimizations must be implemented by \nclasses implementing the Peephole interface. The Peephole \nOptimizer reads the names of the Peephole classes at runtime \nfrom the file peephole.dat and loads them dynamically. Then it \ncontinues to apply the Peepholes repeatedly until none of them \nare able to perform any further optimizations. Soot provides \nonly one Peephole, named ExamplePeephole, which is not enabled \nby the delivered peephole.dat file. ExamplePeephole removes all \ncheckcast instructions."
+                "\nApplies peephole optimizations to the Baf \nintermediate representation. Individual \noptimizations must be implemented by classes \nimplementing the Peephole interface. The Peephole \nOptimizer reads the names of the Peephole classes at \nruntime from the file peephole.dat and loads them \ndynamically. Then it continues to apply the \nPeepholes repeatedly until none of them are able to \nperform any further optimizations. \nSoot provides only one Peephole, named \nExamplePeephole, which is not enabled by the delivered \npeephole.dat file. ExamplePeephole removes all \ncheckcast instructions."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "bb.ule" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThis phase removes any locals that are unused after load store \noptimization and peephole optimization. "
+                "\nThis phase removes any locals that are unused after \nload store optimization and peephole optimization. \n"
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "bb.lp" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Local Packer attempts to minimize the number of local \nvariables required in a method by reusing the same variable for \ndisjoint DU-UD webs. Conceptually, it is the inverse of the \nLocal Splitter. "
+                "\nThe Local Packer attempts to minimize the number of \nlocal variables required in a method by reusing the \nsame variable for disjoint DU-UD webs. Conceptually, \nit is the inverse of the Local Splitter. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "unsplit-original-locals (false)", "" );
     
         if( phaseName.equals( "bop" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Baf Optimization pack performs optimizations on BafBodys \n(currently there are no optimizations performed specifically on \nBafBodys, and the pack is empty). It is run only if the output \nformat is baf or b, or if class files are being output and the \nVia Grimp option has not been specified. "
+                "\nThe Baf Optimization pack performs optimizations on \nBafBodys (currently there are no optimizations performed \nspecifically on BafBodys, and the pack is empty). It \nis run only if the output format is baf or b, or \nif class files are being output and the Via Grimp option \nhas not been specified. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "tag" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Tag Aggregator pack aggregates tags attached to individual \nunits into a code attribute for each method, so that these \nattributes can be encoded in Java class files."
+                "\nThe Tag Aggregator pack aggregates tags attached to \nindividual units into a code attribute for each \nmethod, so that these attributes can be encoded in \nJava class files."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "tag.ln" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Line Number Tag Aggregator aggregates line number tags."
+                "\nThe Line Number Tag Aggregator aggregates line \nnumber tags."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "tag.an" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Array Bounds and Null Pointer Tag Aggregator aggregates \ntags produced by the Array Bound Checker and Null Pointer \nChecker."
+                "\nThe Array Bounds and Null Pointer Tag Aggregator \naggregates tags produced by the Array Bound Checker \nand Null Pointer Checker."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "tag.dep" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Dependence Tag Aggregator aggregates tags produced by the \nSide Effect Tagger."
+                "\nThe Dependence Tag Aggregator aggregates \ntags produced by the Side Effect Tagger."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "tag.fieldrw" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe Field Read/Write Tag Aggregator aggregates field read/write \ntags produced by the Field Read/Write Tagger, phase jap.fieldrw. \n"
+                "\nThe Field Read/Write Tag Aggregator aggregates \nfield read/write tags produced by the Field \nRead/Write Tagger, phase jap.fieldrw. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "db" ) )
             return "Phase "+phaseName+":\n"+
-                "\nThe decompile (Dava) option is set using the -f dava options in \nSoot. Options provided by Dava are added to this dummy phase so \nas not to clutter the soot general arguments. -p db (option \nname):(value) will be used to set all required values for Dava. \n"
+                "\nThe decompile (Dava) option is set using the -f dava \noptions in Soot. Options provided by Dava are added to \nthis dummy phase so as not to clutter the soot general \narguments. -p db (option name):(value) will be used to \nset all required values for Dava. "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" )
                 +padOpt( "source-is-javac (true)", "" );
     
         if( phaseName.equals( "db.transformations" ) )
             return "Phase "+phaseName+":\n"+
-                "\n					The transformations implemented using AST Traversal and \nstructural flow analses on Dava's AST 					"
+                "\n	 The transformations implemented using AST Traversal and \nstructural flow analses on Dava's AST 	 "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "db.renamer" ) )
             return "Phase "+phaseName+":\n"+
-                "\nIf set, the renaming analyses implemented in Dava are applied to \neach method body being decompiled. The analyses use heuristics \nto choose potentially better names for local variables. (As of \nFebruary 14th 2006, work is still under progress on these \nanalyses (dava.toolkits.base.renamer). 					"
+                "\nIf set, the renaming analyses implemented in Dava are applied to \neach method body being decompiled. The analyses use heuristics \nto choose potentially better names for local variables. (As of \nFebruary 14th 2006, work is still under progress on these \nanalyses (dava.toolkits.base.renamer). 	 "
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (false)", "" );
     
         if( phaseName.equals( "db.deobfuscate" ) )
             return "Phase "+phaseName+":\n"+
-                "\nCertain analyses make sense only when the bytecode is obfuscated \ncode. There are plans to implement such analyses and apply them \non methods only if this flag is set. Dead Code elimination \nwhich includes removing code guarded by some condition which is \nalways false or always true is one such analysis. Another \nsuggested analysis is giving default names to classes and \nfields. Onfuscators love to use weird names for fields and \nclasses and even a simple re-naming of these could be a good \nhelp to the user. Another more advanced analysis would be to \ncheck for redundant constant fields added by obfuscators and \nthen remove uses of these constant fields from the code."
+                "\nCertain analyses make sense only when the bytecode is obfuscated \ncode. There are plans to implement such analyses and \napply them on methods only if this flag is set. Dead \nCode elimination which includes removing code guarded by some \ncondition which is always false or always true is one such \nanalysis. Another suggested analysis is giving default names \nto classes and fields. Onfuscators love to use weird names \nfor fields and classes and even a simple re-naming of these \ncould be a good help to the user. Another more \nadvanced analysis would be to check for redundant constant \nfields added by obfuscators and then remove uses of \nthese constant fields from the code."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
         if( phaseName.equals( "db.force-recompile" ) )
             return "Phase "+phaseName+":\n"+
-                "\nWhile decompiling we have to be clear what our aim is: do we \nwant to convert bytecode to Java syntax and stay as close to the \nactual execution of bytecode or do we want recompilably Java \nsource representing the bytecode. This distinction is important \nbecause some restrictions present in Java source are absent from \nthe bytecode. Examples of this include that fact that in Java a \ncall to a constructor or super needs to be the first statement \nin a constructors body. This restriction is absent from the \nbytecode. Similarly final fields HAVE to be initialized once and \nonly once in either the static initializer (static fields) or \nall the constructors (non-static fields). Additionally the \nfields should be initialized on all possible execution paths. \nThese restrictions are again absent from the bytecode. In doing \na one-one conversion of bytecode to Java source then no attempt \nshould be made to fix any of these and similar problems in the \nJava source. However, if the aim is to get recompilable code \nthen these and similar issues need to be fixed. Setting the \nforce-recompilability flag will ensure that the decompiler tries \nits best to produce recompilable Java source."
+                "\nWhile decompiling we have to be clear what our aim is: do we \nwant to convert bytecode to Java syntax and stay as \nclose to the actual execution of bytecode or do we want \nrecompilably Java source representing the bytecode. \nThis distinction is important because some restrictions present \nin Java source are absent from the bytecode. Examples \nof this include that fact that in Java a call to a constructor \nor super needs to be the first statement in a \nconstructors body. This restriction is absent from the bytecode. \nSimilarly final fields HAVE to be initialized once and \nonly once in either the static initializer (static fields) or \nall the constructors (non-static fields). Additionally \nthe fields should be initialized on all possible execution \npaths. These restrictions are again absent from the bytecode. \nIn doing a one-one conversion of bytecode to Java source \nthen no attempt should be made to fix any of these and similar \nproblems in the Java source. However, if the aim is to \nget recompilable code then these and similar issues need to be \nfixed. Setting the force-recompilability flag will \nensure that the decompiler tries its best to produce \nrecompilable Java source."
                 +"\n\nRecognized options (with default values):\n"
                 +padOpt( "enabled (true)", "" );
     
@@ -2688,7 +2694,13 @@ public class Options extends OptionsBase {
                 +"geom-trans "
                 +"geom-frac-base "
                 +"geom-blocking "
-                +"geom-runs ";
+                +"geom-runs "
+                +"kobjsens "
+                +"kobjsens-context-for-static-inits "
+                +"kobjsens-types-for-context "
+                +"kobjsens-extra-array-context "
+                +"kobjsens-no-context-list "
+                +"kobjsens-limit-heap-context ";
     
         if( phaseName.equals( "cg.paddle" ) )
             return ""
@@ -3293,7 +3305,13 @@ public class Options extends OptionsBase {
               +"geom-trans:false "
               +"geom-frac-base:40 "
               +"geom-blocking:true "
-              +"geom-runs:1 ";
+              +"geom-runs:1 "
+              +"kobjsens:0 "
+              +"kobjsens-context-for-static-inits:false "
+              +"kobjsens-types-for-context:false "
+              +"kobjsens-extra-array-context:false "
+              +"kobjsens-no-context-list: "
+              +"kobjsens-limit-heap-context: ";
     
         if( phaseName.equals( "cg.paddle" ) )
             return ""

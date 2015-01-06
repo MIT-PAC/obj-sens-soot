@@ -46,9 +46,10 @@ public class SMBOptions
     
      * .
     
-     * Insert a check that, before invoking the static copy of the 
-     * target method, throws a NullPointerException if the receiver 
-     * object is null. This ensures that static method binding does 
+     * Insert a check that, before invoking the static 
+     * copy of the target method, throws a 
+     * NullPointerException if the receiver object is 
+     * null. This ensures that static method binding does 
      * not eliminate exceptions which would have occurred in its 
      * absence. 
      */
@@ -60,22 +61,26 @@ public class SMBOptions
     
      * .
     
-     * Insert extra casts for the Java bytecode verifier. If the 
-     * target method uses its this parameter, a reference to the 
-     * receiver object must be passed to the static copy of the target 
+     * Insert extra casts for the Java bytecode 
+     * verifier. If the target method uses its this 
+     * parameter, a reference to the receiver object 
+     * must be passed to the static copy of the target 
      * method. The verifier may complain if the declared type of the 
-     * receiver parameter does not match the type implementing the 
-     * target method. Say, for example, that Singer is an interface 
-     * declaring the sing() method and that the call graph shows all 
-     * receiver objects at a particular call site, singer.sing() (with 
-     * singer declared as a Singer) are in fact Bird objects (Bird 
-     * being a class that implements Singer). The virtual call 
-     * singer.sing() is effectively replaced with the static call 
-     * Bird.staticsing(singer). Bird.staticsing() may perform 
-     * operations on its parameter which are only allowed on Birds, 
-     * rather than Singers. The Insert Redundant Casts option inserts 
-     * a cast of singer to the Bird type, to prevent complaints from 
-     * the verifier.
+     * receiver parameter does not match the type 
+     * implementing the target method. 
+     * Say, for example, that Singer is an interface declaring 
+     * the sing() method and that the call graph shows all 
+     * receiver objects at a particular call site, 
+     * singer.sing() (with singer declared as a 
+     * Singer) are in fact Bird objects (Bird being a 
+     * class that implements Singer). The virtual call 
+     * singer.sing() is effectively replaced with the static 
+     * call Bird.staticsing(singer). Bird.staticsing() 
+     * may perform operations on its parameter which are only 
+     * allowed on Birds, rather than Singers. The 
+     * Insert Redundant Casts option inserts a cast of 
+     * singer to the Bird type, to prevent complaints 
+     * from the verifier.
      */
     public boolean insert_redundant_casts() {
         return soot.PhaseOptions.getBoolean( options, "insert-redundant-casts" );
@@ -88,7 +93,8 @@ public class SMBOptions
     
      * .
     
-     * Specify which changes in visibility modifiers are allowed. 
+     * Specify which changes in visibility modifiers 
+     * are allowed. 
      */
     public int allowed_modifier_changes() {
         String s = soot.PhaseOptions.getString( options, "allowed-modifier-changes" );

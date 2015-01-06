@@ -1348,6 +1348,24 @@ public class AntTask extends MatchingTask {
             addArg("geom-blocking:"+(arg?"true":"false"));
           }
       
+          public void setkobjsens_context_for_static_inits(boolean arg) {
+            addArg("-p");
+            addArg("cg.spark");
+            addArg("kobjsens-context-for-static-inits:"+(arg?"true":"false"));
+          }
+      
+          public void setkobjsens_types_for_context(boolean arg) {
+            addArg("-p");
+            addArg("cg.spark");
+            addArg("kobjsens-types-for-context:"+(arg?"true":"false"));
+          }
+      
+          public void setkobjsens_extra_array_context(boolean arg) {
+            addArg("-p");
+            addArg("cg.spark");
+            addArg("kobjsens-extra-array-context:"+(arg?"true":"false"));
+          }
+      
           public void setpropagator(String arg) {
             addArg("-p");
             addArg("cg.spark");
@@ -1424,6 +1442,24 @@ public class AntTask extends MatchingTask {
             addArg("-p");
             addArg("cg.spark");
             addArg("geom-runs:"+arg);
+          }
+      
+          public void setkobjsens(String arg) {
+            addArg("-p");
+            addArg("cg.spark");
+            addArg("kobjsens:"+arg);
+          }
+      
+          public void setkobjsens_no_context_list(String arg) {
+            addArg("-p");
+            addArg("cg.spark");
+            addArg("kobjsens-no-context-list:"+arg);
+          }
+      
+          public void setkobjsens_limit_heap_context(String arg) {
+            addArg("-p");
+            addArg("cg.spark");
+            addArg("kobjsens-limit-heap-context:"+arg);
           }
       
         }
