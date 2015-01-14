@@ -48,17 +48,14 @@ import soot.util.Switch;
 @SuppressWarnings({"serial","rawtypes","unchecked"})
 public class GDynamicInvokeExpr extends AbstractInvokeExpr implements DynamicInvokeExpr 
 {
-    private ValueBox[] argBoxes;
 	protected ValueBox[] bsmArgBoxes;
-	private SootMethodRef methodRef;
 	private SootMethodRef bsmRef;
 
 
 	public GDynamicInvokeExpr(SootMethodRef bootStrapMethodRef, List<Value> bootstrapArgs, SootMethodRef methodRef, List args)
     {
+		super(methodRef, new ValueBox[args.size()]);
 		this.bsmRef = bootStrapMethodRef;
-		this.methodRef = methodRef; 
-		this.argBoxes = new ValueBox[args.size()];
 		
         for(int i = 0; i < args.size(); i++)
             this.argBoxes[i] = Grimp.v().newExprBox((Value) args.get(i));
@@ -82,23 +79,12 @@ public class GDynamicInvokeExpr extends AbstractInvokeExpr implements DynamicInv
         return new  GDynamicInvokeExpr(bsmRef, clonedBsmArgs, methodRef, clonedArgs);
     }
 	
-	private Value getBootstrapArg(int i) {
+	public Value getBootstrapArg(int i) {
 		return bsmArgBoxes[i].getValue();
 	}
 
 	public int getBootstrapArgCount() {
 		return bsmArgBoxes.length;
-	}
-
-	public List getUseBoxes() {
-		List list = new ArrayList();
-
-        for (ValueBox element : argBoxes) {
-            list.addAll(element.getValue().getUseBoxes());
-            list.add(element);
-        }
-
-        return list;
 	}
 
 	public void apply(Switch sw) {

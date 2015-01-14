@@ -23,14 +23,11 @@
  * contributors.  (Soot is distributed at http://www.sable.mcgill.ca/soot)
  */
 
-
-
-
-
-
-
 package soot.coffi;
-import soot.*;
+
+import soot.G;
+import soot.Timers;
+import soot.options.Options;
 
 import java.io.*;
 
@@ -186,9 +183,9 @@ public class ClassFile {
       classFileStream = is;
      
       byte[]  data;
-      
-      
-      Timers.v().readTimer.start();
+
+      if (Options.v().time())
+        Timers.v().readTimer.start();
       
       try 
       {
@@ -200,16 +197,18 @@ public class ClassFile {
       } catch(IOException e)
       {
       }
-      
-      Timers.v().readTimer.end();
+
+      if (Options.v().time())
+        Timers.v().readTimer.end();
       
       d = new DataInputStream(f);
       b = readClass(d);
       
       try {
         classFileStream.close();
-        d.close(); 
-        f.close();
+        d.close();
+        if (f != null)
+        	f.close();
       } catch(IOException e) {
          G.v().out.println("IOException with " + fn + ": " + e.getMessage());
          return false;
@@ -220,22 +219,6 @@ public class ClassFile {
       //G.v().out.println("-- Read " + cf + " --");
       return true;
    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
    /** Main entry point for writing a class file.
@@ -263,12 +246,6 @@ public class ClassFile {
          }
       }
       d = new DataOutputStream(f);
-      if (d==null) {
-         try {
-            f.close();
-         } catch(IOException e) { }
-         return false;
-      }
       b = writeClass(d);
       try {
          d.close();
@@ -376,21 +353,14 @@ public class ClassFile {
             G.v().out.println("Wrong magic number in " + fn + ": " + magic);
             return false;
          }
-         //G.v().out.println("Magic number ok");
          minor_version = d.readUnsignedShort();
          major_version = d.readUnsignedShort();
-        // G.v().out.println("Version: " + major_version + "." + minor_version);
          constant_pool_count = d.readUnsignedShort();
-         //G.v().out.println("Constant pool count: " + constant_pool_count);
 
          if (!readConstantPool(d))
             return false;
 
          access_flags = d.readUnsignedShort();
-         /*if (access_flags!=0)
-             G.v().out.println("Access flags: " + access_flags + " = " +
-                            access_string(access_flags,", "));*/
-
          this_class = d.readUnsignedShort();
          super_class = d.readUnsignedShort();
          interfaces_count = d.readUnsignedShort();
@@ -400,38 +370,38 @@ public class ClassFile {
             for (j=0; j<interfaces_count; j++)
                interfaces[j] = d.readUnsignedShort();
          }
-         //G.v().out.println("Implements " + interfaces_count + " interface(s)");
 
-         Timers.v().fieldTimer.start();
+         if (Options.v().time())
+           Timers.v().fieldTimer.start();
          
          fields_count = d.readUnsignedShort();
-         //G.v().out.println("Has " + fields_count + " field(s)");
          readFields(d);
-         Timers.v().fieldTimer.end();
-        
-         Timers.v().methodTimer.start();
+
+         if (Options.v().time())
+           Timers.v().fieldTimer.end();
+
+         if (Options.v().time())
+           Timers.v().methodTimer.start();
          methods_count = d.readUnsignedShort();
-         //G.v().out.println("Has " + methods_count + " method(s)");
          readMethods(d);
-         Timers.v().methodTimer.end();
-        
-         Timers.v().attributeTimer.start();
+
+         if (Options.v().time())
+           Timers.v().methodTimer.end();
+
+         if (Options.v().time())
+           Timers.v().attributeTimer.start();
          
          attributes_count = d.readUnsignedShort();
-         //G.v().out.println("Has " + attributes_count + " attribute(s)");
          if (attributes_count>0) {
             attributes =  new attribute_info[attributes_count];
             readAttributes(d,attributes_count,attributes);
          }
-         Timers.v().attributeTimer.end();
+         if (Options.v().time())
+           Timers.v().attributeTimer.end();
          
       } catch(IOException e) {
          throw new RuntimeException("IOException with " + fn + ": " + e.getMessage(), e);
       }
-
-      /*inf.fields = fields_count;
-        inf.methods = methods_count;
-        inf.cp = constant_pool_count;*/
 
       return true;
    }
@@ -946,8 +916,6 @@ public class ClassFile {
          
          mi.attributes_count = d.readUnsignedShort();
 
-         CONSTANT_Utf8_info ci;
-           ci = (CONSTANT_Utf8_info)(constant_pool[mi.name_index]);
           //G.v().out.println("Has " + mi.attributes_count + " attribute(s)");
          
          if (mi.attributes_count>0) {
@@ -994,7 +962,6 @@ public class ClassFile {
     * @exception java.io.IOException on error.
     */
    protected boolean writeConstantPool(DataOutputStream dd) throws IOException {
-      byte tag;
       cp_info cp;
       int i;
       boolean skipone = false;
@@ -1066,9 +1033,7 @@ public class ClassFile {
    protected boolean writeAttributes(DataOutputStream dd, int attributes_count,
                                      attribute_info[] ai) throws IOException {
       attribute_info a=null;
-      int i,len;
-      short j;
-      String s;
+      int i;
 
       for (i=0;i<attributes_count;i++) {
          a = ai[i];
@@ -1369,11 +1334,7 @@ public class ClassFile {
 
       // construct a new array for the byte-code
       bc = new byte[codesize];
-      if (bc==null) {
-         G.v().out.println("Warning: can't allocate memory for recompile");
-         return null;
-      }
-
+      
       // then recompile the instructions into byte-code
       i = m.instructions;
       codesize = 0;

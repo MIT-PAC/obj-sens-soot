@@ -18,9 +18,21 @@
  */
 
 package soot.jimple.toolkits.callgraph;
-import soot.*;
-import soot.util.queue.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
+import soot.Kind;
+import soot.MethodOrMethodContext;
+import soot.SootMethod;
+import soot.Unit;
+import soot.jimple.Stmt;
+import soot.util.queue.ChunkedQueue;
+import soot.util.queue.QueueReader;
 
 /** Represents the edges in a call graph. This class is meant to act as
  * only a container of edges; code for various call graph builders should
@@ -66,6 +78,46 @@ public class CallGraph
         e.insertAfterByTgt( position );
         return true;
     }
+    
+    /**
+     * Removes all outgoing edges that start at the given unit
+     * @param u The unit from which to remove all outgoing edges
+     * @return True if at least one edge has been removed, otherwise false
+     */
+    public boolean removeAllEdgesOutOf(Unit u) {
+    	boolean hasRemoved = false;
+    	for (QueueReader<Edge> edgeRdr = listener(); edgeRdr.hasNext(); ) {
+    		Edge e = edgeRdr.next();
+    		if (e.srcUnit() == u) {
+    			removeEdge(e);
+    			hasRemoved = true;
+    		}
+    	}
+    	return hasRemoved;
+    }
+    
+    /**
+     * Swaps an invocation statement. All edges that previously went from the
+     * given statement to some callee now go from the new statement to the same
+     * callee. This method is intended to be used when a Jimple statement is
+     * replaced, but the replacement does not semantically affect the edges.
+     * @param out The old statement
+     * @param in The new statement
+     * @return True if at least one edge was affected by this operation
+     */
+    public boolean swapEdgesOutOf(Stmt out, Stmt in) {
+    	boolean hasSwapped = false;
+    	for (QueueReader<Edge> edgeRdr = listener(); edgeRdr.hasNext(); ) {
+    		Edge e = edgeRdr.next();
+    		if (e.srcUnit() == out) {
+    			removeEdge(e);
+    			addEdge(new Edge(e.getSrc(), in, e.getTgt()));
+    			hasSwapped = true;
+    		}
+    	}
+    	return hasSwapped;
+    }
+    
     /** Removes the edge e from the call graph. Returns true iff the edge
      * was originally present in the call graph. */
     public boolean removeEdge( Edge e ) {

@@ -26,29 +26,32 @@ import java.util.*;
  * @author xiao, generalize it.
  */
 
-public class ArrayNumberer<E> implements IterableNumberer<E> {
-    Numberable[] numberToObj = new Numberable[10240];
-    int lastNumber = 0;
-
-    public void add( E oo ) {
-        if (oo == null)
+public class ArrayNumberer<E extends Numberable> implements IterableNumberer<E> {
+    @SuppressWarnings("unchecked")
+    protected E[] numberToObj = (E[]) new Numberable[10240];
+    protected int lastNumber = 0;
+    
+    private void resize(int n) {
+    	E[] old = numberToObj;    	
+    	numberToObj = Arrays.copyOf(numberToObj, n);
+    	Arrays.fill(old, null);
+    }
+    
+    public void add( E o ) {
+        if (o == null)
             throw new RuntimeException("adding null object to array numberer");
-        Numberable o = (Numberable) oo;
         if( o.getNumber() != 0 ) return;
         
         ++lastNumber;
         if( lastNumber >= numberToObj.length ) {
-            Numberable[] newnto = new Numberable[numberToObj.length*2];
-            System.arraycopy(numberToObj, 0, newnto, 0, numberToObj.length);
-            numberToObj = newnto;
+        	resize(numberToObj.length*2);
         }
         numberToObj[lastNumber] = o;
         o.setNumber( lastNumber );
     }
 
-    public long get( E oo ) {
-        if( oo == null ) return 0;
-        Numberable o = (Numberable) oo;
+    public long get( E o ) {
+        if( o == null ) return 0;
         int ret = o.getNumber();
         if( ret == 0 ) throw new RuntimeException( "unnumbered: "+o );
         return ret;
@@ -56,29 +59,32 @@ public class ArrayNumberer<E> implements IterableNumberer<E> {
 
 	public E get( long number ) {
         if( number == 0 ) return null;
-        E ret = (E) numberToObj[(int) number];
+		E ret = numberToObj[(int) number];
         if( ret == null ) throw new RuntimeException( "no object with number "+number + " of " + lastNumber);
         return ret;
     }
 
-    public int size() { return lastNumber; }
-
-    public Iterator<E> iterator() {
-        return new NumbererIterator();
+    public int size() { 
+    	return lastNumber; 
     }
 
-    final class NumbererIterator implements Iterator<E> {
-        int cur = 1;
-        public final boolean hasNext() {
-            return cur < numberToObj.length && numberToObj[cur] != null;
-        }
+    public Iterator<E> iterator() {
+        return new Iterator<E>() {
+            int cur = 1;
+            public final boolean hasNext() {
+                return cur <= lastNumber && cur < numberToObj.length && numberToObj[cur] != null;
+            }
 
-		public final E next() { 
-            if( !hasNext() ) throw new NoSuchElementException();
-            return (E) numberToObj[cur++];
-        }
-        public final void remove() {
-            throw new UnsupportedOperationException();
-        }
+    		public final E next() { 
+                if ( hasNext() ) {
+                	return numberToObj[cur++];
+                }
+                throw new NoSuchElementException();
+            }
+    		
+            public final void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 }

@@ -20,8 +20,22 @@
  */
 package soot.jimple.toolkits.typing.fast;
 
-import java.util.*;
-import soot.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.ListIterator;
+
+import soot.ArrayType;
+import soot.IntType;
+import soot.IntegerType;
+import soot.NullType;
+import soot.PrimType;
+import soot.RefType;
+import soot.Scene;
+import soot.SootClass;
+import soot.Type;
 
 /**
  * @author Ben Bellamy
@@ -58,9 +72,9 @@ public class BytecodeHierarchy implements IHierarchy
 			{
 				SootClass sc = node.type.getSootClass();
 				
-				for ( Iterator i = sc.getInterfaces().iterator(); i.hasNext(); )
+				for ( Iterator<SootClass> i = sc.getInterfaces().iterator(); i.hasNext(); )
 					leafs.add(new AncestryTreeNode(
-						node, ((SootClass)i.next()).getType()));
+						node, (i.next()).getType()));
 				
 				// The superclass of all interfaces is Object
 				// -- try to discard phantom interfaces.
@@ -95,19 +109,19 @@ public class BytecodeHierarchy implements IHierarchy
 	public static Collection<Type> lcas_(Type a, Type b)
 	{
 		if ( TypeResolver.typesEqual(a, b) )
-			return new SingletonList<Type>(a);
+			return Collections.<Type>singletonList(a);
 		else if ( a instanceof BottomType )
-			return new SingletonList<Type>(b);
+			return Collections.<Type>singletonList(b);
 		else if ( b instanceof BottomType )
-			return new SingletonList<Type>(a);
+			return Collections.<Type>singletonList(a);
 		else if ( a instanceof IntegerType && b instanceof IntegerType )
-			return new SingletonList<Type>(IntType.v());
+			return Collections.<Type>singletonList(IntType.v());
 		else if ( a instanceof PrimType || b instanceof PrimType )
-			return new EmptyList<Type>();
+			return Collections.<Type>emptyList();
 		else if ( a instanceof NullType )
-			return new SingletonList<Type>(b);
+			return Collections.<Type>singletonList(b);
 		else if ( b instanceof NullType )
-			return new SingletonList<Type>(a);
+			return Collections.<Type>singletonList(a);
 		// a and b are both ArrayType or RefType
 		else if ( a instanceof ArrayType && b instanceof ArrayType )
 		{
@@ -116,14 +130,16 @@ public class BytecodeHierarchy implements IHierarchy
 			Collection<Type> ts;
 			
 			// Primitive arrays are not covariant but all other arrays are
-			if ( eta instanceof PrimType || eta instanceof PrimType )
-				ts = new EmptyList<Type>();
+			if ( eta instanceof PrimType || etb instanceof PrimType )
+				ts = Collections.<Type>emptyList();
 			else
 				ts = lcas_(eta, etb);
 			
 			LinkedList<Type> r = new LinkedList<Type>();
 			if ( ts.isEmpty() )
 			{
+				// From Java Language Spec 2nd ed., Chapter 10, Arrays
+				r.add(RefType.v("java.lang.Object"));
 				r.add(RefType.v("java.io.Serializable"));
 				r.add(RefType.v("java.lang.Cloneable"));
 			}
@@ -172,9 +188,9 @@ public class BytecodeHierarchy implements IHierarchy
 					RefType t = leastCommonNode(nodea, nodeb);
 					
 					boolean least = true;
-					for ( ListIterator i = r.listIterator(); i.hasNext(); )
+					for ( ListIterator<Type> i = r.listIterator(); i.hasNext(); )
 					{
-						Type t_ = (Type)i.next();
+						Type t_ = i.next();
 						
 						if ( ancestor_(t, t_) )
 						{
@@ -226,16 +242,16 @@ public class BytecodeHierarchy implements IHierarchy
 			child, ancestor);
 	}
 	
-	private static LinkedList<RefType> superclassPath(RefType t)
+	private static Deque<RefType> superclassPath(RefType t)
 	{
-		LinkedList<RefType> r = new LinkedList<RefType>();
+		Deque<RefType> r = new LinkedList<RefType>();
 		r.addFirst(t);
 		
 		SootClass sc = t.getSootClass();
 		while ( sc.hasSuperclass() )
 		{
 			sc = sc.getSuperclass();
-			r.addFirst((RefType)sc.getType());
+			r.addFirst(sc.getType());
 		}
 		
 		return r;
@@ -243,8 +259,11 @@ public class BytecodeHierarchy implements IHierarchy
 	
 	public static RefType lcsc(RefType a, RefType b)
 	{
-		LinkedList<RefType> pathA = superclassPath(a),
-			pathB = superclassPath(b);
+		if (a == b)
+			return a;
+		
+		Deque<RefType> pathA = superclassPath(a);
+		Deque<RefType> pathB = superclassPath(b);
 		RefType r = null;
 		while ( !(pathA.isEmpty() || pathB.isEmpty()) 
 			&& TypeResolver.typesEqual(pathA.getFirst(), pathB.getFirst()) )

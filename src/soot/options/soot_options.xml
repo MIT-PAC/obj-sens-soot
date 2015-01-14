@@ -99,8 +99,109 @@
       of library classes includes the referenced classes from other
     packages in the Java runtime.</p>
   </intro>
+<phaseintro>
+    <P>
+Soot supports the powerful--but initially confusing--notion of
+``phase options''.  This document aims to clear up the confusion so
+you can exploit the power of phase options.
+</P>
+
+<P>
+Soot's execution is divided into a number of phases.  For example,
+<TT>JimpleBody</TT>s are built by a phase called <TT>jb</TT>, which is
+itself comprised of subphases, such as the aggregation of local
+variables (<TT>jb.a</TT>).
+</P>
+
+<P>
+Phase options provide a way for you to
+change the behaviour of a phase from the Soot command-line.  They take
+the form <TT>-p </TT><EM>phase</EM>.<EM>name</EM> 
+<EM>option</EM>:<EM>value</EM>.  For instance,
+to instruct Soot to use original names in Jimple, we would invoke Soot
+like this:
+<PRE>
+java soot.Main foo -p jb use-original-names:true
+</PRE>
+Multiple option-value pairs may be specified in a single <TT>-p</TT> option
+separated by commas. For example,
+<PRE>
+java soot.Main foo -p cg.spark verbose:true,on-fly-cg:true
+</PRE>
+</P>
+
+<P>
+There are five types of phase options:
+</P>
+
+<OL>
+<LI>Boolean options take the values
+``true'' and ``false''; if you specify the name of a boolean option without adding a value for it, ``true'' is assumed.
+</LI>
+<LI>Multi-valued options take a value from a set of allowed values
+specific to that option.
+</LI>
+<LI>Integer options
+take an integer value. 
+</LI>
+<LI>Floating point options take a 
+floating point number as their value. 
+</LI>
+<LI>String options take an arbitrary
+string as their value.
+</LI>
+</OL>
+
+<P>
+Each option has a default value which is used if the option is not
+specified on the command line.
+</P>
+
+<P>
+All phases and subphases accept the option ``<TT>enabled</TT>'', which
+must be ``<TT>true</TT>'' for the phase or subphase to execute. To save
+you some typing, the pseudo-options ``<TT>on</TT>'' and ``<TT>off</TT>''
+are equivalent to ``<TT>enabled:true</TT>'' and ``<TT>enabled:false</TT>'',
+respectively. In addition, specifying any options for a phase
+automatically enables that phase.
+</P>
+
+<H4>Adding your own subphases</H4>
+
+<P>
+Within Soot, each phase is implemented by a <TT>Pack</TT>. The <TT>Pack</TT>
+is a collection of transformers, each corresponding to a subphase of
+the phase implemented by the <TT>Pack</TT>. When the <TT>Pack</TT> is
+called, it executes each of its transformers in order.
+</P>
+
+<P>
+Soot transformers are usually instances of classes that extend 
+<TT>BodyTransformer</TT> or <TT>SceneTransformer</TT>.  In either case, the
+transformer class must override the <TT>internalTransform</TT> method,
+providing an implementation which carries out some transformation on
+the code being analyzed.
+</P>
+
+<P>
+To add a transformer to some <TT>Pack</TT> without modifying Soot itself,
+create your own class which changes the contents of the <TT>Pack</TT>s to
+meet your requirements and then calls <TT>soot.Main</TT>.
+</P>
+
+<P>
+The remainder of this document describes the transformations belonging
+to Soot's various <TT>Pack</TT>s and their corresponding phase
+options.
+</P>
+</phaseintro>
   <section>
     <name>General Options</name>
+    <boolopt>
+      <name>Coffi Frontend</name>
+      <alias>coffi</alias>
+      <short_desc>Use the good old Coffi front end for parsing Java bytecode (instead of using ASM).</short_desc>		
+    </boolopt>
     <boolopt>
       <name>Help</name>
       <alias>h</alias>
@@ -213,6 +314,19 @@
           Note that the Whole-Shimple Optimization pack is normally disabled
           (and thus not applied by whole shimple mode), unless you also
         specify the Whole Program Optimize option.</p>
+      </long_desc>
+    </boolopt>
+    <boolopt>
+      <name>On-the-fly Mode</name>
+      <alias>fly</alias>
+      <alias>on-the-fly</alias>
+      <default>false</default>
+      <short_desc>Run in on-the-fly mode</short_desc> 
+      <long_desc>
+        <p>
+          This enables whole-program mode but uses a less agressive class loading.
+          By default, classes will be loaded without bodies unless otherwise requested.
+          The cg pack is disabled in this mode. </p>
       </long_desc>
     </boolopt>
     <boolopt>
@@ -789,6 +903,16 @@
         with GZip. It does not apply to class files output by Soot.
       </long_desc>
     </boolopt>
+	<boolopt>
+	    <name>Force Overwrite Output Files</name>
+	    <alias>force-overwrite</alias>
+	    <default>false</default>
+	  <short_desc>Force Overwrite Output Files</short_desc>
+	  <long_desc>
+	      If this option is set to true, the output files will be overwritten
+	      if they already exist and no further warning will be issued.
+		</long_desc>
+	</boolopt>
   </section>
   <section>
     <name>Processing Options</name>
@@ -2473,7 +2597,7 @@
 	      <default>true</default>
 	      <short_desc>Enable blocking strategy for recursive calls</short_desc>
 	      <long_desc>
-		When this option is on, we perform the blocking strategy to the recursive calls. This strategy significantly improves the precision. The details are presented in our paper.
+		Blocking strategy is a 1CFA model for recursive calls. This model significantly improves the precision.
 	      </long_desc>
 	    </boolopt>		
 	    
@@ -2487,9 +2611,18 @@
 	      </long_desc>
 	    </intopt>
 	    
-            -->																					
+		<boolopt>
+		  <name>Pointers processed by geomPTA</name>
+		  <alias>geom-app-only</alias>
+		  <default>true</default>
+		  <short_desc>Processing pointers that impact pointers in application code only</short_desc>
+		  <long_desc>
+		When this option is true, geomPTA only processes the pointers in library functions ( java.*, sun.*, and etc.) that potentially impact the points-to information of pointers in application code, the pointers in application code, and the base pointers at virtual callsites.
+		  </long_desc>
+		</boolopt>
+-->																					
 	  </section>
-          <section>
+      <section>
             <name>Object Sensitivity</name>
 
              <intopt>
@@ -3605,6 +3738,35 @@
             </long_desc>
 	  </boolopt>
 	</sub_phase>
+				<sub_phase>
+					<name>Rename duplicated classes</name>
+					<class>RenameDuplicatedClasses</class>
+					<alias>wjtp.rdc</alias>
+					<short_desc>Rename duplicated classes when the file system is not case sensitive</short_desc>
+<long_desc>
+Rename duplicated classes when the file system is not case sensitive.
+If the file system is case sensitive, this phase does nothing.
+</long_desc>
+					<boolopt>
+						<name>Enabled</name>
+						<alias>enabled</alias>
+						<default>false</default>
+						<short_desc/>
+						<long_desc/>
+					</boolopt>
+					<stropt>
+						<name>FixedClassNames</name>
+						<alias>fcn</alias>
+						<alias>fixed-class-names</alias>
+						<set_arg_label>nameList</set_arg_label>
+						<short_desc>Set <use_arg_label/> for the fixed class names.</short_desc>
+						<long_desc>
+							Use this parameter to set some class names unchangable even they are duplicated.
+							The fixed class name list cannot contain duplicated class names.
+							Using '-' to split multiple class names (e.g., fcn:a.b.c-a.b.d).
+						</long_desc>
+					</stropt>
+				</sub_phase>
       </phase>
       <phase>
 	<name>Whole-Jimple Optimization Pack</name>
@@ -5786,6 +5948,65 @@
         </long_desc>
       </value>
     </multiopt>
+						<multiopt>
+							<name>Local Initialization ThrowAnalysis</name>
+							<alias>check-init-ta</alias>
+							<alias>check-init-throw-analysis</alias>
+							<long_desc>
+This option specifies which throw analysis to use during local initialization 
+checking inside soot.Body.
+        </long_desc>
+							<value>
+								<name>Select Automatically</name>
+								<alias>auto</alias>
+								<default/>
+								<short_desc>Automatically select a throw analysis</short_desc>
+								<long_desc>
+Selects the throw analysis to use for local initialization checking based on 
+information from other options. In particular, it will use 'dalvik' when 
+it detects it is analyzing an Android application (e.g. when --android-jars or 
+--force-android-jar are set) and 'pedantic' otherwise. This is the default.
+</long_desc>
+							</value>
+							<value>
+								<name>Pedantic</name>
+								<alias>pedantic</alias>
+								<short_desc>Pedantically conservative throw analysis</short_desc>
+								<long_desc>
+Says that any instruction may throw any
+<code>Throwable</code> whatsoever. Strictly speaking this is
+correct, since the Java libraries include the
+<code>Thread.stop(Throwable)</code>
+method, which allows other threads to cause arbitrary exceptions
+to occur at arbitrary points in the execution of a victim thread.
+</long_desc>
+							</value>
+							<value>
+								<name>Unit</name>
+								<alias>unit</alias>
+								<short_desc>Unit Throw Analysis</short_desc>															
+								<long_desc>
+Says that each statement in the intermediate representation
+may throw those exception types associated with the corresponding
+Java bytecode instructions in the JVM Specification.  The
+analysis deals with each statement in isolation, without regard
+to the surrounding program.
+</long_desc>
+							</value>
+							<value>
+								<name>Dalvik</name>
+								<alias>dalvik</alias>
+								<short_desc>Dalvik Throw Analysis</short_desc>								
+								<long_desc>
+Says that each statement in the intermediate representation
+may throw those exception types associated with the corresponding
+Java bytecode instructions in the Dalvik Specification.  The
+analysis deals with each statement in isolation, without regard
+to the surrounding program. This is the equivalent of Unit above, but targeting 
+the Dalvik VM semantics as opposed to those of the JVM.
+</long_desc>
+							</value>
+						</multiopt>
     <boolopt>
       <name>Omit Excepting Unit Edges</name>
       <alias>omit-excepting-unit-edges</alias>
@@ -6090,5 +6311,14 @@
           the reports of times required for transformations.
         </long_desc>
       </boolopt>
+		
+		<boolopt>
+			<name>No body releasing after writeout</name>
+			<alias>no-writeout-body-releasing</alias>
+			<short_desc>Disables the release of method bodies after writeout. This flag is used internally.</short_desc>
+			<long_desc>
+By default soot releases the method bodies of all reachable classes after the final writeout. This option deactivates this behaviour. This flag should not affect end users at all.
+</long_desc>
+		</boolopt>
     </section>
   </options>

@@ -31,8 +31,10 @@
 
 package soot.coffi;
 import soot.jimple.*;
+
 import java.util.*;
 import java.io.*;
+
 import soot.tagkit.*;
 import soot.*;
 
@@ -44,7 +46,6 @@ public class Util
 
     private cp_info[] activeConstantPool = null;
     private LocalVariableTable_attribute activeVariableTable;
-    private LocalVariableTypeTable_attribute activeVariableTypeTable;
     /* maps from variable names to local variable slot indexes to soot Locals*/
     private Map<String, Map<Integer, Local>> nameToIndexToLocal;
     private boolean useFaithfulNaming = false;
@@ -60,7 +61,6 @@ public class Util
                       cp_info[] ca)
     {
       activeVariableTable = la;
-      activeVariableTypeTable = lt;
       activeConstantPool = ca;
       nameToIndexToLocal = null;
     }
@@ -74,7 +74,7 @@ public class Util
       return useFaithfulNaming;
     }
 
-    public void resolveFromClassFile(SootClass aClass, InputStream is, String filePath, List references)
+    public void resolveFromClassFile(SootClass aClass, InputStream is, String filePath, Collection<Type> references)
     {
         SootClass bclass = aClass;
         String className = bclass.getName();
@@ -122,7 +122,7 @@ public class Util
                     String superName = ((CONSTANT_Utf8_info) (coffiClass.constant_pool[c.name_index])).convert();
                     superName = superName.replace('/', '.');
     
-                    references.add(superName);
+                    references.add(RefType.v(superName));
                     bclass.setSuperclass(SootResolver.v().makeClassRef(superName));
                 }
         }
@@ -138,7 +138,7 @@ public class Util
     
                     interfaceName = interfaceName.replace('/', '.');
     
-                    references.add(interfaceName);
+                    references.add(RefType.v(interfaceName));
                     SootClass interfaceClass = SootResolver.v().makeClassRef(interfaceName);
                     bclass.addInterface(interfaceClass);
                 }
@@ -244,14 +244,14 @@ public class Util
             String methodName = ((CONSTANT_Utf8_info)(coffiClass.constant_pool[methodInfo.name_index])).convert();
 		    String methodDescriptor = ((CONSTANT_Utf8_info)(coffiClass.constant_pool[methodInfo.descriptor_index])).convert();
     
-            List parameterTypes;
+            List<Type> parameterTypes;
             Type returnType;
     
             // Generate parameterTypes & returnType
             {
                 Type[] types = jimpleTypesOfFieldOrMethodDescriptor(methodDescriptor);
     
-                parameterTypes = new ArrayList();
+                parameterTypes = new ArrayList<Type>();
                 for(int j = 0; j < types.length - 1; j++){
                     references.add(types[j]);
                     parameterTypes.add(types[j]);
@@ -286,7 +286,7 @@ public class Util
 
                             exceptionName = exceptionName.replace('/', '.');
 
-                            references.add(exceptionName);
+                            references.add(RefType.v(exceptionName));
                             method.addExceptionIfAbsent(SootResolver.v().makeClassRef(exceptionName));
                         }
                     }
@@ -338,7 +338,7 @@ public class Util
                                 if(name.startsWith("["))
                                     references.add(jimpleTypeOfFieldDescriptor(desc));
                                 else
-                                    references.add(name);
+                                    references.add(RefType.v(name));
                             }
                         if(coffiClass.constant_pool[k] instanceof CONSTANT_Fieldref_info
                         || coffiClass.constant_pool[k] instanceof CONSTANT_Methodref_info
@@ -379,7 +379,6 @@ public class Util
 	    }
 	    // Set "InnerClass" attribute tag
 	    else if(coffiClass.attributes[i] instanceof InnerClasses_attribute){
-		   
 		    InnerClasses_attribute attr = (InnerClasses_attribute)coffiClass.attributes[i];
             for (int j = 0; j < attr.inner_classes_length; j++)
                 {
@@ -403,7 +402,6 @@ public class Util
         }
         // set deprectaed tags
         else if(coffiClass.attributes[i] instanceof Deprecated_attribute){
-		    
 		    bclass.addTag(new DeprecatedTag());
         }
         else if (coffiClass.attributes[i] instanceof Signature_attribute){
@@ -790,44 +788,19 @@ swtch:
         return className;
     }
 
-    private Local getLocal(Body b, String name) 
-        throws soot.jimple.NoSuchLocalException
-    {
-        Iterator localIt = b.getLocals().iterator();
-
-        while(localIt.hasNext())
-        {
-            Local local = (Local) localIt.next();
-
-            if(local.getName().equals(name))
-                return local;
-        }
-
-        throw new soot.jimple.NoSuchLocalException();
+    private Local getLocalUnsafe(Body b, String name) {
+    	for (Local local : b.getLocals()) {
+    		if(local.getName().equals(name))
+    			return local;
+    	}
+    	return null;
     }
-
-
-    private boolean declaresLocal(Body b, String localName)
-    {
-        Iterator localIt = b.getLocals().iterator();
-
-        while(localIt.hasNext())
-        {
-            Local local = (Local) localIt.next();
-
-            if(local.getName().equals(localName))
-                return true;
-        }
-
-        return false;
-    }
-
+    
     Local getLocalCreatingIfNecessary(JimpleBody listBody, String name, Type type)
     {
-      Local l;
-      if(declaresLocal(listBody, name))
+      Local l = getLocalUnsafe(listBody, name);
+      if(l != null)
       {
-        l = getLocal(listBody, name);
         if(!l.getType().equals(type)) {
           throw new RuntimeException("The body already declares this local name with a different type.");
         }
@@ -1041,7 +1014,7 @@ swtch:
 	return true;
     }
 
-    private void addAnnotationVisibilityAttribute(Host host, attribute_info attribute, ClassFile coffiClass, List references){
+    private void addAnnotationVisibilityAttribute(Host host, attribute_info attribute, ClassFile coffiClass, Collection<Type> references){
         VisibilityAnnotationTag tag;
         if (attribute instanceof RuntimeVisibleAnnotations_attribute){
             tag = new VisibilityAnnotationTag(AnnotationConstants.RUNTIME_VISIBLE);         
@@ -1056,7 +1029,7 @@ swtch:
         host.addTag(tag); 
     }
     
-    private void addAnnotationVisibilityParameterAttribute(Host host, attribute_info attribute, ClassFile coffiClass, List references){
+    private void addAnnotationVisibilityParameterAttribute(Host host, attribute_info attribute, ClassFile coffiClass, Collection<Type> references){
         VisibilityParameterAnnotationTag tag;
         if (attribute instanceof RuntimeVisibleParameterAnnotations_attribute){
             RuntimeVisibleParameterAnnotations_attribute attr = (RuntimeVisibleParameterAnnotations_attribute)attribute;
@@ -1081,13 +1054,13 @@ swtch:
         host.addTag(tag); 
     }
 
-    private void addAnnotations(int numAnnots, annotation [] annotations, ClassFile coffiClass, VisibilityAnnotationTag tag, List references){
+    private void addAnnotations(int numAnnots, annotation [] annotations, ClassFile coffiClass, VisibilityAnnotationTag tag, Collection<Type> references){
         for (int i = 0; i < numAnnots; i++){
             annotation annot = annotations[i];
             String annotType = ((CONSTANT_Utf8_info)coffiClass.constant_pool[annot.type_index]).convert();
             String ref = annotType.substring(1, annotType.length()-1);
             ref = ref.replace('/', '.');
-            references.add(ref);
+            references.add(RefType.v(ref));
             AnnotationTag annotTag = new AnnotationTag(annotType, 
                 createElementTags(annot.num_element_value_pairs, coffiClass, annot.element_value_pairs));
             tag.addAnnotation(annotTag);

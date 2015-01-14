@@ -29,11 +29,21 @@
 
 package soot;
 
-import soot.tagkit.*;
-import soot.util.*;
-import java.util.*;
-import soot.dava.toolkits.base.misc.*;
-import soot.options.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import soot.dava.toolkits.base.misc.PackageNamer;
+import soot.options.Options;
+import soot.tagkit.AbstractHost;
+import soot.util.Chain;
+import soot.util.HashChain;
+import soot.util.Numberable;
+import soot.util.NumberedString;
+import soot.util.SmallNumberedMap;
+import soot.validation.ClassValidator;
+import soot.validation.OuterClassValidator;
+import soot.validation.ValidationException;
 
 /*
  * Incomplete and inefficient implementation.
@@ -60,7 +70,7 @@ public class SootClass extends AbstractHost implements Numberable
     protected String name, shortName, fixedShortName, packageName, fixedPackageName;
     protected int modifiers;
     protected Chain<SootField> fields = new HashChain<SootField>();
-    protected SmallNumberedMap<SootMethod> subSigToMethods = new SmallNumberedMap( Scene.v().getSubSigNumberer() );
+    protected SmallNumberedMap<SootMethod> subSigToMethods = new SmallNumberedMap<SootMethod>( Scene.v().getSubSigNumberer() );
     // methodList is just for keeping the methods in a consistent order. It
     // needs to be kept consistent with subSigToMethods.
     protected List<SootMethod> methodList = new ArrayList<SootMethod>();
@@ -116,18 +126,35 @@ public class SootClass extends AbstractHost implements Numberable
             default: throw new RuntimeException("unknown resolving level");
         }
     }
+
+  /**
+   * Checks if the class has at lease the resolving level specified.
+   * This check does nothing is the class resolution process is not completed.
+   * @param level the resolution level, one of DANGLING, HIERARCHY, SIGNATURES, and BODIES
+   * @throws java.lang.RuntimeException if the resolution is at an insufficient level
+   */
     public void checkLevel( int level ) {
         if( !Scene.v().doneResolving() ) return;
-        if( resolvingLevel < level ) {
-        	String hint = "\nIf you are extending Soot, try to add the following call before calling soot.Main.main(..):\n" +
-        			      "Scene.v().addBasicClass("+getName()+","+levelToString(level)+");\n" +
-        			      "Otherwise, try whole-program mode (-w).";
-            throw new RuntimeException(
-                "This operation requires resolving level "+
-                levelToString(level)+" but "+name+
-                " is at resolving level "+levelToString(resolvingLevel) + hint);
-        }
+      checkLevelIgnoreResolving(level);
     }
+
+  /**
+   * Checks if the class has at lease the resolving level specified.
+   * This check ignores the resolution completeness.
+   * @param level the resolution level, one of DANGLING, HIERARCHY, SIGNATURES, and BODIES
+   * @throws java.lang.RuntimeException if the resolution is at an insufficient level
+   */
+  public void checkLevelIgnoreResolving( int level ) {
+    if( resolvingLevel < level ) {
+      String hint = "\nIf you are extending Soot, try to add the following call before calling soot.Main.main(..):\n" +
+              "Scene.v().addBasicClass("+getName()+","+levelToString(level)+");\n" +
+              "Otherwise, try whole-program mode (-w).";
+      throw new RuntimeException(
+              "This operation requires resolving level "+
+                      levelToString(level)+" but "+name+
+                      " is at resolving level "+levelToString(resolvingLevel) + hint);
+    }
+  }
 
     public int resolvingLevel() { return resolvingLevel; }
     public void setResolvingLevel( int newLevel ) {
@@ -182,8 +209,9 @@ public class SootClass extends AbstractHost implements Numberable
         if(f.isDeclared())
             throw new RuntimeException("already declared: "+f.getName());
 
-	if(declaresField(f.getName()))
-            throw new RuntimeException("Field already exists : "+f.getName());
+        if(declaresField(f.getName(), f.getType()))
+            throw new RuntimeException("Field already exists : " + f.getName()
+            		+ " of type " + f.getType());
  
         fields.add(f);
         f.isDeclared = true;
@@ -206,121 +234,155 @@ public class SootClass extends AbstractHost implements Numberable
     }
 
     /**
-        Returns the field of this class with the given name and type. 
+     * Returns the field of this class with the given name and type. If the
+     * field cannot be found, an exception is thrown.  
     */
-
     public SootField getField( String name, Type type ) {
+    	SootField sf = getFieldUnsafe(name, type);
+    	if (sf == null)
+    		throw new RuntimeException("No field " + name + " in class " + getName());
+    	return sf;
+    }
+    
+    /**
+     * Returns the field of this class with the given name and type. If the
+     * field cannot be found, null is returned.  
+    */    
+    public SootField getFieldUnsafe( String name, Type type ) {
         checkLevel(SIGNATURES);
-        for( Iterator<SootField> fieldIt = this.getFields().iterator(); fieldIt.hasNext(); ) {
-            final SootField field = fieldIt.next();
-            if(field.name.equals(name) && field.type.equals(type))
+        for (SootField field : fields) {
+            if(field.getName().equals(name) && field.getType().equals(type))
                 return field;
         }
-        throw new RuntimeException("No field " + name + " in class " + getName());
+        return null;
     }
     
     /**
-        Returns the field of this class with the given name.  Throws a RuntimeException if there
-        are more than one.
+     * Returns the field of this class with the given name.  Throws a RuntimeException if there
+     * is more than one field with the given name or if no such field exists at all.
     */
-
     public SootField getFieldByName(String name)
     {
-        checkLevel(SIGNATURES);
-        boolean found = false;
-        SootField foundField = null;
-
-        Iterator<SootField> fieldIt = getFields().iterator();
-
-        while(fieldIt.hasNext())
-        {
-            SootField field = fieldIt.next();
-
-            if(field.name.equals(name))
-            {
-                if(found)
-                    throw new RuntimeException("ambiguous field: "+name);
-                else {
-                    found = true;
-                    foundField = field;
-                }
-            }
-        }
-
-        if(found)
-            return foundField;
-        else
+        SootField foundField = getFieldByNameUnsafe(name);
+        if(foundField == null)
             throw new RuntimeException("No field " + name + " in class " + getName());
+        return foundField;
     }
-
-    
-    /*    
-        Returns the field of this class with the given subsignature.
-    */
-
-    public SootField getField(String subsignature)
-    {
-        checkLevel(SIGNATURES);
-        for( Iterator<SootField> fieldIt = this.getFields().iterator(); fieldIt.hasNext(); ) {
-            final SootField field = fieldIt.next();
-            if( field.getSubSignature().equals( subsignature ) ) return field;
-        }
-
-        throw new RuntimeException("No field " + subsignature + " in class " + getName());
-    }
-
     
     /**
-        Does this class declare a field with the given subsignature?
+     * Returns the field of this class with the given name.  Throws a RuntimeException if there
+     * is more than one field with the given name. Returns null if no field with the given name
+     * exists.
     */
+    public SootField getFieldByNameUnsafe(String name)
+    {
+        checkLevel(SIGNATURES);
+        SootField foundField = null;
 
+        for (SootField field : fields) {
+            if(field.getName().equals(name))
+            {
+                if(foundField == null)
+                    foundField = field;
+                else
+                    throw new RuntimeException("ambiguous field: "+name);
+            }
+        }
+        return foundField;
+    }
+    
+    /**
+     * Returns the field of this class with the given subsignature. If such a field
+     * does not exist, an exception is thrown.
+     */
+    public SootField getField(String subsignature)
+    {
+        SootField sf = getFieldUnsafe(subsignature);
+        if (sf == null)
+        	throw new RuntimeException("No field " + subsignature + " in class " + getName());
+        return sf;
+    }
+    
+    /**
+     * Returns the field of this class with the given subsignature. If such a field
+     * does not exist, null is returned.
+     */
+    public SootField getFieldUnsafe(String subsignature)
+    {
+        checkLevel(SIGNATURES);
+        for (SootField field : fields) {
+            if( field.getSubSignature().equals( subsignature ) ) return field;
+        }
+        return null;
+    }
+    
+    /**
+     * Does this class declare a field with the given subsignature?
+     */
     public boolean declaresField(String subsignature)
     {
         checkLevel(SIGNATURES);
-        for( Iterator<SootField> fieldIt = this.getFields().iterator(); fieldIt.hasNext(); ) {
-            final SootField field = fieldIt.next();
+        for( SootField field : fields )
             if( field.getSubSignature().equals( subsignature ) ) return true;
-        }
         return false;
     }
 
     
-    /*    
-        Returns the method of this class with the given subsignature.
-    */
-
+    /**    
+     * Returns the method of this class with the given subsignature. If no
+     * method with the given subsignature can be found, an exception is thrown.
+     */
     public SootMethod getMethod(NumberedString subsignature)
     {
-        checkLevel(SIGNATURES);
-        SootMethod ret = (SootMethod) subSigToMethods.get( subsignature );
+        SootMethod ret = getMethodUnsafe(subsignature);
         if(ret == null)
             throw new RuntimeException("No method " + subsignature + " in class " + getName());
         else
             return ret;
     }
 
-    /**
-        Does this class declare a method with the given subsignature?
-    */
+    /**    
+     * Returns the method of this class with the given subsignature. If no
+     * method with the given subsignature can be found, null is returned.
+     */
+    public SootMethod getMethodUnsafe(NumberedString subsignature)
+    {
+        checkLevel(SIGNATURES);
+        SootMethod ret = subSigToMethods.get( subsignature );
+        return ret;
+    }
 
+    /**
+     * Does this class declare a method with the given subsignature?
+     */
     public boolean declaresMethod(NumberedString subsignature)
     {
         checkLevel(SIGNATURES);
-        SootMethod ret = (SootMethod) subSigToMethods.get( subsignature );
+        SootMethod ret = subSigToMethods.get( subsignature );
         return ret != null;
     }
     
     
-    /*    
-        Returns the method of this class with the given subsignature.
-    */
-
+    /*
+     * Returns the method of this class with the given subsignature. If no
+     * method with the given subsignature can be found, an exception is thrown.
+     */
     public SootMethod getMethod(String subsignature)
     {
         checkLevel(SIGNATURES);
         return getMethod( Scene.v().getSubSigNumberer().findOrAdd( subsignature ) );
     }
-
+    
+    /*
+     * Returns the method of this class with the given subsignature. If no
+     * method with the given subsignature can be found, null is returned.
+     */
+    public SootMethod getMethodUnsafe(String subsignature)
+    {
+        checkLevel(SIGNATURES);
+        return getMethodUnsafe( Scene.v().getSubSigNumberer().findOrAdd( subsignature ) );
+    }
+    
     /**
         Does this class declare a method with the given subsignature?
     */
@@ -339,13 +401,8 @@ public class SootClass extends AbstractHost implements Numberable
     public boolean declaresFieldByName(String name)
     {
         checkLevel(SIGNATURES);
-        Iterator<SootField> fieldIt = getFields().iterator();
-
-        while(fieldIt.hasNext())
-        {
-            SootField field = fieldIt.next();
-
-            if(field.name.equals(name))
+        for (SootField field : fields) {
+            if(field.getName().equals(name))
                 return true;
         }
 
@@ -354,20 +411,14 @@ public class SootClass extends AbstractHost implements Numberable
 
     
     /**
-        Does this class declare a field with the given name and type.
-    */
-
+     * Does this class declare a field with the given name and type.
+     */
     public boolean declaresField(String name, Type type)
     {
         checkLevel(SIGNATURES);
-        Iterator<SootField> fieldIt = getFields().iterator();
-
-        while(fieldIt.hasNext())
-        {
-            SootField field = fieldIt.next();
-
-            if(field.name.equals(name) &&
-                field.type.equals(type))
+        for (SootField field : fields) {
+            if(field.getName().equals(name) &&
+                field.getType().equals(type))
                 return true;
         }
 
@@ -396,18 +447,34 @@ public class SootClass extends AbstractHost implements Numberable
 
     public List<SootMethod> getMethods() {
         checkLevel(SIGNATURES);
-        ArrayList<SootMethod> ret = new ArrayList<SootMethod>();
-        for( Iterator<SootMethod> it = methodIterator(); it.hasNext(); )
-            ret.add( it.next() );
-        return ret;
+        return new ArrayList<SootMethod>(methodList);
     }
 
+    /**
+     * Attempts to retrieve the method with the given name, parameters and return type.
+     * If no matching method can be found, an exception is thrown.  
+     */
     public SootMethod getMethod( String name, List<Type> parameterTypes,
             Type returnType )
     {
+        SootMethod sm = getMethodUnsafe(name, parameterTypes, returnType);
+        if (sm != null)
+        	return sm;
+        
+        throw new RuntimeException(
+                "Class "+getName()+" doesn't have method "+
+            name + "(" + parameterTypes + ")" + " : " + returnType );
+    }
+    
+    /**
+     * Attempts to retrieve the method with the given name, parameters and return type.
+     * If no matching method can be found, null is returned.  
+     */
+    public SootMethod getMethodUnsafe( String name, List<Type> parameterTypes,
+            Type returnType )
+    {
         checkLevel(SIGNATURES);
-        for( Iterator<SootMethod> methodIt = methodIterator(); methodIt.hasNext(); ) {
-            final SootMethod method = methodIt.next();
+        for (SootMethod method : methodList) {
             if(method.getName().equals(name) &&
                 parameterTypes.equals(method.getParameterTypes()) &&
                 returnType.equals(method.getReturnType()))
@@ -415,14 +482,9 @@ public class SootClass extends AbstractHost implements Numberable
                 return method;
             }
         }
-        throw new RuntimeException(
-                "Class "+getName()+" doesn't have method "+
-            name + "(" + parameterTypes + ")" + " : " + returnType );
+        return null;
     }
-    /**
-        Attempts to retrieve the method with the given name, parameters and return type.  
-    */
-
+    
     /**
         Attempts to retrieve the method with the given name and parameters.  This method
         may throw an AmbiguousMethodException if there is more than one method with the
@@ -432,81 +494,70 @@ public class SootClass extends AbstractHost implements Numberable
     public SootMethod getMethod(String name, List<Type> parameterTypes) 
     {
         checkLevel(SIGNATURES);
-        boolean found = false;
         SootMethod foundMethod = null;
         
-        Iterator<SootMethod> methodIt = methodIterator();
-
-        while(methodIt.hasNext())
-        {
-            SootMethod method = methodIt.next();
-
+        for (SootMethod method : methodList) {
             if(method.getName().equals(name) &&
                 parameterTypes.equals(method.getParameterTypes()))
             {
-                if(found)
-                    throw new RuntimeException("ambiguous method");
-                else {                    
-                    found = true;
+                if(foundMethod == null)
                     foundMethod = method;
-                }
+                else                    
+                    throw new RuntimeException("ambiguous method");
             }
         }
 
-        if(found)
-            return foundMethod;
-        else
+        if(foundMethod == null)
             throw new RuntimeException("couldn't find method "+name+"("+parameterTypes+") in "+this);
+        return foundMethod;
     }
 
     
      /**
-        Attempts to retrieve the method with the given name.  This method
-        may throw an AmbiguousMethodException if there are more than one method with the
-        given name.
+      * Attempts to retrieve the method with the given name.  This method may
+      * throw an AmbiguousMethodException if there are more than one method
+      * with the given name. If no method with the given is found, null is
+      * returned.
     */
-
-    public SootMethod getMethodByName(String name) 
+    public SootMethod getMethodByNameUnsafe(String name) 
     {
         checkLevel(SIGNATURES);
-        boolean found = false;
         SootMethod foundMethod = null;
         
-        Iterator<SootMethod> methodIt = methodIterator();
-
-        while(methodIt.hasNext())
-        {
-            SootMethod method = methodIt.next();
-
+        for (SootMethod method : methodList) {
             if(method.getName().equals(name))
             {
-                if(found)
-                    throw new RuntimeException("ambiguous method: " + name + " in class " + this);
-                else {                    
-                    found = true;
+                if(foundMethod == null)
                     foundMethod = method;
-                }
+                else                    
+                    throw new RuntimeException("ambiguous method: " + name + " in class " + this);
             }
         }
-        if(found)
-            return foundMethod;
-        else
-            throw new RuntimeException("couldn't find method "+name+"(*) in "+this);
+        return foundMethod;
     }
 
     /**
+     * Attempts to retrieve the method with the given name.  This method may
+     * throw an AmbiguousMethodException if there are more than one method
+     * with the given name. If no method with the given is found, an exception
+     * is thrown as well.
+   */
+   public SootMethod getMethodByName(String name) 
+   {
+       SootMethod foundMethod = getMethodByNameUnsafe(name);
+       if(foundMethod == null)
+           throw new RuntimeException("couldn't find method "+name+"(*) in "+this);
+       return foundMethod;
+   }
+
+   /**
         Does this class declare a method with the given name and parameter types?
     */
 
     public boolean declaresMethod(String name, List<Type> parameterTypes)
     {
         checkLevel(SIGNATURES);
-        Iterator<SootMethod> methodIt = methodIterator();
-
-        while(methodIt.hasNext())
-        {
-            SootMethod method = methodIt.next();
-
+        for (SootMethod method : methodList) {
             if(method.getName().equals(name) &&
                 method.getParameterTypes().equals(parameterTypes))
                 return true;
@@ -522,12 +573,7 @@ public class SootClass extends AbstractHost implements Numberable
     public boolean declaresMethod(String name, List<Type> parameterTypes, Type returnType)
     {
         checkLevel(SIGNATURES);
-        Iterator<SootMethod> methodIt = methodIterator();
-
-        while(methodIt.hasNext())
-        {
-            SootMethod method = methodIt.next();
-
+        for (SootMethod method : methodList) {
             if(method.getName().equals(name) &&
                 method.getParameterTypes().equals(parameterTypes) &&
                 method.getReturnType().equals(returnType))
@@ -545,12 +591,7 @@ public class SootClass extends AbstractHost implements Numberable
     public boolean declaresMethodByName(String name)
     {
         checkLevel(SIGNATURES);
-        Iterator<SootMethod> methodIt = methodIterator();
-
-        while(methodIt.hasNext())
-        {
-            SootMethod method = methodIt.next();
-
+        for (SootMethod method : methodList) {
             if(method.getName().equals(name))
                 return true;
         }
@@ -684,7 +725,7 @@ public class SootClass extends AbstractHost implements Numberable
     }
 
     /**
-        Removes the given class from the list of interfaces which are direclty implemented by this class.
+        Removes the given class from the list of interfaces which are directly implemented by this class.
     */
 
     public void removeInterface(SootClass interfaceClass) 
@@ -822,7 +863,7 @@ public class SootClass extends AbstractHost implements Numberable
 
     public void setName(String name)
     {
-        this.name = name;
+        this.name = name.intern();
 	
 	shortName = name;
 	packageName = "";
@@ -1103,5 +1144,65 @@ public class SootClass extends AbstractHost implements Numberable
     public final void setNumber( int number ) { this.number = number; }
 
     private int number = 0;
+    
+    public void rename(String newName)
+    {
+    	this.name = newName;
+    	//resolvingLevel = BODIES;
+	
+    	if (this.refType != null)
+    	{
+    		refType.setClassName(name);
+    	}
+    	else
+    	{
+    		refType = RefType.v(name);
+    	}
+    	Scene.v().addRefType(refType);
+    	
+    }
+    
+	private static ClassValidator[] validators;
+	
+	/**
+	 * Returns an array containing some validators in order to validate the SootClass
+	 * @return the array containing validators
+	 */
+	private synchronized static ClassValidator[] getValidators() {
+		if (validators == null)
+		{
+			validators = new ClassValidator[] {
+				OuterClassValidator.v()
+			};
+		}
+		return validators;
+	};
+	
+
+	/**
+     * Validates this SootClass for logical errors. Note that this does not
+     * validate the method bodies, only the class structure.
+     */
+    public void validate() {
+        final List<ValidationException> exceptionList = new ArrayList<ValidationException>();
+        validate(exceptionList);
+        if (!exceptionList.isEmpty())
+        	throw exceptionList.get(0);
+    }
+
+    /**
+     * Validates this SootClass for logical errors. Note that this does not
+     * validate the method bodies, only the class structure. All found errors
+     * are saved into the given list.
+     */
+    public void validate(List<ValidationException> exceptionList) {
+        final boolean runAllValidators = Options.v().debug() || Options.v().validate();
+    	for (ClassValidator validator : getValidators()) {
+    		if (!validator.isBasicValidator() && !runAllValidators)
+    			continue;
+    		validator.validate(this, exceptionList);
+    	}
+    }
+    
 }
 

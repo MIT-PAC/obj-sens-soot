@@ -29,6 +29,7 @@
 
 package soot;
 import soot.util.*;
+
 import java.util.*;
 
 /**
@@ -36,12 +37,13 @@ import java.util.*;
  *   Two RefType are equal iff they are parametrized by the same class name as a String.
  */
 
-public class RefType extends RefLikeType implements Comparable
+@SuppressWarnings("serial")
+public class RefType extends RefLikeType implements Comparable<RefType>
 {
     public RefType( Singletons.Global g ) { className = ""; }
     public static RefType v() { return G.v().soot_RefType(); }
 
-    /** the class name that parametrizes this RefType */
+    /** the class name that parameterizes this RefType */
     private String className;
     public String getClassName() { return className; }
     private SootClass sootClass;
@@ -62,18 +64,16 @@ public class RefType extends RefLikeType implements Comparable
      */
     public static RefType v(String className)
     {
-        if(Scene.v().containsType(className)) {
-        	return Scene.v().getRefType( className );
-        } else {
-	        RefType ret = new RefType(className);
-	        Scene.v().addRefType( ret );
-	        return ret;
-        }
+    	RefType rt = Scene.v().getRefTypeUnsafe( className );
+    	if (rt == null) {
+	        rt = new RefType(className);
+		    Scene.v().addRefType( rt );
+    	}
+	    return rt;
     }
 
-    public int compareTo(Object o) throws ClassCastException
+    public int compareTo(RefType t)
     {
-        RefType t = (RefType)o;
         return this.toString().compareTo(t.toString());
     }
         
@@ -205,6 +205,10 @@ public class RefType extends RefLikeType implements Comparable
                     commonClass = otherHierarchy.removeFirst();
                     thisHierarchy.removeFirst();
                 }
+                
+                if (commonClass == null)
+                    throw new RuntimeException("Could not find a common superclass for "
+                            + this + " and " + other);
 
                 return RefType.v(commonClass.getName());
             }

@@ -61,7 +61,7 @@ public class JavaLangObjectNative extends NativeMethodClass {
 
   /*********************** java.lang.Object *********************/
   /**
-   * The return variable is assigned an abstract object represneting
+   * The return variable is assigned an abstract object representing
    * all classes (UnknowClassObject) from environment.
    *
    * public final native java.lang.Class getClass();
@@ -105,6 +105,9 @@ public class JavaLangObjectNative extends NativeMethodClass {
 					    ReferenceVariable thisVar,
 					    ReferenceVariable returnVar,
 					    ReferenceVariable params[]) {
+	  if (thisVar == null)
+		  throw new RuntimeException("Need a 'this' variable to perform a clone()");
+	  
     ReferenceVariable newVar = helper.cloneObject(thisVar);
     helper.assign(returnVar, newVar);
   }

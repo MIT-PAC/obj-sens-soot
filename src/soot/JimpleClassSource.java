@@ -43,14 +43,17 @@ public class JimpleClassSource extends ClassSource
           jimpAST.getSkeleton(sc);
           JimpleMethodSource mtdSrc = new JimpleMethodSource(jimpAST);
 
-          Iterator mtdIt = sc.methodIterator();
+          Iterator<SootMethod> mtdIt = sc.methodIterator();
           while(mtdIt.hasNext()) {
-              SootMethod sm = (SootMethod) mtdIt.next();
+              SootMethod sm = mtdIt.next();
               sm.setSource(mtdSrc);
           }
 
           Dependencies deps = new Dependencies();
-          deps.typesToSignature.addAll(jimpAST.getCstPool());
+          //The method documentation states it returns RefTypes only, so this is a transformation safe
+          for (String t : jimpAST.getCstPool()){
+              deps.typesToSignature.add(RefType.v(t));
+          }
 
           classFile.close();
           return deps;

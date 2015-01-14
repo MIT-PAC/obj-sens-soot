@@ -19,7 +19,6 @@
 
 package soot;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,9 +32,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import soot.baf.Baf;
 import soot.baf.BafBody;
@@ -79,6 +79,7 @@ import soot.jimple.toolkits.annotation.purity.PurityAnalysis;
 import soot.jimple.toolkits.annotation.qualifiers.TightestQualifiersTagger;
 import soot.jimple.toolkits.annotation.tags.ArrayNullTagAggregator;
 import soot.jimple.toolkits.base.Aggregator;
+import soot.jimple.toolkits.base.RenameDuplicatedClasses;
 import soot.jimple.toolkits.callgraph.CHATransformer;
 import soot.jimple.toolkits.callgraph.CallGraphPack;
 import soot.jimple.toolkits.callgraph.UnreachableMethodTransformer;
@@ -113,6 +114,8 @@ import soot.tagkit.LineNumberTagAggregator;
 import soot.toDex.DexPrinter;
 import soot.toolkits.exceptions.TrapTightener;
 import soot.toolkits.graph.interaction.InteractionHandler;
+import soot.toolkits.scalar.ConstantInitializerToTagTransformer;
+import soot.toolkits.scalar.ConstantValueToInitializerTransformer;
 import soot.toolkits.scalar.LocalPacker;
 import soot.toolkits.scalar.LocalSplitter;
 import soot.toolkits.scalar.UnusedLocalEliminator;
@@ -129,7 +132,6 @@ import soot.xml.XMLPrinter;
 public class PackManager {
 	public static boolean DEBUG=false;
     public PackManager( Singletons.Global g ) { PhaseOptions.v().setPackManager(this); init(); }
-
     public boolean onlyStandardPacks() { return onlyStandardPacks; }
     private boolean onlyStandardPacks = false;
     void notifyAddPack() {
@@ -202,6 +204,7 @@ public class PackManager {
         {
 	    	p.add(new Transform("wjtp.mhp", MhpTransformer.v()));
 	    	p.add(new Transform("wjtp.tn", LockAllocator.v()));
+	    	p.add(new Transform("wjtp.rdc", RenameDuplicatedClasses.v()));
         }
 
         // Whole-Jimple Optimization pack
@@ -410,16 +413,26 @@ public class PackManager {
             for (String cl : SourceLocator.v().getClassesUnder(path)) {
 
                 ClassSource source = SourceLocator.v().getClassSource(cl);
+                if (source == null)
+                	throw new RuntimeException("Could not locate class source");
                 SootClass clazz = Scene.v().getSootClass(cl);
                 clazz.setResolvingLevel(SootClass.BODIES);
                 source.resolve(clazz);
-
-				//run packs
+                
+            	// Create tags from all values we only have in code assingments now
+                for (SootClass sc : Scene.v().getApplicationClasses()) {
+                    if( Options.v().validate() )
+                    	sc.validate();
+                	if (!sc.isPhantom)
+                		ConstantInitializerToTagTransformer.v().transformClass(sc, true);
+                }
+                
 				runBodyPacks(clazz);
 				//generate output
 				writeClass(clazz);
 
-				releaseBodies(clazz);
+				if (!Options.v().no_writeout_body_releasing())
+					releaseBodies(clazz);
             }
 
 //            for (String cl : SourceLocator.v().getClassesUnder(path)) {
@@ -438,12 +451,20 @@ public class PackManager {
             LineNumberAdder lineNumAdder = LineNumberAdder.v();
             lineNumAdder.internalTransform("", null);
         }
-
+		
         if (Options.v().whole_program() || Options.v().whole_shimple()) {
             runWholeProgramPacks();
         }
         retrieveAllBodies();
-
+        
+    	// Create tags from all values we only have in code assignments now
+        for (SootClass sc : Scene.v().getApplicationClasses()) {
+            if( Options.v().validate() )
+            	sc.validate();
+        	if (!sc.isPhantom)
+        		ConstantInitializerToTagTransformer.v().transformClass(sc, true);
+        }
+        
         // if running coffi cfg metrics, print out results and exit
         if (soot.jbco.Main.metrics) {
           coffiMetrics();
@@ -460,7 +481,6 @@ public class PackManager {
                 G.v().out.println("Running in interactive mode.");
             }
         }
-
         runBodyPacks();
         handleInnerClasses();
 	}
@@ -487,9 +507,9 @@ public class PackManager {
         runBodyPacks( reachableClasses() );
     }
 
-    private ZipOutputStream jarFile = null;
+    private JarOutputStream jarFile = null;
 
-    public ZipOutputStream getJarFile() {
+    public JarOutputStream getJarFile() {
 		return jarFile;
 	}
 
@@ -507,7 +527,9 @@ public class PackManager {
             tearDownJAR();
         }
         postProcessXML( reachableClasses() );
-        releaseBodies( reachableClasses() );
+
+		if (!Options.v().no_writeout_body_releasing())
+			releaseBodies( reachableClasses() );
         if(Options.v().verbose())
             PhaseDumper.v().dumpAfter("output");
     }
@@ -518,15 +540,15 @@ public class PackManager {
 		if( Options.v().output_jar() ) {
             String outFileName = SourceLocator.v().getOutputDir();
             try {
-                jarFile = new ZipOutputStream(new FileOutputStream(outFileName));
-            } catch( FileNotFoundException e ) {
+                jarFile = new JarOutputStream(new FileOutputStream(outFileName));
+            } catch( IOException e ) {
                 throw new CompilationDeathException("Cannot open output Jar file " + outFileName);
             }
         } else {
             jarFile = null;
         }
 	}
-
+	
     private void runWholeProgramPacks() {
         if (Options.v().whole_shimple()) {
             ShimpleTransformer.v().transform();
@@ -580,8 +602,8 @@ public class PackManager {
     }
 
     private void runBodyPacks( Iterator<SootClass> classes ) {
-        while( classes.hasNext() ) {
-            runBodyPacks( classes.next() );
+    	while( classes.hasNext() ) {
+            runBodyPacks(classes.next());
         }
     }
 
@@ -625,9 +647,7 @@ public class PackManager {
         /*
          * apply analyses etc
          */
-        Iterator<SootClass> classIt = appClasses.iterator();
-        while (classIt.hasNext()) {
-            SootClass s = classIt.next();
+        for (SootClass s : appClasses) {
             String fileName = SourceLocator.v().getFileNameFor(s, Options.v().output_format());
 
             /*
@@ -659,12 +679,7 @@ public class PackManager {
             	 * Added hook into going through each decompiled method again
             	 * Need it for all the implemented AST analyses
             	 */
-            	Iterator<SootMethod> methodIt = s.methodIterator();
-            	while (methodIt.hasNext()) {
-
-            		SootMethod m = methodIt.next();
-            		//System.out.println("SootMethod:"+m.getName().toString());
-
+            	for (SootMethod m : s.getMethods()) {
             		/*
             		 * 3rd April 2006
             		 * Fixing RuntimeException caused when you
@@ -687,9 +702,6 @@ public class PackManager {
 
         } //going through all classes
 
-
-
-
         /*
          * Nomair A. Naeem March 6th, 2006
          *
@@ -702,8 +714,6 @@ public class PackManager {
         if(transformations){
         	InterProceduralAnalyses.applyInterProceduralAnalyses();
         }
-
-
 
         outputDava();
     }
@@ -734,7 +744,7 @@ public class PackManager {
 
             try {
                 if( jarFile != null ) {
-                    ZipEntry entry = new ZipEntry(soot.util.StringTools.replaceAll(fileName,"\\","/"));
+                    JarEntry entry = new JarEntry(fileName.replaceAll("\\","/"));
                     jarFile.putNextEntry(entry);
                     streamOut = jarFile;
                 } else {
@@ -774,7 +784,7 @@ public class PackManager {
         /*
          * Create the build.xml for Dava
          */
-        {
+        if (pathForBuild != null) {
         	//path for build is probably ending in sootoutput/dava/src
         	//definetly remove the src
         	if(pathForBuild.endsWith("src/"))
@@ -796,7 +806,8 @@ public class PackManager {
 
 
     }
-
+    
+    @SuppressWarnings("fallthrough")
     private void runBodyPacks(SootClass c) {
         final int format = Options.v().output_format();
         if (format == Options.output_format_dava) {
@@ -857,10 +868,7 @@ public class PackManager {
         //resolving a method reference to a non-existing method, then this
         //method is created as a phantom method when phantom-refs are enabled
         LinkedList<SootMethod> methodsCopy = new LinkedList<SootMethod>(c.getMethods());
-        Iterator<SootMethod> methodIt = methodsCopy.iterator();
-        while (methodIt.hasNext()) {
-            SootMethod m = (SootMethod) methodIt.next();
-
+        for (SootMethod m : methodsCopy) {
             if(DEBUG){
             	if(m.getExceptions().size()!=0)
             		System.out.println("PackManager printing out jimple body exceptions for method "+m.toString()+" " + m.getExceptions().toString());
@@ -894,7 +902,12 @@ public class PackManager {
             }
 
             if (produceJimple) {
-                JimpleBody body =(JimpleBody) m.retrieveActiveBody();
+                Body body = m.retrieveActiveBody();
+                //Change
+                ConditionalBranchFolder.v().transform(body);
+                UnreachableCodeEliminator.v().transform(body);
+                DeadAssignmentEliminator.v().transform(body);
+                UnusedLocalEliminator.v().transform(body);
                 PackManager.v().getPack("jtp").apply(body);
                 if( Options.v().validate() ) {
                     body.validate();
@@ -923,9 +936,7 @@ public class PackManager {
         }
 
         if (produceDava) {
-            methodIt = c.methodIterator();
-            while (methodIt.hasNext()) {
-                SootMethod m = (SootMethod) methodIt.next();
+            for (SootMethod m : c.getMethods()) {
                 if (!m.isConcrete())
                 	continue;
                 //all the work done in decompilation is done in DavaBody which is invoked from within newBody
@@ -953,7 +964,13 @@ public class PackManager {
     }
 
 	public BafBody convertJimpleBodyToBaf(SootMethod m) {
-		BafBody bafBody = Baf.v().newBody((JimpleBody) m.getActiveBody());
+		JimpleBody body = (JimpleBody) m.getActiveBody().clone();
+		//Change
+//        ConditionalBranchFolder.v().transform(body);
+//        UnreachableCodeEliminator.v().transform(body);
+//        DeadAssignmentEliminator.v().transform(body);
+//        UnusedLocalEliminator.v().transform(body);
+		BafBody bafBody = Baf.v().newBody(body);
 		PackManager.v().getPack("bop").apply(bafBody);
 		PackManager.v().getPack("tag").apply(bafBody);
 		if( Options.v().validate() ) {
@@ -963,6 +980,11 @@ public class PackManager {
 	}
 
     public void writeClass(SootClass c) {
+        // Create code assignments for those values we only have in code assignments
+        if (Options.v().output_format() == Options.output_format_jimple)
+        	if (!c.isPhantom)
+        		ConstantValueToInitializerTransformer.v().transformClass(c);
+        
         final int format = Options.v().output_format();
         if( format == Options.output_format_none ) return;
         if( format == Options.output_format_dava ) return;
@@ -980,7 +1002,10 @@ public class PackManager {
 
         try {
             if( jarFile != null ) {
-                ZipEntry entry = new ZipEntry(fileName);
+            	// Fix path delimiters according to ZIP specification
+            	fileName = fileName.replace("\\", "/");
+                JarEntry entry = new JarEntry(fileName);
+                entry.setMethod(ZipEntry.DEFLATED);
                 jarFile.putNextEntry(entry);
                 streamOut = jarFile;
             } else {
@@ -1044,7 +1069,12 @@ public class PackManager {
 
         try {
             writerOut.flush();
-            streamOut.close();
+            if( jarFile == null ) {            	
+	            streamOut.close();
+	            writerOut.close();
+            }
+            else
+                jarFile.closeEntry();
         } catch (IOException e) {
             throw new CompilationDeathException("Cannot close output file " + fileName);
         }
@@ -1111,5 +1141,9 @@ public class PackManager {
                 }
             }
         }
+    }
+    
+    public void resetDexPrinter() {
+    	this.dexPrinter = new DexPrinter();
     }
 }

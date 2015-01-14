@@ -18,7 +18,10 @@
  */
 
 package soot;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 import soot.javaToJimple.LocalGenerator;
 import soot.jimple.AssignStmt;
@@ -31,7 +34,7 @@ import soot.jimple.StringConstant;
 import soot.options.Options;
 import soot.tagkit.GeneratedPhantomMethodTag;
 import soot.tagkit.StringTag;
-import soot.util.*;
+import soot.util.NumberedString;
 
 /** Representation of a reference to a method as it appears in a class file.
  * Note that the method directly referred to may not actually exist; the
@@ -64,7 +67,7 @@ class SootMethodRefImpl implements SootMethodRef {
     private final List<Type> parameterTypes;
     private final Type returnType;
     private final boolean isStatic;
-
+    
     private NumberedString subsig;
 
     public SootClass declaringClass() { return declaringClass; }
@@ -102,7 +105,8 @@ class SootMethodRefImpl implements SootMethodRef {
             return ret.toString();
         }
     }
-
+    
+    @Override
     public SootMethod resolve() {
         return resolve(null);
     }
@@ -122,8 +126,9 @@ class SootMethodRefImpl implements SootMethodRef {
         while(true) {
             if(trace != null) trace.append(
                     "Looking in "+cl+" which has methods "+cl.getMethods()+"\n" );
-            if( cl.declaresMethod( getSubSignature() ) )
-                return checkStatic(cl.getMethod( getSubSignature() ));
+            SootMethod sm = cl.getMethodUnsafe(getSubSignature());
+            if( sm != null )
+                return checkStatic(sm);
             if(Scene.v().allowsPhantomRefs() && (cl.isPhantom() || Options.v().ignore_resolution_errors()))
             {
                 SootMethod m = new SootMethod(name, parameterTypes, returnType, isStatic()?Modifier.STATIC:0);
@@ -142,8 +147,9 @@ class SootMethodRefImpl implements SootMethodRef {
                 SootClass iface = queue.removeFirst();
                 if(trace != null) trace.append(
                         "Looking in "+iface+" which has methods "+iface.getMethods()+"\n" );
-                if( iface.declaresMethod( getSubSignature() ) )
-                    return checkStatic(iface.getMethod( getSubSignature() ));
+                SootMethod sm = iface.getMethodUnsafe(getSubSignature());
+                if( sm != null )
+                    return checkStatic(sm);
                 queue.addAll( iface.getInterfaces() );
             }
             if( cl.hasSuperclass() ) cl = cl.getSuperclass();
@@ -153,65 +159,75 @@ class SootMethodRefImpl implements SootMethodRef {
         //when allowing phantom refs we also allow for references to non-existing methods;
         //we simply create the methods on the fly; the method body will throw an appropriate
         //error just in case the code *is* actually reached at runtime
-        if(Options.v().allow_phantom_refs()) {
-        	SootMethod m = new SootMethod(name, parameterTypes, returnType, isStatic()?Modifier.STATIC:0);
-        	
-        	//create a tag to denote that this method is a generated phantom method
-        	m.addTag(new GeneratedPhantomMethodTag());
-        	
-        	int modifiers = Modifier.PUBLIC; //  we don't know who will be calling us
-            if (isStatic())
-            	modifiers |= Modifier.STATIC;
-            m.setModifiers(modifiers);
-        	JimpleBody body = Jimple.v().newBody(m);
-			m.setActiveBody(body);
-
-			//create locals for parameters and reference params
-			int i = 0;
-			for (Object param : parameterTypes) {
-			    if (!(param instanceof Type))
-			        continue;
-			    Type type = (Type)param;
-			    //add local
-			    Local arg = Jimple.v().newLocal("l" + i, type);
-		        body.getLocals().add(arg);
-			    
-		        //add param assignment
-		        body.getUnits().add(Jimple.v().newIdentityStmt(arg, 
-	                Jimple.v().newParameterRef(type, i)));
-
-			    i++;
-			}
-			
-			//exc = new Error
-			RefType runtimeExceptionType = RefType.v("java.lang.Error");
-			NewExpr newExpr = Jimple.v().newNewExpr(runtimeExceptionType);
-			LocalGenerator lg = new LocalGenerator(body);
-			Local exceptionLocal = lg.generateLocal(runtimeExceptionType);
-			AssignStmt assignStmt = Jimple.v().newAssignStmt(exceptionLocal, newExpr);
-			body.getUnits().add(assignStmt);
-			
-			//exc.<init>(message)
-			SootMethodRef cref = runtimeExceptionType.getSootClass().getMethod("<init>", Collections.<Type>singletonList(RefType.v("java.lang.String"))).makeRef();
-			SpecialInvokeExpr constructorInvokeExpr = Jimple.v().newSpecialInvokeExpr(exceptionLocal, cref, StringConstant.v("Unresolved compilation error: Method "+getSignature()+" does not exist!"));
-			InvokeStmt initStmt = Jimple.v().newInvokeStmt(constructorInvokeExpr);
-			body.getUnits().insertAfter(initStmt, assignStmt);
-			
-			//throw exc
-			body.getUnits().insertAfter(Jimple.v().newThrowStmt(exceptionLocal), initStmt);
-
-			declaringClass.addMethod(m);
-			return m; 
-        } else if( trace == null ) {
+        if(Options.v().allow_phantom_refs())
+        	return createUnresolvedErrorMethod(declaringClass);
+        
+        if( trace == null ) {
         	ClassResolutionFailedException e = new ClassResolutionFailedException();
         	if(Options.v().ignore_resolution_errors())
         		G.v().out.println(e.getMessage());
         	else
         		throw e;
-
         }
+        
         return null;
     }
+    
+    /**
+     * Creates a method body that throws an "unresolved compilation error"
+     * message
+     * @param declaringClass The class that was supposed to contain the method
+     * @return The created SootMethod
+     */
+	private SootMethod createUnresolvedErrorMethod(SootClass declaringClass) {
+		SootMethod m = new SootMethod(name, parameterTypes, returnType, isStatic()?Modifier.STATIC:0);
+
+		//create a tag to denote that this method is a generated phantom method
+		m.addTag(new GeneratedPhantomMethodTag());
+
+		int modifiers = Modifier.PUBLIC; //  we don't know who will be calling us
+		if (isStatic())
+			modifiers |= Modifier.STATIC;
+		m.setModifiers(modifiers);
+		JimpleBody body = Jimple.v().newBody(m);
+		m.setActiveBody(body);
+
+		final LocalGenerator lg = new LocalGenerator(body);
+		
+		// For producing valid Jimple code, we need to access all parameters.
+		// Otherwise, methods like "getThisLocal()" will fail.
+		if (!isStatic) {
+			RefType thisType = RefType.v(declaringClass);
+			Local lThis = lg.generateLocal(thisType);
+			body.getUnits().add(Jimple.v().newIdentityStmt(lThis, Jimple.v().newThisRef(thisType)));
+		}
+		for (int i = 0; i < m.getParameterCount(); i++) {
+			Type paramType = m.getParameterType(i);
+			Local lParam = lg.generateLocal(paramType);
+			body.getUnits().add(Jimple.v().newIdentityStmt(lParam, Jimple.v().newParameterRef(paramType, i)));
+		}
+		
+		//exc = new Error
+		RefType runtimeExceptionType = RefType.v("java.lang.Error");
+		NewExpr newExpr = Jimple.v().newNewExpr(runtimeExceptionType);
+		Local exceptionLocal = lg.generateLocal(runtimeExceptionType);
+		AssignStmt assignStmt = Jimple.v().newAssignStmt(exceptionLocal, newExpr);
+		body.getUnits().add(assignStmt);
+		
+		//exc.<init>(message)
+		SootMethodRef cref = Scene.v().makeConstructorRef(runtimeExceptionType.getSootClass(),
+				Collections.<Type>singletonList(RefType.v("java.lang.String")));
+		SpecialInvokeExpr constructorInvokeExpr = Jimple.v().newSpecialInvokeExpr(exceptionLocal, cref,
+				StringConstant.v("Unresolved compilation error: Method "+getSignature()+" does not exist!"));
+		InvokeStmt initStmt = Jimple.v().newInvokeStmt(constructorInvokeExpr);
+		body.getUnits().insertAfter(initStmt, assignStmt);
+		
+		//throw exc
+		body.getUnits().insertAfter(Jimple.v().newThrowStmt(exceptionLocal), initStmt);
+
+		declaringClass.addMethod(m);
+		return m;
+	}
     
     public String toString() {
         return getSignature();
