@@ -614,7 +614,7 @@ public final class OnFlyCallGraphBuilder
 
     private void processNewMethod( MethodOrMethodContext momc) {
         SootMethod method = momc.method();
-        if( method.isNative() || method.isPhantom() ) {
+        if( method.isNative() || method.isPhantom() || method.getDeclaringClass().isPhantom()) {
             return;
         }
         Body b = method.retrieveActiveBody();

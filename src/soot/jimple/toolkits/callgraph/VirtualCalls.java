@@ -33,7 +33,7 @@ public final class VirtualCalls
     public static VirtualCalls v() { return G.v().soot_jimple_toolkits_callgraph_VirtualCalls(); }
 
     private final LargeNumberedMap typeToVtbl =
-        new LargeNumberedMap( Scene.v().getTypeNumberer() );
+            new LargeNumberedMap( Scene.v().getTypeNumberer() );
 
     public SootMethod resolveSpecial( SpecialInvokeExpr iie, NumberedString subSig, SootMethod container ) {
         SootMethod target = iie.getMethod();
@@ -41,20 +41,14 @@ public final class VirtualCalls
         if( Scene.v().getOrMakeFastHierarchy()
                 .canStoreType( container.getDeclaringClass().getType(),
                     target.getDeclaringClass().getType() )
-            && container.getDeclaringClass().getType() !=
-                target.getDeclaringClass().getType() 
-            && !target.getName().equals( "<init>" ) 
-            && subSig != sigClinit ) {
+                    && container.getDeclaringClass().getType() !=
+                    target.getDeclaringClass().getType() 
+                    && !target.getName().equals( "<init>" ) 
+                    && subSig != sigClinit ) {
 
-            //INVOKE-SPECIAL-CHANGE
-            /*return resolveNonSpecial(
-                    container.getDeclaringClass().getSuperclass().getType(),
-                    subSig );
-                    */
             return resolveNonSpecial(
-                target.getDeclaringClass().getType(),
-                subSig );
-            
+                container.getDeclaringClass().getSuperclass().getType(),
+                subSig );                                  
         } else {
             return target;
         }
@@ -148,13 +142,13 @@ public final class VirtualCalls
             throw new RuntimeException( "oops "+t );
         }
     }
-    
+
     public final NumberedString sigClinit =
-        Scene.v().getSubSigNumberer().findOrAdd("void <clinit>()");
+            Scene.v().getSubSigNumberer().findOrAdd("void <clinit>()");
     public final NumberedString sigStart =
-        Scene.v().getSubSigNumberer().findOrAdd("void start()");
+            Scene.v().getSubSigNumberer().findOrAdd("void start()");
     public final NumberedString sigRun =
-        Scene.v().getSubSigNumberer().findOrAdd("void run()");
+            Scene.v().getSubSigNumberer().findOrAdd("void run()");
 }
 
 

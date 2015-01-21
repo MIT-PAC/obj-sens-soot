@@ -130,7 +130,7 @@ public abstract class UnitGraph implements DirectedGraph<Unit>
 			successors.add(target);
 			List<Unit> preds = unitToPreds.get(target);
 			if (preds == null)
-				throw new RuntimeException("Unit graph contains jump to non-existing target");
+				throw new RuntimeException("Unit graph contains jump to non-existing target: " + method);
 			preds.add(currentUnit);
 		    }
 		}

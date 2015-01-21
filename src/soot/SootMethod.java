@@ -195,7 +195,7 @@ implements ClassMember, Numberable, MethodOrMethodContext {
     /** Returns true when this <code>SootMethod</code> object is phantom. */
     @Override
     public boolean isPhantom() {
-        return isPhantom;
+        return getDeclaringClass().isPhantom() || isPhantom;
     }
 
     /**

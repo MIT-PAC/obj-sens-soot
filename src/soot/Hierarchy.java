@@ -27,6 +27,7 @@ package soot;
 
 import soot.jimple.*;
 import soot.util.*;
+
 import java.util.*;
 
 /** Represents the class hierarchy.  It is closely linked to a Scene,
@@ -82,8 +83,9 @@ public class Hierarchy
                     interfaceToDirSubinterfaces.put(c, new ArrayList<SootClass>());
                     interfaceToDirImplementers.put(c, new ArrayList<SootClass>());
                 }
-                else
-                    classToDirSubclasses.put(c, new ArrayList<SootClass>());
+                else {
+                    classToDirSubclasses.put(c, new ArrayList<SootClass>());   
+                }
             }
 
             classesIt = allClasses.iterator();
@@ -109,8 +111,12 @@ public class Hierarchy
                     else
                     {
                         List<SootClass> l = classToDirSubclasses.get(c.getSuperclass());
-                        l.add(c);
-
+                        if (l == null) {
+                            G.v().out.println("WARN: Error in soot hierarchy. Interface found where class excepted: " + c); 
+                            c.setPhantomClass();
+                        } else {
+                            l.add(c);
+                        }
                     
                         Iterator<SootClass> subIt = c.getInterfaces().iterator();
 
@@ -163,9 +169,10 @@ public class Hierarchy
                     interfaceToDirImplementers.put(c, Collections.unmodifiableList
                                                 (interfaceToDirImplementers.get(c)));
                 }
-                else
+                else {
                     classToDirSubclasses.put(c, Collections.unmodifiableList
                                           (classToDirSubclasses.get(c)));
+                }
             }
         }
     }
