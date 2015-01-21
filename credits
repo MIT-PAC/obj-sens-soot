@@ -65,6 +65,9 @@ John Jorgensen (jjorge1@sable.mcgill.ca)
        
 Felix Kwok (wkwok@sable.mcgill.ca)
     - VTA re-implementation
+
+Steven Lambeth
+	- BitSet based implementation of FlowAnalysis and other performance improvements
     
 Patrick Lam (plam@sable.mcgill.ca)
     - general Soot hacker
@@ -92,6 +95,9 @@ Florian Loitsch (florian@loitsch.net)
 Jerome Miecznikowski (jerome@sable.mcgill.ca)
     - Dava decompiler
 
+Aaloan Miftah (aaloanmiftah@yahoo.com)
+	- ASM based .class-to-Jimple conversion
+
 Antoine Mine (Antoine.Mine@ens.fr)
     - purity analysis 
     
@@ -117,6 +123,9 @@ Feng Qian (fqian@sable.mcgill.ca)
     - prepared 1.2.0 release
     - Dot interface, CFGViewer
     - prepared 1.2.2, 1.2.3 release
+
+Samuel Andres Beracasa Rodriguez (samuelbera91@gmail.com)
+	- Improvements to the ASM frontend
 
 Hossein Sadat-Mohtasham
 	- Program Dependency Graphs

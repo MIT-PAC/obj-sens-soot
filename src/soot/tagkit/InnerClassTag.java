@@ -41,13 +41,15 @@ public class InnerClassTag implements Tag
 	this.outerClass = outerClass;
 	this.name = name;
 	this.accessFlags = accessFlags;
-	if (innerClass != null && (innerClass.startsWith("L") || innerClass.endsWith(";")))
+	if (innerClass != null && (innerClass.startsWith("L") && innerClass.endsWith(";")))
         throw new RuntimeException("InnerClass annotation type string must " +
         		"be of the form a/b/ClassName not '"+ innerClass +"'");
-	if (outerClass != null && (outerClass.startsWith("L") || outerClass.endsWith(";")))
+	if (outerClass != null && (outerClass.startsWith("L") && outerClass.endsWith(";")))
         throw new RuntimeException("OuterType annotation type string must " +
         		"be of the form a/b/ClassName not '"+ innerClass +"'");
-	
+		if (name != null && name.endsWith(";")) {
+			throw new RuntimeException("InnerClass name cannot end with ';', got '" + name + "'");
+		}
     }
 
     public String getName()

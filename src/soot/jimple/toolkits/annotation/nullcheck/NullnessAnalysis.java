@@ -31,6 +31,7 @@ import soot.Unit;
 import soot.Value;
 import soot.jimple.ArrayRef;
 import soot.jimple.ClassConstant;
+import soot.jimple.CaughtExceptionRef;
 import soot.jimple.DefinitionStmt;
 import soot.jimple.FieldRef;
 import soot.jimple.InstanceFieldRef;
@@ -56,8 +57,8 @@ import soot.toolkits.scalar.ForwardBranchedFlowAnalysis;
 
 /**
  * An intraprocedural nullness analysis that computes for each location and each value
- * in a method if the value is (before or after that location) definetely null,
- * definetely non-null or neither.
+ * in a method if the value is (before or after that location) definitely null,
+ * definitely non-null or neither.
  * This class replaces {@link BranchedRefVarsAnalysis} which is known to have bugs.
  *
  * @author Eric Bodden
@@ -131,7 +132,7 @@ public class NullnessAnalysis  extends ForwardBranchedFlowAnalysis
 	/**
 	 * {@inheritDoc}
 	 */
-	@SuppressWarnings("unchecked")
+	@Override
 	protected void flowThrough(Object flowin, Unit u, List fallOut, List branchOuts) {
 		AnalysisInfo in = (AnalysisInfo) flowin;
 		AnalysisInfo out = new AnalysisInfo(in);
@@ -301,7 +302,8 @@ public class NullnessAnalysis  extends ForwardBranchedFlowAnalysis
 		if ( isAlwaysNonNull(right)
 		|| right instanceof NewExpr || right instanceof NewArrayExpr
 		|| right instanceof NewMultiArrayExpr || right instanceof ThisRef
-		|| right instanceof StringConstant || right instanceof ClassConstant) {
+		|| right instanceof StringConstant || right instanceof ClassConstant
+		|| right instanceof CaughtExceptionRef) {
 			//if we assign new... or @this, the result is non-null
 			out.put(left,NON_NULL);
 		} else if(right==NullConstant.v()) {
@@ -317,6 +319,7 @@ public class NullnessAnalysis  extends ForwardBranchedFlowAnalysis
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected void copy(Object source, Object dest) {
 		AnalysisInfo s = (AnalysisInfo) source;
 		AnalysisInfo d = (AnalysisInfo) dest;
@@ -327,6 +330,7 @@ public class NullnessAnalysis  extends ForwardBranchedFlowAnalysis
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected Object entryInitialFlow() {
 		return new AnalysisInfo();
 	}
@@ -334,6 +338,7 @@ public class NullnessAnalysis  extends ForwardBranchedFlowAnalysis
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected void merge(Object in1, Object in2, Object out) {
 		AnalysisInfo outflow = (AnalysisInfo) out;
 		outflow.clear();
@@ -344,6 +349,7 @@ public class NullnessAnalysis  extends ForwardBranchedFlowAnalysis
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected Object newInitialFlow() {
 		return new AnalysisInfo();
 	}

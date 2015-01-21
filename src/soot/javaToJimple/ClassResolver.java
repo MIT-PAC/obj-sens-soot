@@ -18,16 +18,24 @@
  */
 
 package soot.javaToJimple;
-import soot.*;
-import soot.options.Options;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import polyglot.ast.Block;
 import polyglot.ast.FieldDecl;
 import polyglot.ast.Node;
 import polyglot.types.Type;
 import polyglot.util.IdentityKey;
+import soot.G;
+import soot.RefType;
+import soot.SootClass;
+import soot.SootField;
+import soot.SootMethod;
+import soot.options.Options;
 
 public class ClassResolver {
 
@@ -258,11 +266,9 @@ public class ClassResolver {
     }
     private void addFinals(polyglot.types.LocalInstance li, ArrayList<SootField> finalFields){
         // add as param for init
-        Iterator it = sootClass.getMethods().iterator();
-        while (it.hasNext()){
-            soot.SootMethod meth = (soot.SootMethod)it.next();
+        for (SootMethod meth : sootClass.getMethods()) {
             if (meth.getName().equals("<init>")){
-                List newParams = new ArrayList();
+                List<soot.Type> newParams = new ArrayList<soot.Type>();
                 newParams.addAll(meth.getParameterTypes());
                 newParams.add(Util.getSootType(li.type()));
                 meth.setParameterTypes(newParams);
@@ -419,17 +425,19 @@ public class ClassResolver {
             addQualifierRefToInit(aNew.qualifier().type());
             src.hasQualifier(true);
         }
-        if (info != null && !info.inStaticMethod()){
-            if (!InitialResolver.v().isAnonInCCall(aNew.anonType())){
-                addOuterClassThisRefToInit(aNew.anonType().outer());
-                addOuterClassThisRefField(aNew.anonType().outer());
-                src.thisOuterType(Util.getSootType(aNew.anonType().outer()));
-                src.hasOuterRef(true);
-            }
+        if (info != null) {
+            src.inStaticMethod(info.inStaticMethod());
+        	if (!info.inStaticMethod()){
+	            if (!InitialResolver.v().isAnonInCCall(aNew.anonType())){
+	                addOuterClassThisRefToInit(aNew.anonType().outer());
+	                addOuterClassThisRefField(aNew.anonType().outer());
+	                src.thisOuterType(Util.getSootType(aNew.anonType().outer()));
+	                src.hasOuterRef(true);
+	            }
+        	}
         }
         src.polyglotType((polyglot.types.ClassType)aNew.anonType().superType());
         src.anonType(aNew.anonType()); 
-        src.inStaticMethod(info.inStaticMethod());
         if (info != null){
             src.setFinalsList(addFinalLocals(aNew.body(), info.finalLocalsAvail(), aNew.anonType(), info));
         }
@@ -492,7 +500,7 @@ public class ClassResolver {
             Util.addInnerClassTag(addToClass, specialClass.getName(), addToClass.getName(), null, soot.Modifier.STATIC);
             Util.addInnerClassTag(specialClass, specialClass.getName(), addToClass.getName(), null, soot.Modifier.STATIC);
             InitialResolver.v().addNameToAST(specialClassName);
-            references.add(specialClassName);    
+            references.add(RefType.v(specialClassName));    
             if (InitialResolver.v().specialAnonMap() == null){
                 InitialResolver.v().setSpecialAnonMap(new HashMap<SootClass, SootClass>());
             }
@@ -536,7 +544,7 @@ public class ClassResolver {
         // this field is named after the outer class even if the outer
         // class is an interface and will be actually added to the
         // special interface anon class
-        fieldName = "class$"+soot.util.StringTools.replaceAll(addToClass.getName(), ".", "$");
+        fieldName = "class$"+addToClass.getName().replaceAll(".", "$");
         if ((InitialResolver.v().getInterfacesList() != null) && (InitialResolver.v().getInterfacesList().contains(addToClass.getName()))) {
             addToClass = getSpecialInterfaceAnonClass(addToClass);
         }
@@ -773,8 +781,10 @@ public class ClassResolver {
                 // assume its anon class (only option left) 
                 //
                 if ((InitialResolver.v().getAnonClassMap() != null) && InitialResolver.v().getAnonClassMap().containsVal(simpleName)){
-                    
                     polyglot.ast.New aNew = (polyglot.ast.New)InitialResolver.v().getAnonClassMap().getKey(simpleName);
+                    if (aNew == null)
+                    	throw new RuntimeException("Could resolve class: " + simpleName);
+                    
                     createAnonClassDecl(aNew);
                     findReferences(aNew.body());
                     createClassBody(aNew.body());
@@ -912,7 +922,7 @@ public class ClassResolver {
         this.references = set;
     }
     private final SootClass sootClass;
-    private final Collection references;
+    private final Collection<soot.Type> references;
 
     
     /**

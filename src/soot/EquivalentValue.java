@@ -27,14 +27,21 @@
 
 package soot;
 import java.util.*;
+
 import soot.util.*;
 
 /** 
  * Encapsulates the Value class, but uses EquivTo for equality comparisons. 
  * Also uses equivHashCode as its hash code. */
+@SuppressWarnings("serial")
 public class EquivalentValue implements Value {
     Value e;
-    public EquivalentValue(Value e) { this.e = e; }
+    public EquivalentValue(Value e) {
+    	if (e instanceof EquivalentValue)
+    		e = ((EquivalentValue) e).e;
+    	this.e = e;
+    }
+    
     public boolean equals(Object o) 
     { 
         if (o instanceof EquivalentValue) 
@@ -57,17 +64,14 @@ public class EquivalentValue implements Value {
     public boolean equalsToValue(Value v) {
       return e.equals(v);
     }
-
+    
     /**
-     * returns the deepest Value stored in <code>this</code>. If the
-     * immediate stored value is an EquivalentValue its deepest value is
-     * returned.
+     * @deprecated
+     * @see #getValue()
      **/
+    @Deprecated
     public Value getDeepestValue() {
-      Value deepest = e;
-      while (e instanceof EquivalentValue)
-        deepest = ((EquivalentValue)deepest).getValue();
-      return deepest;
+    	return getValue();
     }
 
     public int hashCode() { return e.equivHashCode(); }
@@ -77,7 +81,7 @@ public class EquivalentValue implements Value {
     /*********************************/
     /* implement the Value-interface */
     /*********************************/
-    public List getUseBoxes() {
+    public List<ValueBox> getUseBoxes() {
       return e.getUseBoxes();
     }
 

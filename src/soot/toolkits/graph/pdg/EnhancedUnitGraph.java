@@ -39,7 +39,7 @@ import soot.util.Chain;
  * 
  * This class represents a control flow graph which behaves like an ExceptionalUnitGraph and 
  * BriefUnitGraph when there are no exception handling construct in the method; at the presence
- * of such constructs, the CFG is constructed from a brief graph by addition a concise representation
+ * of such constructs, the CFG is constructed from a brief graph by adding a concise representation
  * of the exceptional flow as well as START/STOP auxiliary nodes. In a nutshell, the exceptional flow
  * is represented at the level of try-catch-finally blocks instead of the Unit level to allow a more
  * useful region analysis.
@@ -181,12 +181,10 @@ public class EnhancedUnitGraph extends UnitGraph {
 		}
 	}
 	
-
-	@SuppressWarnings("unchecked")
 	protected void handleExplicitThrowEdges()
 	{
 		MHGDominatorTree dom = new MHGDominatorTree(new MHGDominatorsFinder<Unit>(this));
-		MHGDominatorTree pdom = new MHGDominatorTree(new MHGPostDominatorsFinder(this));
+		MHGDominatorTree pdom = new MHGDominatorTree(new MHGPostDominatorsFinder<Unit>(this));
 		
 		//this keeps a map from the entry of a try-catch-block to a selected merge point 
 		Hashtable<Unit, Unit> x2mergePoint = new Hashtable<Unit, Unit>();
@@ -365,8 +363,9 @@ public class EnhancedUnitGraph extends UnitGraph {
 				else if(dom.isDominatorOf(dom.getDode(mergePoint), dom.getDode(tail)))
 					continue TailsLoop;
 				
+				//turns out that when the method ends with a throw, the control get here.
 				if(mergePoint == null)
-					throw new RuntimeException("This should not have happened!");
+					continue TailsLoop;
 				
 				x2mergePoint.put((Unit) xgode, mergePoint);
 			}

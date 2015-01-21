@@ -108,6 +108,10 @@ public class AntTask extends MatchingTask {
 
 
 
+        public void setcoffi(boolean arg) {
+            if(arg) addArg("-coffi");
+        }
+  
         public void sethelp(boolean arg) {
             if(arg) addArg("-help");
         }
@@ -154,6 +158,10 @@ public class AntTask extends MatchingTask {
   
         public void setwhole_shimple(boolean arg) {
             if(arg) addArg("-whole-shimple");
+        }
+  
+        public void seton_the_fly(boolean arg) {
+            if(arg) addArg("-on-the-fly");
         }
   
         public void setvalidate(boolean arg) {
@@ -345,6 +353,10 @@ public class AntTask extends MatchingTask {
             if(arg) addArg("-gzip");
         }
   
+        public void setforce_overwrite(boolean arg) {
+            if(arg) addArg("-force-overwrite");
+        }
+  
         public void setplugin(Path arg) {
             if(plugin == null )
                 plugin = new Path(getProject());
@@ -383,6 +395,21 @@ public class AntTask extends MatchingTask {
                 addArg(arg);
             } else {
                 throw new BuildException("Bad value "+arg+" for option throw_analysis");
+            }
+        }
+  
+        public void setcheck_init_throw_analysis(String arg) {
+            if(false
+    
+                || arg.equals( "auto" )
+                || arg.equals( "pedantic" )
+                || arg.equals( "unit" )
+                || arg.equals( "dalvik" )
+                ) {
+                addArg("-check-init-throw-analysis");
+                addArg(arg);
+            } else {
+                throw new BuildException("Bad value "+arg+" for option check_init_throw_analysis");
             }
         }
   
@@ -496,6 +523,10 @@ public class AntTask extends MatchingTask {
   
         public void setsubtract_gc(boolean arg) {
             if(arg) addArg("-subtract-gc");
+        }
+  
+        public void setno_writeout_body_releasing(boolean arg) {
+            if(arg) addArg("-no-writeout-body-releasing");
         }
   
         public Object createp_jb() {
@@ -1348,6 +1379,12 @@ public class AntTask extends MatchingTask {
             addArg("geom-blocking:"+(arg?"true":"false"));
           }
       
+          public void setgeom_app_only(boolean arg) {
+            addArg("-p");
+            addArg("cg.spark");
+            addArg("geom-app-only:"+(arg?"true":"false"));
+          }
+      
           public void setkobjsens_context_for_static_inits(boolean arg) {
             addArg("-p");
             addArg("cg.spark");
@@ -1802,6 +1839,27 @@ public class AntTask extends MatchingTask {
             addArg("-p");
             addArg("wjtp.tn");
             addArg("locking-scheme:"+arg);
+          }
+      
+        }
+    
+        public Object createp_wjtp_rdc() {
+            Object ret = new PhaseOptwjtp_rdc();
+            phaseopts.add(ret);
+            return ret;
+        }
+        public class PhaseOptwjtp_rdc {
+      
+          public void setenabled(boolean arg) {
+            addArg("-p");
+            addArg("wjtp.rdc");
+            addArg("enabled:"+(arg?"true":"false"));
+          }
+      
+          public void setfixed_class_names(String arg) {
+            addArg("-p");
+            addArg("wjtp.rdc");
+            addArg("fixed-class-names:"+arg);
           }
       
         }

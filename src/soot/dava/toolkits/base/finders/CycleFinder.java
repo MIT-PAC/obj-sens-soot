@@ -26,6 +26,7 @@
 package soot.dava.toolkits.base.finders;
 
 import soot.*;
+
 import java.util.*;
 
 import soot.dava.*;
@@ -240,7 +241,7 @@ public class CycleFinder implements FactFinder
 		    //"as" has a predecssor and successor which is as i.e. it is a self loop
 	  
 		    List<AugmentedStmt> currentComponent = null;
-		    currentComponent = new StationaryArrayList();
+		    currentComponent = new StationaryArrayList<AugmentedStmt>();
 		    currentComponent.add(as);
 		    //System.out.println("Special add of"+as);
 		    c_list.add(currentComponent);
@@ -342,6 +343,8 @@ public class CycleFinder implements FactFinder
 	
 	candidates = max_Reach_Set;
 	
+	if (candidates == null)
+		throw new RuntimeException("Did not find a suitable candidate");
 	if (candidates.size() == 1)
 	    return (AugmentedStmt) candidates.getFirst();
 	

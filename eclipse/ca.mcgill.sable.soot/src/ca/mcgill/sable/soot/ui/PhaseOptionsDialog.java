@@ -202,6 +202,8 @@ Composite wjtpwjtp_mhpChild = wjtpwjtp_mhpCreate(getPageContainer());
 
 Composite wjtpwjtp_tnChild = wjtpwjtp_tnCreate(getPageContainer());
 
+Composite wjtpwjtp_rdcChild = wjtpwjtp_rdcCreate(getPageContainer());
+
 Composite wjopwjop_smbChild = wjopwjop_smbCreate(getPageContainer());
 
 Composite wjopwjop_siChild = wjopwjop_siCreate(getPageContainer());
@@ -873,6 +875,9 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		addToEnableGroup("cg", "cg.spark", getcgcg_sparkgeom_runs_widget(), "geom-runs");
 
 		
+		addToEnableGroup("cg", "cg.spark", getcgcg_sparkgeom_app_only_widget(), "geom-app-only");
+
+		
 		addToEnableGroup("cg", "cg.spark", getcgcg_sparkkobjsens_widget(), "kobjsens");
 
 		
@@ -1067,6 +1072,14 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		getwjtpwjtp_tnprint_table_widget().getButton().addSelectionListener(this);
 		
 		getwjtpwjtp_tnprint_debug_widget().getButton().addSelectionListener(this);
+		
+		
+		makeNewEnableGroup("wjtp", "wjtp.rdc");
+		
+		
+		addToEnableGroup("wjtp", "wjtp.rdc", getwjtpwjtp_rdcenabled_widget(), "enabled");
+		
+		getwjtpwjtp_rdcenabled_widget().getButton().addSelectionListener(this);
 		
 		
 		makeNewEnableGroup("wjop");
@@ -1880,6 +1893,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		String nextListToken;
 	
 		
+		boolRes = getGeneral_Optionscoffi_widget().getButton().getSelection();
+		
+		
+		defBoolRes = false;
+		
+
+		if (boolRes != defBoolRes) {
+			getConfig().put(getGeneral_Optionscoffi_widget().getAlias(), new Boolean(boolRes));
+		}
+		
 		boolRes = getGeneral_Optionshelp_widget().getButton().getSelection();
 		
 		
@@ -1968,6 +1991,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 
 		if (boolRes != defBoolRes) {
 			getConfig().put(getGeneral_Optionswhole_shimple_widget().getAlias(), new Boolean(boolRes));
+		}
+		
+		boolRes = getGeneral_Optionson_the_fly_widget().getButton().getSelection();
+		
+		
+		defBoolRes = false;
+		
+
+		if (boolRes != defBoolRes) {
+			getConfig().put(getGeneral_Optionson_the_fly_widget().getAlias(), new Boolean(boolRes));
 		}
 		
 		boolRes = getGeneral_Optionsvalidate_widget().getButton().getSelection();
@@ -2214,6 +2247,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 			getConfig().put(getOutput_Optionsgzip_widget().getAlias(), new Boolean(boolRes));
 		}
 		
+		boolRes = getOutput_Optionsforce_overwrite_widget().getButton().getSelection();
+		
+		
+		defBoolRes = false;
+		
+
+		if (boolRes != defBoolRes) {
+			getConfig().put(getOutput_Optionsforce_overwrite_widget().getAlias(), new Boolean(boolRes));
+		}
+		
 		stringRes = getOutput_Optionsoutput_dir_widget().getText().getText();
 		
 		defStringRes = "./sootOutput";
@@ -2338,6 +2381,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 
 		if (!stringRes.equals(defStringRes)) {
 			getConfig().put(getProcessing_Optionsthrow_analysis_widget().getAlias(), stringRes);
+		}
+		 
+		stringRes = getProcessing_Optionscheck_init_throw_analysis_widget().getSelectedAlias();
+
+		
+		defStringRes = "auto";
+		
+
+		if (!stringRes.equals(defStringRes)) {
+			getConfig().put(getProcessing_Optionscheck_init_throw_analysis_widget().getAlias(), stringRes);
 		}
 		
 		boolRes = getjbenabled_widget().getButton().getSelection();
@@ -3335,6 +3388,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 			getConfig().put(getcgcg_sparkgeom_blocking_widget().getAlias(), new Boolean(boolRes));
 		}
 		
+		boolRes = getcgcg_sparkgeom_app_only_widget().getButton().getSelection();
+		
+		
+		defBoolRes = true;
+		
+
+		if (boolRes != defBoolRes) {
+			getConfig().put(getcgcg_sparkgeom_app_only_widget().getAlias(), new Boolean(boolRes));
+		}
+		
 		stringRes = getcgcg_sparkgeom_dump_verbose_widget().getText().getText();
 		
 		defStringRes = "";
@@ -3932,6 +3995,25 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 
 		if (!stringRes.equals(defStringRes)) {
 			getConfig().put(getwjtpwjtp_tnlocking_scheme_widget().getAlias(), stringRes);
+		}
+		
+		boolRes = getwjtpwjtp_rdcenabled_widget().getButton().getSelection();
+		
+		
+		defBoolRes = false;
+		
+
+		if (boolRes != defBoolRes) {
+			getConfig().put(getwjtpwjtp_rdcenabled_widget().getAlias(), new Boolean(boolRes));
+		}
+		
+		stringRes = getwjtpwjtp_rdcfixed_class_names_widget().getText().getText();
+		
+		defStringRes = "";
+		
+
+	        if ( (!(stringRes.equals(defStringRes))) && (stringRes != null) && (stringRes.length() != 0)) {
+			getConfig().put(getwjtpwjtp_rdcfixed_class_names_widget().getAlias(), stringRes);
 		}
 		
 		boolRes = getwjopenabled_widget().getButton().getSelection();
@@ -5325,6 +5407,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 			getConfig().put(getMiscellaneous_Optionssubtract_gc_widget().getAlias(), new Boolean(boolRes));
 		}
 		
+		boolRes = getMiscellaneous_Optionsno_writeout_body_releasing_widget().getButton().getSelection();
+		
+		
+		defBoolRes = false;
+		
+
+		if (boolRes != defBoolRes) {
+			getConfig().put(getMiscellaneous_Optionsno_writeout_body_releasing_widget().getAlias(), new Boolean(boolRes));
+		}
+		
 		
 		setSootMainClass(getSootMainClassWidget().getText().getText());			
 		return setSootMainProject(getSootMainProjectWidget().getText().getText());
@@ -5782,6 +5874,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 
 			
 			subSectParent = wjtp_wjtp_tn_branch;
+			
+			
+			SootOption wjtp_wjtp_rdc_branch = new SootOption("Rename duplicated classes", "wjtpwjtp_rdc");
+			subParent.addChild(wjtp_wjtp_rdc_branch);
+
+
+			
+
+			
+			subSectParent = wjtp_wjtp_rdc_branch;
 			
 			
 			//Whole-Jimple Optimization Pack
@@ -6447,6 +6549,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 
 		
 		
+	private BooleanOptionWidget General_Optionscoffi_widget;
+	
+	private void setGeneral_Optionscoffi_widget(BooleanOptionWidget widget) {
+		General_Optionscoffi_widget = widget;
+	}
+	
+	public BooleanOptionWidget getGeneral_Optionscoffi_widget() {
+		return General_Optionscoffi_widget;
+	}	
+	
 	private BooleanOptionWidget General_Optionshelp_widget;
 	
 	private void setGeneral_Optionshelp_widget(BooleanOptionWidget widget) {
@@ -6535,6 +6647,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 	
 	public BooleanOptionWidget getGeneral_Optionswhole_shimple_widget() {
 		return General_Optionswhole_shimple_widget;
+	}	
+	
+	private BooleanOptionWidget General_Optionson_the_fly_widget;
+	
+	private void setGeneral_Optionson_the_fly_widget(BooleanOptionWidget widget) {
+		General_Optionson_the_fly_widget = widget;
+	}
+	
+	public BooleanOptionWidget getGeneral_Optionson_the_fly_widget() {
+		return General_Optionson_the_fly_widget;
 	}	
 	
 	private BooleanOptionWidget General_Optionsvalidate_widget;
@@ -6801,6 +6923,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		return Output_Optionsgzip_widget;
 	}	
 	
+	private BooleanOptionWidget Output_Optionsforce_overwrite_widget;
+	
+	private void setOutput_Optionsforce_overwrite_widget(BooleanOptionWidget widget) {
+		Output_Optionsforce_overwrite_widget = widget;
+	}
+	
+	public BooleanOptionWidget getOutput_Optionsforce_overwrite_widget() {
+		return Output_Optionsforce_overwrite_widget;
+	}	
+	
 
 	private ListOptionWidget Output_Optionsdump_body_widget;
 	
@@ -6940,6 +7072,18 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 	
 	public MultiOptionWidget getProcessing_Optionsthrow_analysis_widget() {
 		return Processing_Optionsthrow_analysis_widget;
+	}	
+	
+	
+	
+	private MultiOptionWidget Processing_Optionscheck_init_throw_analysis_widget;
+	
+	private void setProcessing_Optionscheck_init_throw_analysis_widget(MultiOptionWidget widget) {
+		Processing_Optionscheck_init_throw_analysis_widget = widget;
+	}
+	
+	public MultiOptionWidget getProcessing_Optionscheck_init_throw_analysis_widget() {
+		return Processing_Optionscheck_init_throw_analysis_widget;
 	}	
 	
 	
@@ -7961,6 +8105,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		return cgcg_sparkgeom_blocking_widget;
 	}	
 	
+	private BooleanOptionWidget cgcg_sparkgeom_app_only_widget;
+	
+	private void setcgcg_sparkgeom_app_only_widget(BooleanOptionWidget widget) {
+		cgcg_sparkgeom_app_only_widget = widget;
+	}
+	
+	public BooleanOptionWidget getcgcg_sparkgeom_app_only_widget() {
+		return cgcg_sparkgeom_app_only_widget;
+	}	
+	
 	
 	private StringOptionWidget cgcg_sparkgeom_dump_verbose_widget;
 	
@@ -8613,6 +8767,28 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 	public MultiOptionWidget getwjtpwjtp_tnlocking_scheme_widget() {
 		return wjtpwjtp_tnlocking_scheme_widget;
 	}	
+	
+	
+	private BooleanOptionWidget wjtpwjtp_rdcenabled_widget;
+	
+	private void setwjtpwjtp_rdcenabled_widget(BooleanOptionWidget widget) {
+		wjtpwjtp_rdcenabled_widget = widget;
+	}
+	
+	public BooleanOptionWidget getwjtpwjtp_rdcenabled_widget() {
+		return wjtpwjtp_rdcenabled_widget;
+	}	
+	
+	
+	private StringOptionWidget wjtpwjtp_rdcfixed_class_names_widget;
+	
+	private void setwjtpwjtp_rdcfixed_class_names_widget(StringOptionWidget widget) {
+		wjtpwjtp_rdcfixed_class_names_widget = widget;
+	}
+	
+	public StringOptionWidget getwjtpwjtp_rdcfixed_class_names_widget() {
+		return wjtpwjtp_rdcfixed_class_names_widget;
+	}
 	
 	
 	private BooleanOptionWidget wjopenabled_widget;
@@ -10041,6 +10217,16 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		return Miscellaneous_Optionssubtract_gc_widget;
 	}	
 	
+	private BooleanOptionWidget Miscellaneous_Optionsno_writeout_body_releasing_widget;
+	
+	private void setMiscellaneous_Optionsno_writeout_body_releasing_widget(BooleanOptionWidget widget) {
+		Miscellaneous_Optionsno_writeout_body_releasing_widget = widget;
+	}
+	
+	public BooleanOptionWidget getMiscellaneous_Optionsno_writeout_body_releasing_widget() {
+		return Miscellaneous_Optionsno_writeout_body_releasing_widget;
+	}	
+	
 
 	private Composite General_OptionsCreate(Composite parent) {
 		String defKey;
@@ -10063,6 +10249,22 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		}
 		OptionData [] data;	
 		
+		
+		
+		
+		defKey = ""+" "+""+" "+"coffi";
+		defKey = defKey.trim();
+
+		if (isInDefList(defKey)) {
+			defaultBool = getBoolDef(defKey);	
+		}
+		else {
+			
+			defaultBool = false;
+			
+		}
+
+		setGeneral_Optionscoffi_widget(new BooleanOptionWidget(editGroupGeneral_Options, SWT.NONE, new OptionData("Coffi Frontend", "", "","coffi", "\n", defaultBool)));
 		
 		
 		
@@ -10207,6 +10409,22 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		}
 
 		setGeneral_Optionswhole_shimple_widget(new BooleanOptionWidget(editGroupGeneral_Options, SWT.NONE, new OptionData("Whole-Shimple Mode", "", "","ws", "\nRun in whole shimple mode, taking into consideration \nthe whole program when performing Shimple analyses and \ntransformations. Soot uses the Call Graph Constructor \nto build a call graph for the program, then applies \nenabled transformations in the Whole-Shimple Transformation \nand Whole-Shimple Optimization before applying enabled \nintraprocedural transformations. Note that the \nWhole-Shimple Optimization pack is normally disabled \n(and thus not applied by whole shimple mode), unless you also \nspecify the Whole Program Optimize option.", defaultBool)));
+		
+		
+		
+		defKey = ""+" "+""+" "+"fly";
+		defKey = defKey.trim();
+
+		if (isInDefList(defKey)) {
+			defaultBool = getBoolDef(defKey);	
+		}
+		else {
+			
+			defaultBool = false;
+			
+		}
+
+		setGeneral_Optionson_the_fly_widget(new BooleanOptionWidget(editGroupGeneral_Options, SWT.NONE, new OptionData("On-the-fly Mode", "", "","fly", "\nThis enables whole-program mode but uses a less \nagressive class loading. By default, classes will be \nloaded without bodies unless otherwise requested. The \ncg pack is disabled in this mode. ", defaultBool)));
 		
 		
 		
@@ -10696,6 +10914,22 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		
 		
 		
+		defKey = ""+" "+""+" "+"force-overwrite";
+		defKey = defKey.trim();
+
+		if (isInDefList(defKey)) {
+			defaultBool = getBoolDef(defKey);	
+		}
+		else {
+			
+			defaultBool = false;
+			
+		}
+
+		setOutput_Optionsforce_overwrite_widget(new BooleanOptionWidget(editGroupOutput_Options, SWT.NONE, new OptionData("Force Overwrite Output Files", "", "","force-overwrite", "\n	 If this option is set to true, the output files will be \noverwritten 	 if they already exist and no further warning \nwill be issued. 		", defaultBool)));
+		
+		
+		
 		data = new OptionData [] {
 		
 		new OptionData("Jimple File",
@@ -11017,6 +11251,48 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 			defaultString = getStringDef(defKey);
 		
 			getProcessing_Optionsthrow_analysis_widget().setDef(defaultString);
+		}
+		
+		
+		
+		data = new OptionData [] {
+		
+		new OptionData("Select Automatically",
+		"auto",
+		"\nSelects the throw analysis to use for local initialization \nchecking based on information from other options. In \nparticular, it will use 'dalvik' when it detects it is \nanalyzing an Android application (e.g. when --android-jars or \n--force-android-jar are set) and 'pedantic' otherwise. This is \nthe default. ",
+		
+		true),
+		
+		new OptionData("Pedantic",
+		"pedantic",
+		"\nSays that any instruction may throw any Throwable whatsoever. \nStrictly speaking this is correct, since the Java libraries \ninclude the Thread.stop(Throwable) method, which allows other \nthreads to cause arbitrary exceptions to occur at arbitrary \npoints in the execution of a victim thread. ",
+		
+		false),
+		
+		new OptionData("Unit",
+		"unit",
+		"\nSays that each statement in the intermediate representation may \nthrow those exception types associated with the corresponding \nJava bytecode instructions in the JVM Specification. The \nanalysis deals with each statement in isolation, without regard \nto the surrounding program. ",
+		
+		false),
+		
+		new OptionData("Dalvik",
+		"dalvik",
+		"\nSays that each statement in the intermediate representation may \nthrow those exception types associated with the corresponding \nJava bytecode instructions in the Dalvik Specification. The \nanalysis deals with each statement in isolation, without regard \nto the surrounding program. This is the equivalent of Unit \nabove, but targeting the Dalvik VM semantics as opposed to \nthose of the JVM. ",
+		
+		false),
+		
+		};
+		
+										
+		setProcessing_Optionscheck_init_throw_analysis_widget(new MultiOptionWidget(editGroupProcessing_Options, SWT.NONE, data, new OptionData("Local Initialization ThrowAnalysis", "", "","check-init-ta", "\nThis option specifies which throw analysis to use during local \ninitialization checking inside soot.Body. ")));
+		
+		defKey = ""+" "+""+" "+"check-init-ta";
+		defKey = defKey.trim();
+		
+		if (isInDefList(defKey)) {
+			defaultString = getStringDef(defKey);
+		
+			getProcessing_Optionscheck_init_throw_analysis_widget().setDef(defaultString);
 		}
 		
 		
@@ -13955,7 +14231,23 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 			
 		}
 
-		setcgcg_sparkgeom_blocking_widget(new BooleanOptionWidget(editGroupcgGeometric_context_sensitive_analysis_from_ISSTA_2011, SWT.NONE, new OptionData("Blocking strategy for recursive calls", "p", "cg.spark","geom-blocking", "\n		When this option is on, we perform the blocking strategy to \nthe recursive calls. This strategy significantly improves the \nprecision. The details are presented in our paper. 	 ", defaultBool)));
+		setcgcg_sparkgeom_blocking_widget(new BooleanOptionWidget(editGroupcgGeometric_context_sensitive_analysis_from_ISSTA_2011, SWT.NONE, new OptionData("Blocking strategy for recursive calls", "p", "cg.spark","geom-blocking", "\n		Blocking strategy is a 1CFA model for recursive calls. This \nmodel significantly improves the precision. 	 ", defaultBool)));
+		
+		
+		
+		defKey = "p"+" "+"cg.spark"+" "+"geom-app-only";
+		defKey = defKey.trim();
+
+		if (isInDefList(defKey)) {
+			defaultBool = getBoolDef(defKey);	
+		}
+		else {
+			
+			defaultBool = true;
+			
+		}
+
+		setcgcg_sparkgeom_app_only_widget(new BooleanOptionWidget(editGroupcgGeometric_context_sensitive_analysis_from_ISSTA_2011, SWT.NONE, new OptionData("Pointers processed by geomPTA", "p", "cg.spark","geom-app-only", "\n		When this option is true, geomPTA only processes the pointers \nin library functions ( java.*, sun.*, and etc.) that potentially \nimpact the points-to information of pointers in application \ncode, the pointers in application code, and the base pointers at \nvirtual callsites. 		 ", defaultBool)));
 		
 		
 		
@@ -15656,6 +15948,67 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 
 		
 		return editGroupwjtpwjtp_tn;
+	}
+
+
+
+	private Composite wjtpwjtp_rdcCreate(Composite parent) {
+		String defKey;
+		String defaultString;
+		boolean defaultBool = false;
+	    String defaultArray;
+       
+		Group editGroupwjtpwjtp_rdc = new Group(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		editGroupwjtpwjtp_rdc.setLayout(layout);
+	
+	 	editGroupwjtpwjtp_rdc.setText("Rename duplicated classes");
+	 	
+		editGroupwjtpwjtp_rdc.setData("id", "wjtpwjtp_rdc");
+		
+		String descwjtpwjtp_rdc = "Rename duplicated classes when the file system is not case sensitive";	
+		if (descwjtpwjtp_rdc.length() > 0) {
+			Label descLabelwjtpwjtp_rdc = new Label(editGroupwjtpwjtp_rdc, SWT.WRAP);
+			descLabelwjtpwjtp_rdc.setText(descwjtpwjtp_rdc);
+		}
+		OptionData [] data;	
+		
+		
+		
+		
+		defKey = "p"+" "+"wjtp.rdc"+" "+"enabled";
+		defKey = defKey.trim();
+
+		if (isInDefList(defKey)) {
+			defaultBool = getBoolDef(defKey);	
+		}
+		else {
+			
+			defaultBool = false;
+			
+		}
+
+		setwjtpwjtp_rdcenabled_widget(new BooleanOptionWidget(editGroupwjtpwjtp_rdc, SWT.NONE, new OptionData("Enabled", "p", "wjtp.rdc","enabled", "\n", defaultBool)));
+		
+		
+		
+		defKey = "p"+" "+"wjtp.rdc"+" "+"fcn";
+		defKey = defKey.trim();
+		
+		if (isInDefList(defKey)) {
+			defaultString = getStringDef(defKey);	
+		}
+		else {
+			
+			defaultString = "";
+			
+		}
+
+		setwjtpwjtp_rdcfixed_class_names_widget(new StringOptionWidget(editGroupwjtpwjtp_rdc, SWT.NONE, new OptionData("FixedClassNames",  "p", "wjtp.rdc","fcn", "\n							Use this parameter to set some class names unchangable \neven they are duplicated. 							The fixed class name list \ncannot contain duplicated class names. 							Using '-' to split \nmultiple class names (e.g., fcn:a.b.c-a.b.d). 						", defaultString)));
+		
+
+		
+		return editGroupwjtpwjtp_rdc;
 	}
 
 
@@ -20116,6 +20469,22 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		}
 
 		setMiscellaneous_Optionssubtract_gc_widget(new BooleanOptionWidget(editGroupMiscellaneous_Options, SWT.NONE, new OptionData("Subtract Garbage Collection Time", "", "","subtract-gc", "\nAttempt to subtract time spent in garbage collection \nfrom the reports of times required for \ntransformations. ", defaultBool)));
+		
+		
+		
+		defKey = ""+" "+""+" "+"no-writeout-body-releasing";
+		defKey = defKey.trim();
+
+		if (isInDefList(defKey)) {
+			defaultBool = getBoolDef(defKey);	
+		}
+		else {
+			
+			defaultBool = false;
+			
+		}
+
+		setMiscellaneous_Optionsno_writeout_body_releasing_widget(new BooleanOptionWidget(editGroupMiscellaneous_Options, SWT.NONE, new OptionData("No body releasing after writeout", "", "","no-writeout-body-releasing", "\nBy default soot releases the method bodies of all reachable \nclasses after the final writeout. This option deactivates this \nbehaviour. This flag should not affect end users at all. ", defaultBool)));
 		
 		
 

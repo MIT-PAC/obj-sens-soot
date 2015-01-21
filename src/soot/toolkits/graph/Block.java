@@ -43,7 +43,7 @@ import soot.baf.*;
  *    Block instances are the nodes of the graph. Hence, a Block can be queried
  *    for its successors and predecessors Blocks, as found in this graph.
  */
-public class Block
+public class Block implements Iterable<Unit>
 {
     private Unit mHead, mTail;
     private final Body mBody;
@@ -150,7 +150,7 @@ public class Block
 
 
     /**
-     *  Removes a Unit occuring before some other Unit in the Block.
+     *  Removes a Unit occurring before some other Unit in the Block.
      *
      *  @param item       A Unit to be remove from the Block's Unit Chain.         
      *  @return           True if the item could be found and removed.
@@ -169,7 +169,7 @@ public class Block
     }
     
     /**
-     *  Returns the  Unit occuring immediatly after some other Unit in the block.
+     *  Returns the  Unit occurring immediately after some other Unit in the block.
      *
      *  @param aItem      The Unit from which we wish to get it's successor.
      *  @return           The successor or null if <code>aItem</code> is the tail
@@ -186,7 +186,7 @@ public class Block
     }
     
     /**
-     *  Returns the  Unit occuring immediatly before some other Unit in the block.
+     *  Returns the  Unit occurring immediately before some other Unit in the block.
      *
      *  @param aItem      The Unit from which we wish to get it's predecessor.
      *  @return           The predecessor or null if <code>aItem</code> is the head

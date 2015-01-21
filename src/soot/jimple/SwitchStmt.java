@@ -1,5 +1,5 @@
 /* Soot - a J*va Optimization Framework
- * Copyright (C) 2000 Patrice Pominville
+ * Copyright (C) 1997-1999 Raja Vallee-Rai
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,31 +24,26 @@
  */
 
 
-package soot.util;
 
-/** Provides utility methods for debugging, including assertions. */
-public class Debug
+
+
+package soot.jimple;
+
+import soot.*;
+import java.util.*;
+
+public interface SwitchStmt extends Stmt
 {
-    private Debug()
-    {
-    }
-
-    /** Asserts that condition is true; otherwise, abort. */
-    /*
-    public static void assert(boolean condition, String message)
-    {
-        if (!condition)
-            {
-                G.v().out.println("Assert [" + message + "] fired at:");
-                G.v().out.println(getStackTrace());
-                System.exit(1);
-        
-            }
-    }
-    */
+    public Unit getDefaultTarget();
+    public void setDefaultTarget(Unit defaultTarget);
+    public UnitBox getDefaultTargetBox();
+    public Value getKey();
+    public void setKey(Value key);
+    public ValueBox getKeyBox();
+    public List<Unit> getTargets();
+    public Unit getTarget(int index);
+    public void setTarget(int index, Unit target);
+    public UnitBox getTargetBox(int index);
 }
-
-
-
 
 
