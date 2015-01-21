@@ -35,8 +35,8 @@
            		<pathelement location="${axmlprinter2.jar}"/>
            		<pathelement location="${dexlib2.jar}"/>
            		<pathelement location="${dexlib-utils.jar}"/>
-           		<pathelement location="${slf4j-api.jar}"/>
-           		<pathelement location="${slf4j-simple.jar}"/>
+           		<!-- <pathelement location="${slf4j-api.jar}"/> -->
+           		<!-- <pathelement location="${slf4j-simple.jar}"/> -->
            		<pathelement location="${asm.jar}"/>
         	</classpath>
             <src path="src"/>
