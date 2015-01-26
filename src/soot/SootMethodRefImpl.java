@@ -129,7 +129,9 @@ class SootMethodRefImpl implements SootMethodRef {
             SootMethod sm = cl.getMethodUnsafe(getSubSignature());
             if( sm != null )
                 return checkStatic(sm);
-            if(Scene.v().allowsPhantomRefs() && (cl.isPhantom() || Options.v().ignore_resolution_errors()))
+            // LWG: do not create phantom methods when ignore_resolution_errors is true
+            // if(Scene.v().allowsPhantomRefs() && (cl.isPhantom() || Options.v().ignore_resolution_errors()))
+            if(Scene.v().allowsPhantomRefs() && cl.isPhantom())
             {
                 SootMethod m = new SootMethod(name, parameterTypes, returnType, isStatic()?Modifier.STATIC:0);
                 m.setPhantom(true);
