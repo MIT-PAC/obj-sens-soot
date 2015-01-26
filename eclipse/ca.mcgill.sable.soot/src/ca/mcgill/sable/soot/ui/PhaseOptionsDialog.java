@@ -875,9 +875,6 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 		addToEnableGroup("cg", "cg.spark", getcgcg_sparkgeom_runs_widget(), "geom-runs");
 
 		
-		addToEnableGroup("cg", "cg.spark", getcgcg_sparkgeom_app_only_widget(), "geom-app-only");
-
-		
 		addToEnableGroup("cg", "cg.spark", getcgcg_sparkkobjsens_widget(), "kobjsens");
 
 		
@@ -3386,16 +3383,6 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 
 		if (boolRes != defBoolRes) {
 			getConfig().put(getcgcg_sparkgeom_blocking_widget().getAlias(), new Boolean(boolRes));
-		}
-		
-		boolRes = getcgcg_sparkgeom_app_only_widget().getButton().getSelection();
-		
-		
-		defBoolRes = true;
-		
-
-		if (boolRes != defBoolRes) {
-			getConfig().put(getcgcg_sparkgeom_app_only_widget().getAlias(), new Boolean(boolRes));
 		}
 		
 		stringRes = getcgcg_sparkgeom_dump_verbose_widget().getText().getText();
@@ -8103,16 +8090,6 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 	
 	public BooleanOptionWidget getcgcg_sparkgeom_blocking_widget() {
 		return cgcg_sparkgeom_blocking_widget;
-	}	
-	
-	private BooleanOptionWidget cgcg_sparkgeom_app_only_widget;
-	
-	private void setcgcg_sparkgeom_app_only_widget(BooleanOptionWidget widget) {
-		cgcg_sparkgeom_app_only_widget = widget;
-	}
-	
-	public BooleanOptionWidget getcgcg_sparkgeom_app_only_widget() {
-		return cgcg_sparkgeom_app_only_widget;
 	}	
 	
 	
@@ -14231,23 +14208,7 @@ Composite dbdb_force_recompileChild = dbdb_force_recompileCreate(getPageContaine
 			
 		}
 
-		setcgcg_sparkgeom_blocking_widget(new BooleanOptionWidget(editGroupcgGeometric_context_sensitive_analysis_from_ISSTA_2011, SWT.NONE, new OptionData("Blocking strategy for recursive calls", "p", "cg.spark","geom-blocking", "\n		Blocking strategy is a 1CFA model for recursive calls. This \nmodel significantly improves the precision. 	 ", defaultBool)));
-		
-		
-		
-		defKey = "p"+" "+"cg.spark"+" "+"geom-app-only";
-		defKey = defKey.trim();
-
-		if (isInDefList(defKey)) {
-			defaultBool = getBoolDef(defKey);	
-		}
-		else {
-			
-			defaultBool = true;
-			
-		}
-
-		setcgcg_sparkgeom_app_only_widget(new BooleanOptionWidget(editGroupcgGeometric_context_sensitive_analysis_from_ISSTA_2011, SWT.NONE, new OptionData("Pointers processed by geomPTA", "p", "cg.spark","geom-app-only", "\n		When this option is true, geomPTA only processes the pointers \nin library functions ( java.*, sun.*, and etc.) that potentially \nimpact the points-to information of pointers in application \ncode, the pointers in application code, and the base pointers at \nvirtual callsites. 		 ", defaultBool)));
+		setcgcg_sparkgeom_blocking_widget(new BooleanOptionWidget(editGroupcgGeometric_context_sensitive_analysis_from_ISSTA_2011, SWT.NONE, new OptionData("Blocking strategy for recursive calls", "p", "cg.spark","geom-blocking", "\n		When this option is on, we perform the blocking strategy to \nthe recursive calls. This strategy significantly improves the \nprecision. The details are presented in our paper. 	 ", defaultBool)));
 		
 		
 		

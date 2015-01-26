@@ -1928,7 +1928,6 @@ public class Options extends OptionsBase {
                 +padOpt( "geom-frac-base (40)", "Fractional parameter for precision/performance trade-off" )
                 +padOpt( "geom-blocking (true)", "Enable blocking strategy for recursive calls" )
                 +padOpt( "geom-runs (1)", "Iterations of analysis" )
-                +padOpt( "geom-app-only (true)", "Processing pointers that impact pointers in application code only" )
                 +padOpt( "kobjsens (0)", "Run object sensitivity with k." )
                 +padOpt( "kobjsens-context-for-static-inits (false)", "Keep a special context for static initializer methods." )
                 +padOpt( "kobjsens-types-for-context (false)", "Use types instead of allocation sites for context for context depth > 1." )
@@ -2822,7 +2821,6 @@ public class Options extends OptionsBase {
                 +"geom-frac-base "
                 +"geom-blocking "
                 +"geom-runs "
-                +"geom-app-only "
                 +"kobjsens "
                 +"kobjsens-context-for-static-inits "
                 +"kobjsens-types-for-context "
@@ -3439,7 +3437,6 @@ public class Options extends OptionsBase {
               +"geom-frac-base:40 "
               +"geom-blocking:true "
               +"geom-runs:1 "
-              +"geom-app-only:true "
               +"kobjsens:0 "
               +"kobjsens-context-for-static-inits:false "
               +"kobjsens-types-for-context:false "
