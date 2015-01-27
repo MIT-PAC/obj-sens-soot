@@ -192,6 +192,8 @@ class SootMethodRefImpl implements SootMethodRef {
 			modifiers |= Modifier.STATIC;
 		m.setModifiers(modifiers);
 		JimpleBody body = Jimple.v().newBody(m);
+		
+		declaringClass.addMethod(m);
 		m.setActiveBody(body);
 
 		final LocalGenerator lg = new LocalGenerator(body);
@@ -226,8 +228,7 @@ class SootMethodRefImpl implements SootMethodRef {
 		
 		//throw exc
 		body.getUnits().insertAfter(Jimple.v().newThrowStmt(exceptionLocal), initStmt);
-
-		declaringClass.addMethod(m);
+		
 		return m;
 	}
     
