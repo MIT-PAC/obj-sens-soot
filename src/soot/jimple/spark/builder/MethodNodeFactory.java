@@ -73,8 +73,18 @@ public class MethodNodeFactory extends AbstractShimpleValueSwitch {
                 Value l = as.getLeftOp();
                 Value r = as.getRightOp();
                 if( !( l.getType() instanceof RefLikeType ) ) return;
+                
+                //check for improper casts, with mal-formed code we might get
+                // l = (refliketype)int_type 
+                //if so just return
+                if (r instanceof CastExpr &&
+                    (! (((CastExpr) r).getOp().getType() instanceof RefLikeType))){
+                        return;
+                }                        
+                                
                 assert r.getType() instanceof RefLikeType : "Type mismatch in assignment "
                 + as + " in method " + method.getSignature();
+                
                 l.apply( MethodNodeFactory.this );
                 Node dest = getNode();
                 r.apply( MethodNodeFactory.this );
