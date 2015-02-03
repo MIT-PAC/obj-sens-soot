@@ -84,7 +84,11 @@ public final class TypeManager {
             }
         }
         BitVector ret = (BitVector) typeMask.get( type );
+        /* MIG: removed because it seems as if all calling method will handled a returned null mask 
+         * conservatively
         if( ret == null && fh != null ) throw new RuntimeException( "Type mask not found for type "+type );
+        
+        */
         return ret;
     }
     final public void clearTypeMask() {
