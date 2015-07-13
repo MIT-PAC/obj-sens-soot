@@ -19,10 +19,13 @@
 
 package soot.jimple.spark.internal;
 import java.util.*;
+
 import soot.jimple.spark.pag.*;
 import soot.*;
 import soot.util.*;
+
 import java.util.Iterator;
+
 import soot.util.queue.*;
 import soot.Type;
 
@@ -95,11 +98,14 @@ public final class TypeManager {
         typeMask = null;
     }
     final public void makeTypeMask() {
+        ArrayNumberer<Type> typeNumberer = Scene.v().getTypeNumberer();
+		castNeverFailsFalseCache = new LargeNumberedMap(typeNumberer);
+		castNeverFailsTrueCache = new LargeNumberedMap(typeNumberer);
         RefType.v( "java.lang.Class" );
-        typeMask = new LargeNumberedMap( Scene.v().getTypeNumberer() );
+        typeMask = new LargeNumberedMap( typeNumberer );
         if( fh == null ) return;
 
-        int numTypes = Scene.v().getTypeNumberer().size();
+        int numTypes = typeNumberer.size();
         if( pag.getOpts().verbose() )
             G.v().out.println( "Total types: "+numTypes );
         // **
@@ -107,7 +113,7 @@ public final class TypeManager {
         makeClassTypeMask(Scene.v().getSootClass("java.lang.Object"));
         // **
         ArrayNumberer allocNodes = pag.getAllocNodeNumberer();
-        for( Iterator tIt = Scene.v().getTypeNumberer().iterator(); tIt.hasNext(); ) {
+        for( Iterator tIt = typeNumberer.iterator(); tIt.hasNext(); ) {
             final Type t = (Type) tIt.next();
             if( !(t instanceof RefLikeType) ) continue;
             if( t instanceof AnySubType ) continue;
@@ -138,7 +144,41 @@ public final class TypeManager {
     }
 
     private LargeNumberedMap typeMask = null;
+    
+    // LWG
+    private LargeNumberedMap<Type, BitVector> castNeverFailsFalseCache;
+    private LargeNumberedMap<Type, BitVector> castNeverFailsTrueCache;
+    // LWG: cache results for efficiency
     final public boolean castNeverFails( Type src, Type dst ) {
+        if( fh == null ) return true;
+        if( dst == null ) return true;
+        if( dst == src ) return true;
+        if( src == null ) return false;
+        int size = Scene.v().getTypeNumberer().size();
+        BitVector trueCache = (BitVector) castNeverFailsTrueCache.get(src);
+        if (trueCache == null) {
+        	trueCache = new BitVector(size);
+        	castNeverFailsTrueCache.put(src, trueCache);
+        }
+        int dstNum = dst.getNumber();
+        if (trueCache.get(dstNum)) 
+        	return true;
+        BitVector falseCache = (BitVector) castNeverFailsFalseCache.get(src);
+        if (falseCache == null) {
+        	falseCache = new BitVector(size);
+        	castNeverFailsFalseCache.put(src, falseCache);
+        }
+        if (falseCache.get(dstNum))
+        	return false;
+        boolean result = castNeverFailsInternal(src, dst);
+        if (result)
+        	trueCache.set(dstNum);
+        else
+            falseCache.set(dstNum);
+        return result;
+    }
+    // LWG: factored out from castNeverFails
+    final public boolean castNeverFailsInternal( Type src, Type dst ) {
         if( fh == null ) return true;
         if( dst == null ) return true;
         if( dst == src ) return true;
