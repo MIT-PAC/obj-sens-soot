@@ -61,6 +61,7 @@ public final class TypeManager {
         SootClass cl = rt.getSootClass();
         return cl.resolvingLevel() < SootClass.HIERARCHY;
     }
+
     final public BitVector get( Type type ) {
         if( type == null ) return null;
         while(allocNodeListener.hasNext()) {
@@ -94,60 +95,111 @@ public final class TypeManager {
         */
         return ret;
     }
+    
+    // LWG: typeMask is used to filter out AllocNodes whose types are incompatible with the given
+    // type. Instead of computing the typeMask for all types and all alloc nodes as the function above 
+    // (BitVector get(Type)) does, this function takes an additional argument which is the target set
+    // of alloc nodes to be filtered and it only computes the type compatibility between the given type
+    // and the alloc nodes in the target set if this info hasn't been computed and cached before. We
+    // use two maps to cache the type compatibility computation results.  The 'typeMask' stores the 
+    // real type mask, i.e. a 'set' bit means the types are compatible.  The 'negativeTypeMask'  
+    // stores the negative results, i.e. a 'set' bit means the types are incompatible. This additional
+    // map does increases the memory footprint.  But this approach is more time efficient since it
+    // only computes the type mask for a subset of alloc nodes where the information is needed.
+    final public BitVector get( Type type, BitVector target ) {
+        if( type == null ) return null;
+        BitVector negativeMask = (BitVector) negativeTypeMask.get( type );
+        BitVector mask = (BitVector) typeMask.get( type );
+        if (negativeMask == null) {
+        	negativeMask = new BitVector();
+        	negativeTypeMask.put( type, negativeMask);
+        }
+        if (mask == null) {
+        	mask = new BitVector();
+        	typeMask.put( type, mask);
+        }
+        for( BitSetIterator it = target.iterator(); it.hasNext(); ) {
+            int allocNodeNum = it.next();
+            if (!mask.get(allocNodeNum) && !negativeMask.get(allocNodeNum)) {
+            	AllocNode allocNode = (AllocNode) pag.getAllocNodeNumberer().get(allocNodeNum);
+            	if (castNeverFails(allocNode.getType(), type))
+            		mask.set(allocNodeNum);
+            	else
+            		negativeMask.set(allocNodeNum);
+            }
+        }
+        return mask;
+    }
+
     final public void clearTypeMask() {
         typeMask = null;
     }
     final public void makeTypeMask() {
         ArrayNumberer<Type> typeNumberer = Scene.v().getTypeNumberer();
-		castNeverFailsFalseCache = new LargeNumberedMap(typeNumberer);
-		castNeverFailsTrueCache = new LargeNumberedMap(typeNumberer);
-        RefType.v( "java.lang.Class" );
-        typeMask = new LargeNumberedMap( typeNumberer );
-        if( fh == null ) return;
+        castNeverFailsFalseCache = new LargeNumberedMap<Type, BitVector>( typeNumberer );
+        castNeverFailsTrueCache = new LargeNumberedMap<Type, BitVector>( typeNumberer );
+//        RefType.v( "java.lang.Class" );
+        negativeTypeMask = new LargeNumberedMap<Type, BitVector>( typeNumberer );
+        typeMask = new LargeNumberedMap<Type, BitVector>( typeNumberer );
 
-        int numTypes = typeNumberer.size();
-        if( pag.getOpts().verbose() )
-            G.v().out.println( "Total types: "+numTypes );
-        // **
-        initClass2allocs();
-        makeClassTypeMask(Scene.v().getSootClass("java.lang.Object"));
-        // **
-        ArrayNumberer allocNodes = pag.getAllocNodeNumberer();
-        for( Iterator tIt = typeNumberer.iterator(); tIt.hasNext(); ) {
-            final Type t = (Type) tIt.next();
-            if( !(t instanceof RefLikeType) ) continue;
-            if( t instanceof AnySubType ) continue;
-            if( isUnresolved(t) ) continue;
-            // **
-            if (t instanceof RefType && !t.equals(RefType.v("java.lang.Object"))
-                    && !t.equals(RefType.v("java.io.Serializable"))
-                    && !t.equals(RefType.v("java.lang.Cloneable"))) {
-                
-                SootClass sc = ((RefType)t).getSootClass();
-                if (sc.isInterface()) {
-                    makeMaskOfInterface(sc);
-                }
-                continue;
-            }
-            // **
-            BitVector mask = new BitVector( allocNodes.size() );
-            for( Iterator nIt = allocNodes.iterator(); nIt.hasNext(); ) {
-                final Node n = (Node) nIt.next();
-                if( castNeverFails( n.getType(), t ) ) {
-                    mask.set( n.getNumber() );
-                }
-            }
-            typeMask.put( t, mask );
-        }
-
-        allocNodeListener = pag.allocNodeListener();
+        // LWG: The following typeMask initialization code is commented out because
+        // the typeMask entries are now computed only when necessary
+        // Note: This removal is valid only when the option 'set-impl' is 
+        // double or hybrid
+//        if( fh == null ) return;
+//
+//        int numTypes = typeNumberer.size();
+//        if( pag.getOpts().verbose() )
+//            G.v().out.println( "Total types: "+numTypes );
+//        // **
+//        initClass2allocs();
+//        makeClassTypeMask(Scene.v().getSootClass("java.lang.Object"));
+//        // **
+//        ArrayNumberer allocNodes = pag.getAllocNodeNumberer();
+//        for( Iterator tIt = typeNumberer.iterator(); tIt.hasNext(); ) {
+//            final Type t = (Type) tIt.next();
+//            if( !(t instanceof RefLikeType) ) continue;
+//            if( t instanceof AnySubType ) continue;
+//            if( isUnresolved(t) ) continue;
+//            // **
+//            if (t instanceof RefType && !t.equals(RefType.v("java.lang.Object"))
+//                    && !t.equals(RefType.v("java.io.Serializable"))
+//                    && !t.equals(RefType.v("java.lang.Cloneable"))) {
+//                
+//                SootClass sc = ((RefType)t).getSootClass();
+//                if (sc.isInterface()) {
+//                    makeMaskOfInterface(sc);
+//                }
+//                continue;
+//            }
+//            // **
+//            BitVector mask = new BitVector( allocNodes.size() );
+//            for( Iterator nIt = allocNodes.iterator(); nIt.hasNext(); ) {
+//                final Node n = (Node) nIt.next();
+//                if( castNeverFails( n.getType(), t ) ) {
+//                    mask.set( n.getNumber() );
+//                }
+//            }
+//            typeMask.put( t, mask );
+//        }
+//
+//        allocNodeListener = pag.allocNodeListener();
     }
 
-    private LargeNumberedMap typeMask = null;
+    private LargeNumberedMap<Type, BitVector> typeMask = null;
     
-    // LWG
+    // LWG: a 'set' bit in the BitVector of a map entry indicates the corresponding
+    // castNeverFails() result is false
+    private LargeNumberedMap<Type, BitVector> negativeTypeMask = null;
+
+    // LWG: a 'set' bit in the BitVector of a map entry indicates the corresponding
+    // castNeverFails() result is true
     private LargeNumberedMap<Type, BitVector> castNeverFailsFalseCache;
+
+    // LWG: a 'set' bit in the BitVector of a map entry indicates the corresponding
+    // castNeverFails() result is false
     private LargeNumberedMap<Type, BitVector> castNeverFailsTrueCache;
+
     // LWG: cache results for efficiency
     final public boolean castNeverFails( Type src, Type dst ) {
         if( fh == null ) return true;

@@ -65,7 +65,10 @@ public class ObjectSensitiveAllocNode extends AllocNode implements Context {
             objSenAllocNode = new ObjectSensitiveAllocNode(pag, base, contextElements.array);
             universeMap.put(contextElements, objSenAllocNode);
             pag.getAllocNodeNumberer().add( objSenAllocNode );
-            pag.newAllocNodes.add(objSenAllocNode);
+            // LWG: removed for efficiency
+            // Note: This removal is valid only when the spark option 'set-impl' is 
+            // double or hybrid
+            //pag.newAllocNodes.add(objSenAllocNode);
 
             /* print some stats
             if (base.getMethod() != null) {

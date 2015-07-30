@@ -48,17 +48,19 @@ public final class HybridPointsToSet extends PointsToSetInternal {
 
     private final boolean nativeAddAll( HybridPointsToSet other, HybridPointsToSet exclude ) {
         boolean ret = false;
-        BitVector mask = null;
-        TypeManager typeManager = pag.getTypeManager();
-        if( !typeManager.castNeverFails( other.getType(), this.getType() ) ) {
-            mask = typeManager.get( this.getType() );
-        }
         if( other.bits != null ) {
             convertToBits();
             if( exclude != null ) {
                 exclude.convertToBits();
             }
             BitVector ebits = ( exclude==null ? null : exclude.bits );
+            BitVector mask = null;
+            TypeManager typeManager = pag.getTypeManager();
+            if( !typeManager.castNeverFails( other.getType(), this.getType() ) ) {
+            	// LWG; only compute type mask for the alloc nodes in other.bits
+                //mask = typeManager.get( this.getType() );
+                mask = typeManager.get( this.getType(), other.bits );
+            }
             ret = bits.orAndAndNot( other.bits, mask, ebits );
         } else {
             do {

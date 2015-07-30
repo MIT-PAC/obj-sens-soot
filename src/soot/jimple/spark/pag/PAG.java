@@ -483,7 +483,10 @@ public class PAG implements PointsToAnalysis {
             valToAllocNode.put( newExpr, ret = new InsensitiveAllocNode( this, newExpr, type, m) );
             getAllocNodeNumberer().add( ret );
             //System.out.println("Making alloc node: " + ret);
-            newAllocNodes.add( ret );
+            // LWG: removed for efficiency
+            // Note: This removal is valid only when the spark option 'set-impl' is 
+            // double or hybrid
+            //newAllocNodes.add( ret );
             addNodeTag( ret, m );
         } else if( !( ret.getType().equals( type ) ) ) {
             throw new RuntimeException( "NewExpr "+newExpr+" of type "+type+
@@ -511,6 +514,10 @@ public class PAG implements PointsToAnalysis {
         } else {
             StringConstantNode ret = new StringConstantNode(this, probe);
             valToAllocNode.put(probe, ret);
+            // LWG: removed for efficiency
+            // Note: This removal is valid only when the spark option 'set-impl' is 
+            // double or hybrid
+            //newAllocNodes.add( ret );
             addNodeTag(ret, null);
             return ret;
         }
@@ -536,7 +543,10 @@ public class PAG implements PointsToAnalysis {
 
         if( ret == null ) {
             valToAllocNode.put(cc, ret = new ClassConstantNode(this, cc));
-            newAllocNodes.add( ret );
+            // LWG: removed for efficiency
+            // Note: This removal is valid only when the spark option 'set-impl' is 
+            // double or hybrid
+            //newAllocNodes.add( ret );
             addNodeTag( ret, null );
         }
         return ret;
