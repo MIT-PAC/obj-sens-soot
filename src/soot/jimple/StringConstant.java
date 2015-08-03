@@ -38,7 +38,10 @@ public class StringConstant extends Constant
 
     private StringConstant(String s)
     {
-        this.value = s;
+        if (s == null)
+            this.value = "";
+        else 
+            this.value = s;
     }
 
     public static StringConstant v(String value)
