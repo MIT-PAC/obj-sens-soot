@@ -76,9 +76,12 @@ import soot.jimple.VirtualInvokeExpr;
 import soot.jimple.spark.SparkTransformer;
 import soot.jimple.spark.pag.AllocNode;
 import soot.jimple.spark.pag.ClassConstantNode;
+import soot.jimple.spark.pag.EntryContext;
 import soot.jimple.spark.pag.NoContext;
+import soot.jimple.spark.pag.ObjectSensitiveAllocNode;
 import soot.jimple.spark.pag.ObjectSensitiveConfig;
 import soot.jimple.spark.pag.PAG;
+import soot.jimple.spark.pag.StaticInitContext;
 import soot.jimple.spark.pag.StringConstantNode;
 import soot.jimple.spark.pag.VarNode;
 import soot.jimple.toolkits.reflection.ReflectionTraceInfo;
@@ -494,7 +497,7 @@ public final class OnFlyCallGraphBuilder
         for( Iterator siteIt = ((Collection) receiverToSites.get( receiver )).iterator(); siteIt.hasNext(); ) {
             final VirtualCallSite site = (VirtualCallSite) siteIt.next();
             InstanceInvokeExpr iie = site.iie();
-
+  
             if( site.kind() == Kind.THREAD 
                     && !fh.canStoreType( type, clRunnable ) )
                 continue;
@@ -522,9 +525,9 @@ public final class OnFlyCallGraphBuilder
             }
 
             while(targets.hasNext()) {
-
+                
                 SootMethod target = (SootMethod) targets.next();
-
+                               
                 cm.addVirtualEdge(
                     site.container(),
                     site.stmt(),
@@ -753,12 +756,12 @@ public final class OnFlyCallGraphBuilder
         }
     }
 
-    private void processNewMethodContext( MethodOrMethodContext momc ) {
+    private void processNewMethodContext( MethodOrMethodContext momc ) { 
         Object ctxt = momc.context();
         Iterator it = cicg.edgesOutOf(momc);
         while( it.hasNext() ) {
-            Edge e = (Edge) it.next();
-            cm.addStaticEdge( momc, e.srcUnit(), e.tgt(), e.kind(), momc.context() );
+            Edge e = (Edge) it.next();                                              
+            cm.addStaticEdge( momc, e.srcUnit(), e.tgt(), e.kind(), momc.context() );            
             //SparkTransformer.println("OFCGB: processNewMethodContext: " + e);
         }
     }

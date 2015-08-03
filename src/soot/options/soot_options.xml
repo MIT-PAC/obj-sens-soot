@@ -2624,6 +2624,15 @@ options.
 	      <long_desc>Run object sensitivity with k. 0 will run with context-insensitivitiy.</long_desc>
 	    </intopt>
 
+            <intopt>
+	      <name>API call graph depth</name>
+	      <alias>kobjsens-api-calldepth</alias>
+	      <default>-1</default>
+	      <short_desc>Depth to traverse call graph edges in API from app.</short_desc>
+	      <long_desc>Depth to traverse call graph edges in API from app. -1 means follow all API edges.  0 is don't taverse into API. 1 mean follow one edge into api and stop, etc.</long_desc>
+	    </intopt>
+
+
             <boolopt>
 	      <name>Context for static inits</name>
 	      <alias>kobjsens-context-for-static-inits</alias>
@@ -2650,6 +2659,16 @@ options.
 	      <long_desc>
               </long_desc>
             </boolopt>
+
+             <stropt>
+	      <name>List of application classes (versus API / Library / Framework classes).</name>
+	      <alias>kobjsens-app-classes-list</alias>
+	      <default></default>
+	      <set_arg_label>types</set_arg_label>
+	      <short_desc>List of application classes.</short_desc>
+	      <long_desc> Argument is comma separated list of classes that are the implementation of the Android app.
+	      </long_desc>
+	    </stropt>  
             
             <stropt>
 	      <name>Do not keep method context for types in this list.</name>

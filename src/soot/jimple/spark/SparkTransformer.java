@@ -109,7 +109,9 @@ public class SparkTransformer extends SceneTransformer
         PAGBuilder b;
         if (opts.kobjsens() > 0) {
             ObjectSensitiveConfig.initialize(
-                opts.kobjsens(),
+                opts.kobjsens(),  
+                opts.kobjsens_api_calldepth(),
+                opts.kobjsens_app_classes_list(),
                 opts.kobjsens_no_context_list(),                
                 opts.kobjsens_limit_heap_context(),
                 opts.kobjsens_context_for_static_inits(),

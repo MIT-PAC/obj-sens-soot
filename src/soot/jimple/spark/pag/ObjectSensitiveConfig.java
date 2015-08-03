@@ -21,7 +21,9 @@ public class ObjectSensitiveConfig {
 
     /** list of classes for which we do not add context */
     private Set<SootClass> ignoreList;
-
+    
+    /** list of app classes */
+    private Set<SootClass> appClasses;
   
     private Set<SootClass> limitHeapContext;
 
@@ -35,22 +37,31 @@ public class ObjectSensitiveConfig {
 
     /** depth of the object sensitivity on heap and method */
     private int k = 0;
+    /** depth to traverse into API for call graph building, -1 is follow all edges */
+    private int apiCallDepth = -1;
 
     private HashSet<SootClass> hasArrayField;
     
     private boolean extraArrayContext = false;
 
-    private ObjectSensitiveConfig(int k, String noContext, String limitHeapContext,
+    private ObjectSensitiveConfig(int k, int apiCallDepth, String appClassesStr, String noContextStr, String limitHeapContextStr,
                                   boolean contextForStaticInits, boolean typesForContextGTOne,
                                   boolean extraArrayContext) {
         this.k = k;
+        this.apiCallDepth = apiCallDepth; 
+        System.out.println("Api Call Depth: " + this.apiCallDepth);
       
         this.contextForStaticInits = contextForStaticInits;
         this.typesForContextGTOne = typesForContextGTOne;
         this.extraArrayContext = extraArrayContext;
 
-        installNoContextList(noContext);       
-        installLimitHeapContext(limitHeapContext);
+        this.ignoreList = new HashSet<SootClass>();
+        this.limitHeapContext = new HashSet<SootClass>();
+        this.appClasses = new HashSet<SootClass>();
+        
+        installClassListWithAncestors(this.ignoreList, noContextStr);                  
+        installClassList(this.limitHeapContext, limitHeapContextStr);
+        installClassList(this.appClasses, appClassesStr);
         
         buildHasArraySet();
 
@@ -67,6 +78,15 @@ public class ObjectSensitiveConfig {
         
         return false;
     }
+    
+    public int apiCallDepth() {
+        return apiCallDepth;
+    }
+    
+    public boolean isAppClass(SootClass clz) {
+        return appClasses.contains(clz);
+    }
+    
 
     private void buildHasArraySet() {
         hasArrayField = new HashSet<SootClass>();
@@ -108,9 +128,7 @@ public class ObjectSensitiveConfig {
     }
 
 
-    private void installLimitHeapContext(String lhc) {
-
-        limitHeapContext = new HashSet<SootClass>();
+    private void installClassList(Set<SootClass> set, String lhc) {
 
         if (lhc == null || lhc.isEmpty())
             return;
@@ -121,7 +139,7 @@ public class ObjectSensitiveConfig {
             str = str.trim();
             SootClass clz = tryToGetClass(str);
             if (clz != null && !clz.isInterface()) {
-                limitHeapContext.add(clz);
+                set.add(clz);
             }
         }
     }
@@ -138,8 +156,7 @@ public class ObjectSensitiveConfig {
     /**
      * Install no context list for classes given plus all subclasses.
      */
-    private void installNoContextList(String csl) {
-        ignoreList = new HashSet<SootClass>();
+    private void installClassListWithAncestors(Set<SootClass> set, String csl) {
 
         if (csl == null || csl.isEmpty())
             return;
@@ -153,7 +170,7 @@ public class ObjectSensitiveConfig {
             //System.out.println("Adding class plus subclasses to ignore list: " + str);
             SootClass clz = tryToGetClass(str);
             if (clz != null)
-                ignoreList.add(clz);
+                set.add(clz);
         }
     }
 
@@ -165,11 +182,11 @@ public class ObjectSensitiveConfig {
         return k;
     }
 
-    public static void initialize(int k, String noContextList, 
+    public static void initialize(int k, int apiCallDepth, String appClasses, String noContextList, 
                                   String limitHeapContext, boolean contextForStaticInits,
                                   boolean typesForContextGTOne, boolean extraArrayContext) {
         v = null;
-        v = new ObjectSensitiveConfig(k, noContextList, limitHeapContext, 
+        v = new ObjectSensitiveConfig(k, apiCallDepth, appClasses, noContextList, limitHeapContext, 
             contextForStaticInits, typesForContextGTOne, extraArrayContext);
     }
 
