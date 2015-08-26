@@ -105,8 +105,10 @@ public class BitVector
         return true;
     }
     public boolean get( int bit ) {
-        if( indexOf(bit) >= bits.length ) return false;
-        return ( bits[indexOf(bit)] & mask(bit) ) != 0L;
+        // LWG
+        int index = indexOf(bit);
+        if( index >= bits.length ) return false;
+        return ( bits[index] & mask(bit) ) != 0L;
     }
     public int hashCode() {
         long ret = 0;
@@ -293,61 +295,111 @@ public class BitVector
         if( c == null ) {
             if( dl <= bl ) {
                 while( i < dl ) {
+                    /* LWG: replaced by below
                     l = b[i] & ~d[i];
                     if( (l & ~e[i]) != 0 ) ret = true;
                     e[i] |= l;
+                    */
+                    // LWG: removed unnecessary ops to improve efficiency
+                    l = e[i] | (b[i] & ~d[i]);
+                    if( e[i] != l ) ret = true;
+                    e[i] = l;
+
                     i++;
                 }
                 while( i < bl ) {
+                    /* LWG: replaced by below
                     l = b[i];
                     if( (l & ~e[i]) != 0 ) ret = true;
                     e[i] |= l;
+                    */
+                    // LWG: removed unnecessary ops to improve efficiency
+                    l = e[i] | b[i];
+                    if( e[i] != l ) ret = true;
+                    e[i] = l;
+
                     i++;
                 }
             } else {
                 while( i < bl ) {
+                    /* LWG: replaced by below
                     l = b[i] & ~d[i];
                     if( (l & ~e[i]) != 0 ) ret = true;
                     e[i] |= l;
+                    */
+                    // LWG: removed unnecessary ops to improve efficiency
+                    l = e[i] | (b[i] & ~d[i]);
+                    if( e[i] != l ) ret = true;
+                    e[i] = l;
+
                     i++;
                 }
             }
         } else if( bl <= cl && bl <= dl ) {
             // bl is the shortest
             while( i < bl ) {
+                /* LWG: replaced by below
                 l = b[i] & c[i] & ~d[i];
                 if( (l & ~e[i]) != 0 ) ret = true;
                 e[i] |= l;
+                */
+                // LWG: removed unnecessary ops to improve efficiency
+                l = e[i] | (b[i] & c[i] & ~d[i]);
+                if( e[i] != l ) ret = true;
+                e[i] = l;
+
                 i++;
             }
         } else if( cl <= bl && cl <= dl ) {
             // cl is the shortest
             while( i < cl ) {
+                /* LWG: replaced by below
                 l = b[i] & c[i] & ~d[i];
                 if( (l & ~e[i]) != 0 ) ret = true;
                 e[i] |= l;
+                */
+                // LWG: removed unnecessary ops to improve efficiency
+                l = e[i] | (b[i] & c[i] & ~d[i]);
+                if( e[i] != l ) ret = true;
+                e[i] = l;
+
                 i++;
             }
         } else {
             // dl is the shortest
             while( i < dl ) {
+                /* LWG: replaced by below
                 l = b[i] & c[i] & ~d[i];
                 if( (l & ~e[i]) != 0 ) ret = true;
                 e[i] |= l;
+                */
+                // LWG: removed unnecessary ops to improve efficiency
+                l = e[i] | (b[i] & c[i] & ~d[i]);
+                if( e[i] != l ) ret = true;
+                e[i] = l;
+
                 i++;
             }
             int shorter = cl;
             if( bl < shorter ) shorter = bl;
             while( i < shorter ) {
+                /* LWG: replaced by below
                 l = b[i] & c[i];
                 if( (l & ~e[i]) != 0 ) ret = true;
                 e[i] |= l;
+                */
+                // LWG: removed unnecessary ops to improve efficiency
+                l = e[i] | (b[i] & c[i]);
+                if( e[i] != l ) ret = true;
+                e[i] = l;
+
                 i++;
             }
         }
 
         return ret;
     }
+
         public static BitVector and( BitVector set1, BitVector set2 ) {
         int min = set1.size();
         {

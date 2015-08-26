@@ -97,8 +97,8 @@ public final class PropWorklist extends Propagator {
 
     /** Propagates new points-to information of node src to all its
      * successors. */
-    protected final boolean handleAllocNode( AllocNode src ) {
-        boolean ret = false;
+    // LWG: changed the return type to void
+    protected final void handleAllocNode( AllocNode src ) {
         Node[] targets = pag.allocLookup( src );
         for (Node element : targets) {
           
@@ -106,10 +106,8 @@ public final class PropWorklist extends Propagator {
             //if( element.makeP2Set().add( src ) ) {
             if (thisPtrFilterAdd((VarNode)element, src, element.makeP2Set())) {
                 varNodeWorkList.add( (VarNode) element );
-                ret = true;
             }
         }
-        return ret;
     }
     
      private boolean thisPtrFilterAdd(VarNode pointer, AllocNode other, PointsToSetInternal addTo) {
@@ -154,15 +152,19 @@ public final class PropWorklist extends Propagator {
     
     /** Propagates new points-to information of node src to all its
      * successors. */
-    protected final boolean handleVarNode( final VarNode src ) {
-        boolean ret = false;
+    // LWG: changed the return type to void
+    protected final void handleVarNode( final VarNode src ) {
         boolean flush = true;
 
         if( src.getReplacement() != src ) throw new RuntimeException(
             "Got bad node "+src+" with rep "+src.getReplacement() );
 
         final PointsToSetInternal newP2Set = src.getP2Set().getNewSet();
-        if( newP2Set.isEmpty() ) return false;
+        if( newP2Set.isEmpty() ) return;
+        
+        // LWG: simple targets from the input source node whose p2sets will
+        // be updated in the while loop below
+        Set<VarNode> processedSimpleTargets = new HashSet<VarNode>();
 
         if( ofcg != null ) {
             QueueReader addedEdges = pag.edgeReader();
@@ -172,12 +174,16 @@ public final class PropWorklist extends Propagator {
             while(addedEdges.hasNext()) {
                 Node addedSrc = (Node) addedEdges.next();
                 Node addedTgt = (Node) addedEdges.next();
-                ret = true;
                 if( addedSrc instanceof VarNode ) {
                     if( addedTgt instanceof VarNode ) {
                         VarNode edgeSrc = (VarNode) addedSrc.getReplacement();
                         VarNode edgeTgt = (VarNode) addedTgt.getReplacement();
-
+                        
+                        // LWG: cache the new simple targets (from the input source node) whose 
+                        // p2sets are updated to avoid redundant computation
+                        if (edgeSrc == src)
+                        	processedSimpleTargets.add(edgeTgt);
+                        	
                         //if( edgeTgt.makeP2Set().addAll( edgeSrc.getP2Set(), null ) ) {
                         if (thisPtrFilterAddAll(edgeTgt, edgeSrc.getP2Set(), edgeTgt.makeP2Set())) {
                             varNodeWorkList.add( edgeTgt );
@@ -199,18 +205,21 @@ public final class PropWorklist extends Propagator {
         Node[] simpleTargets = pag.simpleLookup( src );
         for (Node element : simpleTargets) {
             //if( element.makeP2Set().addAll( newP2Set, null ) ) {
-             if (thisPtrFilterAddAll((VarNode)element, newP2Set, element.makeP2Set())) {
-                varNodeWorkList.add( (VarNode) element );
-                if(element == src) flush = false;
-                ret = true;
-            }
+            // LWG: Do not re-compute p2sets of simple targets if they were already computed
+        	// in the while loop above
+        	if (!processedSimpleTargets.contains(element)) {
+        		if (thisPtrFilterAddAll((VarNode)element, newP2Set, element.makeP2Set())) {
+        			varNodeWorkList.add( (VarNode) element );
+        			if(element == src) flush = false;
+        		}
+        	}
         }
 
         Node[] storeTargets = pag.storeLookup( src );
         for (Node element : storeTargets) {
             final FieldRefNode fr = (FieldRefNode) element;
             final SparkField f = fr.getField();
-            ret = fr.getBase().getP2Set().forall( new P2SetVisitor() {
+            fr.getBase().getP2Set().forall( new P2SetVisitor() {
                 public final void visit( Node n ) {
                     AllocDotField nDotF = pag.makeAllocDotField( 
                         (AllocNode) n, f );
@@ -218,7 +227,7 @@ public final class PropWorklist extends Propagator {
                         returnValue = true;
                     }
                 }
-            } ) | ret;
+            } );
         }
 
         //field stuff
@@ -267,9 +276,7 @@ public final class PropWorklist extends Propagator {
         for (Node[] p : storesToPropagate) {
             VarNode storeSource = (VarNode) p[0];
             AllocDotField nDotF = (AllocDotField) p[1];
-            if( nDotF.makeP2Set().addAll( storeSource.getP2Set(), null ) ) {
-                ret = true;
-            }
+            nDotF.makeP2Set().addAll( storeSource.getP2Set(), null );
         }
         for (Node[] p : loadsToPropagate) {
             AllocDotField nDotF = (AllocDotField) p[0];
@@ -277,10 +284,8 @@ public final class PropWorklist extends Propagator {
             //if( loadTarget.makeP2Set().addAll( nDotF.getP2Set(), null ) ) {
             if (thisPtrFilterAddAll(loadTarget,  nDotF.getP2Set(), loadTarget.makeP2Set())) {
                 varNodeWorkList.add( loadTarget );
-                ret = true;
             }
         }
-        return ret;
     }
 
     /** Propagates new points-to information of node src to all its

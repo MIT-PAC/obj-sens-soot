@@ -116,7 +116,9 @@ public class OnFlyCallGraph {
 
     public void updatedNode( final VarNode vn ) {
         final Object r = vn.getVariable();
-       
+
+        /* LWG: removed the sanity check for efficiency (the violation should not happen when the p2sets are
+         * correctly constructed
         //is the vn a this ref, if so, test its pt set!
         if (ObjectSensitiveConfig.isObjectSensitive() && (vn.isThisPtr() && vn instanceof ContextVarNode)) {
             PointsToSetInternal p2set = vn.getP2Set().getNewSet();
@@ -135,6 +137,7 @@ public class OnFlyCallGraph {
                 }} );
 
         }
+        */
         
         
         if( !(r instanceof Local) ) return;
