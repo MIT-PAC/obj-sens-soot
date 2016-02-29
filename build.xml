@@ -201,6 +201,8 @@
     <target name="buildtests" depends="compile,settings">
         <mkdir dir="testclasses"/>
         <javac
+            source="1.6"
+            target="1.6"           
             srcdir="tests"
             destdir="testclasses"
             classpath="classes:${polyglot.jar}:${jasmin.jar}:${junit.jar}:${hamcrest.jar}"
@@ -276,6 +278,8 @@
             out="eclipse/ca.mcgill.sable.soot/src/ca/mcgill/sable/soot/ui/PhaseOptionsDialog.java"
         />
         <javac
+            source="1.6"
+            target="1.6"            
             destdir="eclipse/ca.mcgill.sable.soot/classes"
             debug="true"
         >
@@ -300,9 +304,11 @@
 
     <!-- build the graph plugin-->
     <target name="graph-plugin">
-        <javac
-            destdir="eclipse/ca.mcgill.sable.graph/classes"
-            debug="true"
+      <javac
+          source="1.6"
+          target="1.6"
+          destdir="eclipse/ca.mcgill.sable.graph/classes"
+          debug="true"
         >
         <src path="eclipse/ca.mcgill.sable.graph/src"/>
         <classpath>
