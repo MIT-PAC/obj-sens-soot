@@ -25,7 +25,7 @@ public class ObjectSensitiveConfig {
     /** list of app classes */
     private Set<SootClass> appClasses;
   
-    private Set<SootClass> limitHeapContext;
+    private Set<Integer> limitHeapContext;
 
     private static ObjectSensitiveConfig v;
 
@@ -56,12 +56,12 @@ public class ObjectSensitiveConfig {
         this.extraArrayContext = extraArrayContext;
 
         this.ignoreList = new HashSet<SootClass>();
-        this.limitHeapContext = new HashSet<SootClass>();
+        this.limitHeapContext = new HashSet<Integer>();
         this.appClasses = new HashSet<SootClass>();
         
         installClassListWithAncestors(this.ignoreList, noContextStr);                  
-        installClassList(this.limitHeapContext, limitHeapContextStr);
         installClassList(this.appClasses, appClassesStr);
+        installLimitHeapContext(limitHeapContextStr);
         
         buildHasArraySet();
 
@@ -128,6 +128,23 @@ public class ObjectSensitiveConfig {
     }
 
 
+    private void installLimitHeapContext(String lhc) {
+    	if (lhc == null || lhc.isEmpty())
+    		return;
+
+    	String[] hashcodes = lhc.split(",");
+
+    	for (String str : hashcodes) {
+    		str = str.trim();
+    		try {
+    			int hashCode = Integer.parseInt(str);
+    			limitHeapContext.add(hashCode);
+    		} catch (NumberFormatException e) {
+    			System.out.println("Invalid hashCode integer in limit heap context string: " + str);
+    		}    		    		
+    	}
+    }
+    
     private void installClassList(Set<SootClass> set, String lhc) {
 
         if (lhc == null || lhc.isEmpty())
@@ -203,23 +220,13 @@ public class ObjectSensitiveConfig {
     }
 
     /**
-     * Limit heap context to 1 for these classes.
+     * Limit heap context to 1 for these AllocNodes.
      * 
      * @param clz
      * @return
      */
     public boolean limitHeapContext(AllocNode base) {
-        //limit class constant context
-        if (base instanceof ClassConstantNode)
-            return true;
-
-        if (base.getType() instanceof RefType) {
-            SootClass clz = ((RefType)base.getType()).getSootClass();
-            if (limitHeapContext.contains(clz))
-                return true;
-        }
-
-        return false;
+        return limitHeapContext.contains(base.newExpr.hashCode());
     }
 
     public boolean addHeapContext(AllocNode probe) {
