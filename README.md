@@ -1,3 +1,24 @@
+# About this repo
+
+This repo is the final snapshot of the DroidSafe project's
+modifications to the Soot analysis framework.  This repo includes the
+source code for our object-sensitive points to analysis, and all
+associated modifications to Soot.  It has been tested extensively, and
+performance-tuned.  The analysis needs lots of memory to run on large
+Android programs (we ran on a machine with 512GB of memory).
+
+A while ago, this branch diverged from the Soot mainline, and we do
+not currently have the resources to merge our changes back to the Soot
+master.  We are sorry for this.
+
+We hope you can find this code useful.
+
+Please see the [DroidSafe analysis
+driver](https://github.com/MIT-PAC/droidsafe-src/blob/master/src/main/java/droidsafe/analyses/pta/SparkPTA.java)
+for an example on how to use the object-sensitive analysis.
+
+What remains in this document is the existing Soot documentation.
+
 # What is Soot?
 
 Soot is a Java optimization framework. It provides four intermediate representations for analyzing and transforming Java bytecode:
